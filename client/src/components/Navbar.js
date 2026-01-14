@@ -15,12 +15,15 @@ function Navbar() {
   return (
     <nav className="navbar">
       <div className="navbar-container">
-        <Link to="/dashboard" className="navbar-brand">
+        <Link to="/" className="navbar-brand">
           📈 AI Stock Simulator
         </Link>
         
         {user && (
           <div className="navbar-menu">
+            <Link to="/" className="navbar-link">
+              Home
+            </Link>
             <Link to="/dashboard" className="navbar-link">
               Dashboard
             </Link>

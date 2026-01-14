@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import StockSearch from './pages/StockSearch';
 import StockDetail from './pages/StockDetail';
 import Portfolio from './pages/Portfolio';
+import Home from './pages/Home';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import './App.css';
 
@@ -25,8 +26,16 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
-      <Route path="/register" element={user ? <Navigate to="/dashboard" /> : <Register />} />
+      <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
+      <Route path="/register" element={user ? <Navigate to="/" /> : <Register />} />
+      <Route
+        path="/"
+        element={
+          <PrivateRoute>
+            <Home />
+          </PrivateRoute>
+        }
+      />
       <Route
         path="/dashboard"
         element={
@@ -59,7 +68,6 @@ function AppRoutes() {
           </PrivateRoute>
         }
       />
-      <Route path="/" element={<Navigate to="/dashboard" />} />
     </Routes>
   );
 }
