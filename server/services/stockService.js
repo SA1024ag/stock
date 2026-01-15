@@ -5,6 +5,15 @@ const axios = require('axios');
 const ALPHA_VANTAGE_API_KEY = process.env.ALPHA_VANTAGE_API_KEY;
 const BASE_URL = 'https://www.alphavantage.co/query';
 
+// Timeframe configuration
+const TIMEFRAME_CONFIG = {
+  '1D': { days: 1, resolution: '5min', apiFunction: 'TIME_SERIES_INTRADAY', interval: '5min' },
+  '1W': { days: 7, resolution: '30min', apiFunction: 'TIME_SERIES_INTRADAY', interval: '30min' },
+  '1M': { days: 30, resolution: 'daily', apiFunction: 'TIME_SERIES_DAILY' },
+  '3M': { days: 90, resolution: 'daily', apiFunction: 'TIME_SERIES_DAILY' },
+  '1Y': { days: 365, resolution: 'daily', apiFunction: 'TIME_SERIES_DAILY' }
+};
+
 class StockService {
   // Get real-time stock quote
   async getQuote(symbol) {
@@ -79,38 +88,164 @@ class StockService {
     }
   }
 
-  // Get historical data (for charts)
-  async getHistoricalData(symbol, interval = 'daily') {
+  // Get historical data with timeframe support
+  async getHistoricalData(symbol, timeframe = '1M') {
+    const config = TIMEFRAME_CONFIG[timeframe];
+    if (!config) {
+      throw new Error(`Invalid timeframe: ${timeframe}`);
+    }
+
     try {
-      const response = await axios.get(BASE_URL, {
-        params: {
-          function: 'TIME_SERIES_DAILY',
-          symbol: symbol.toUpperCase(),
-          apikey: ALPHA_VANTAGE_API_KEY
-        }
-      });
-
-      if (response.data['Error Message'] || response.data['Note']) {
-        throw new Error('API limit reached or invalid symbol');
+      // For intraday data (1D, 1W)
+      if (config.apiFunction === 'TIME_SERIES_INTRADAY') {
+        return await this.getIntradayData(symbol, config);
       }
 
-      const timeSeries = response.data['Time Series (Daily)'];
-      if (!timeSeries) {
-        throw new Error('Historical data not available');
-      }
+      // For daily data (1M, 3M, 1Y)
+      return await this.getDailyData(symbol, config);
+    } catch (error) {
+      console.error('Error fetching historical data:', error.message);
 
-      return Object.keys(timeSeries).map(date => ({
+      // Fallback to mock data
+      if (process.env.NODE_ENV === 'development') {
+        return this.getMockHistoricalData(symbol, config.days, config.resolution);
+      }
+      throw error;
+    }
+  }
+
+  async getIntradayData(symbol, config) {
+    const response = await axios.get(BASE_URL, {
+      params: {
+        function: config.apiFunction,
+        symbol: symbol.toUpperCase(),
+        interval: config.interval,
+        apikey: ALPHA_VANTAGE_API_KEY,
+        outputsize: 'full'
+      }
+    });
+
+    if (response.data['Error Message'] || response.data['Note']) {
+      throw new Error('API limit reached or invalid symbol');
+    }
+
+    const timeSeriesKey = `Time Series (${config.interval})`;
+    const timeSeries = response.data[timeSeriesKey];
+
+    if (!timeSeries) {
+      throw new Error('Intraday data not available');
+    }
+
+    // Filter to requested timeframe
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - config.days);
+
+    return Object.keys(timeSeries)
+      .filter(datetime => new Date(datetime) >= cutoffDate)
+      .map(datetime => ({
+        date: datetime,
+        open: parseFloat(timeSeries[datetime]['1. open']),
+        high: parseFloat(timeSeries[datetime]['2. high']),
+        low: parseFloat(timeSeries[datetime]['3. low']),
+        close: parseFloat(timeSeries[datetime]['4. close']),
+        volume: parseInt(timeSeries[datetime]['5. volume'])
+      }))
+      .reverse();
+  }
+
+  async getDailyData(symbol, config) {
+    const response = await axios.get(BASE_URL, {
+      params: {
+        function: 'TIME_SERIES_DAILY',
+        symbol: symbol.toUpperCase(),
+        apikey: ALPHA_VANTAGE_API_KEY,
+        outputsize: config.days > 100 ? 'full' : 'compact'
+      }
+    });
+
+    if (response.data['Error Message'] || response.data['Note']) {
+      throw new Error('API limit reached or invalid symbol');
+    }
+
+    const timeSeries = response.data['Time Series (Daily)'];
+    if (!timeSeries) {
+      throw new Error('Historical data not available');
+    }
+
+    // Filter to requested timeframe
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - config.days);
+
+    return Object.keys(timeSeries)
+      .filter(date => new Date(date) >= cutoffDate)
+      .map(date => ({
         date,
         open: parseFloat(timeSeries[date]['1. open']),
         high: parseFloat(timeSeries[date]['2. high']),
         low: parseFloat(timeSeries[date]['3. low']),
         close: parseFloat(timeSeries[date]['4. close']),
         volume: parseInt(timeSeries[date]['5. volume'])
-      })).reverse();
-    } catch (error) {
-      console.error('Error fetching historical data:', error.message);
-      throw error;
+      }))
+      .reverse();
+  }
+
+  // Enhanced mock data generator with resolution support
+  getMockHistoricalData(symbol, days, resolution) {
+    const data = [];
+    let basePrice = 100 + Math.random() * 200;
+    const now = new Date();
+
+    // Calculate interval based on resolution
+    let intervalMs;
+    let pointsPerDay;
+
+    switch (resolution) {
+      case '5min':
+        intervalMs = 5 * 60 * 1000;
+        pointsPerDay = (24 * 60) / 5; // 288 points per day
+        break;
+      case '30min':
+        intervalMs = 30 * 60 * 1000;
+        pointsPerDay = (24 * 60) / 30; // 48 points per day
+        break;
+      case 'daily':
+      default:
+        intervalMs = 24 * 60 * 60 * 1000;
+        pointsPerDay = 1;
     }
+
+    // Generate data points
+    const totalPoints = resolution === 'daily' ? days : Math.floor(days * pointsPerDay);
+
+    for (let i = totalPoints - 1; i >= 0; i--) {
+      const timestamp = new Date(now.getTime() - (i * intervalMs));
+
+      // Skip weekends for daily data
+      if (resolution === 'daily' && (timestamp.getDay() === 0 || timestamp.getDay() === 6)) {
+        continue;
+      }
+
+      const change = (Math.random() - 0.5) * 10;
+      basePrice += change;
+
+      const open = basePrice + (Math.random() - 0.5) * 5;
+      const close = basePrice + (Math.random() - 0.5) * 5;
+      const high = Math.max(open, close) + Math.random() * 3;
+      const low = Math.min(open, close) - Math.random() * 3;
+
+      data.push({
+        date: resolution === 'daily'
+          ? timestamp.toISOString().split('T')[0]
+          : timestamp.toISOString().replace('T', ' ').substring(0, 19),
+        open: parseFloat(open.toFixed(2)),
+        high: parseFloat(high.toFixed(2)),
+        low: parseFloat(low.toFixed(2)),
+        close: parseFloat(close.toFixed(2)),
+        volume: Math.floor(Math.random() * 10000000)
+      });
+    }
+
+    return data;
   }
 
   // Mock data for development/testing

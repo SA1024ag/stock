@@ -6,7 +6,7 @@ const router = express.Router();
 router.get('/search', async (req, res) => {
   try {
     const { q } = req.query;
-    
+
     if (!q) {
       return res.status(400).json({ message: 'Search query is required' });
     }
@@ -35,8 +35,8 @@ router.get('/:symbol', async (req, res) => {
 router.get('/:symbol/history', async (req, res) => {
   try {
     const { symbol } = req.params;
-    const { interval } = req.query;
-    const history = await stockService.getHistoricalData(symbol, interval);
+    const { timeframe = '1M' } = req.query; // Default to 1 month
+    const history = await stockService.getHistoricalData(symbol, timeframe);
     res.json(history);
   } catch (error) {
     console.error('Get history error:', error);
