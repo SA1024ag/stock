@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import './Home.css';
 
@@ -116,9 +117,15 @@ function Home() {
 function StockSummary({ quote, positive }) {
   const isUp = quote.changePercent >= 0;
   const directionClass = isUp ? 'positive' : 'negative';
+  const navigate = useNavigate();
 
   return (
-    <div className="home-stock">
+    <div
+      className="home-stock"
+      onClick={() => navigate(`/stock/${quote.symbol}`)}
+      role="button"
+      tabIndex={0}
+    >
       <div className="home-stock-header">
         <span className="home-stock-symbol">{quote.symbol}</span>
         <span className={`badge ${isUp ? 'badge-success' : 'badge-danger'}`}>
