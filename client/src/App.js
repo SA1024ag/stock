@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
+import Sidebar from './components/Sidebar';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -8,6 +9,16 @@ import StockSearch from './pages/StockSearch';
 import StockDetail from './pages/StockDetail';
 import Portfolio from './pages/Portfolio';
 import Home from './pages/Home';
+
+// AI & Insights Pages
+import AIStockInsights from './pages/AIStockInsights';
+import AIPortfolioAnalysis from './pages/AIPortfolioAnalysis';
+import AIRecommendations from './pages/AIRecommendations';
+
+// Learning Pages
+import LearningHub from './pages/LearningHub';
+import { StockExplainers, BeginnerGuides, PortfolioReport, Transactions, ProfitLoss, Watchlist, Alerts, MarketMovers } from './pages/PlaceholderPages';
+
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import './App.css';
@@ -29,47 +40,48 @@ function AppRoutes() {
     <Routes>
       <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
       <Route path="/register" element={user ? <Navigate to="/" /> : <Register />} />
-      <Route
-        path="/"
-        element={
-          <PrivateRoute>
-            <Home />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/dashboard"
-        element={
-          <PrivateRoute>
-            <Dashboard />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/search"
-        element={
-          <PrivateRoute>
-            <StockSearch />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/stock/:symbol"
-        element={
-          <PrivateRoute>
-            <StockDetail />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/portfolio"
-        element={
-          <PrivateRoute>
-            <Portfolio />
-          </PrivateRoute>
-        }
-      />
+
+      {/* Main Pages */}
+      <Route path="/" element={<PrivateRoute><Home /></PrivateRoute>} />
+      <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+      <Route path="/search" element={<PrivateRoute><StockSearch /></PrivateRoute>} />
+      <Route path="/stock/:symbol" element={<PrivateRoute><StockDetail /></PrivateRoute>} />
+      <Route path="/portfolio" element={<PrivateRoute><Portfolio /></PrivateRoute>} />
+
+      {/* AI & Insights */}
+      <Route path="/ai-insights" element={<PrivateRoute><AIStockInsights /></PrivateRoute>} />
+      <Route path="/ai-portfolio" element={<PrivateRoute><AIPortfolioAnalysis /></PrivateRoute>} />
+      <Route path="/ai-recommendations" element={<PrivateRoute><AIRecommendations /></PrivateRoute>} />
+
+      {/* Learning */}
+      <Route path="/learning-hub" element={<PrivateRoute><LearningHub /></PrivateRoute>} />
+      <Route path="/stock-explainers" element={<PrivateRoute><StockExplainers /></PrivateRoute>} />
+      <Route path="/beginner-guides" element={<PrivateRoute><BeginnerGuides /></PrivateRoute>} />
+
+      {/* Reports */}
+      <Route path="/portfolio-report" element={<PrivateRoute><PortfolioReport /></PrivateRoute>} />
+      <Route path="/transactions" element={<PrivateRoute><Transactions /></PrivateRoute>} />
+      <Route path="/profit-loss" element={<PrivateRoute><ProfitLoss /></PrivateRoute>} />
+
+      {/* Tracking */}
+      <Route path="/watchlist" element={<PrivateRoute><Watchlist /></PrivateRoute>} />
+      <Route path="/alerts" element={<PrivateRoute><Alerts /></PrivateRoute>} />
+      <Route path="/market-movers" element={<PrivateRoute><MarketMovers /></PrivateRoute>} />
     </Routes>
+  );
+}
+
+function AppContent() {
+  const { user } = useAuth();
+
+  return (
+    <div className="App">
+      <Navbar />
+      {user && <Sidebar />}
+      <main className="main-content">
+        <AppRoutes />
+      </main>
+    </div>
   );
 }
 
@@ -78,12 +90,7 @@ function App() {
     <AuthProvider>
       <ThemeProvider>
         <Router>
-          <div className="App">
-            <Navbar />
-            <main className="main-content">
-              <AppRoutes />
-            </main>
-          </div>
+          <AppContent />
         </Router>
       </ThemeProvider>
     </AuthProvider>
