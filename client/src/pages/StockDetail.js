@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import Card from '../components/common/Card';
+import Button from '../components/common/Button';
 import './StockDetail.css';
 
 function StockDetail() {
@@ -20,7 +22,6 @@ function StockDetail() {
   useEffect(() => {
     fetchStockData();
     fetchAnalysis();
-    // Refresh stock data every 30 seconds
     const interval = setInterval(fetchStockData, 30000);
     return () => clearInterval(interval);
   }, [symbol]);
@@ -65,13 +66,11 @@ function StockDetail() {
 
       setSuccess(response.data.message);
       setShares('');
-      
-      // Update user balance
+
       if (response.data.remainingBalance !== undefined) {
         updateUser({ ...user, virtualBalance: response.data.remainingBalance });
       }
 
-      // Refresh stock data
       setTimeout(() => {
         fetchStockData();
       }, 1000);
@@ -83,16 +82,14 @@ function StockDetail() {
   };
 
   if (loading) {
-    return <div className="loading">Loading stock data...</div>;
+    return <div className="loading">Initializing Market Data...</div>;
   }
 
   if (!stockData) {
     return (
       <div className="error-container">
-        <div className="alert alert-error">Stock not found or data unavailable</div>
-        <button onClick={() => navigate('/search')} className="btn btn-primary">
-          Back to Search
-        </button>
+        <div className="alert alert-error">Stock not found</div>
+        <Button onClick={() => navigate('/search')}>Back to Search</Button>
       </div>
     );
   }
@@ -100,107 +97,127 @@ function StockDetail() {
   const totalCost = stockData.price * (parseInt(shares) || 0);
 
   return (
-    <div className="stock-detail">
-      <button onClick={() => navigate(-1)} className="back-button">
-        ← Back
-      </button>
-
-      <div className="stock-header">
-        <h1>{stockData.symbol}</h1>
-        <div className={`stock-price ${stockData.change >= 0 ? 'positive' : 'negative'}`}>
-          ${stockData.price.toFixed(2)}
-          <span className="price-change">
-            {stockData.change >= 0 ? '+' : ''}{stockData.change.toFixed(2)} 
-            ({stockData.changePercent >= 0 ? '+' : ''}{stockData.changePercent.toFixed(2)}%)
-          </span>
+    <div className="stock-detail-container">
+      <div className="stock-detail-header">
+        <button onClick={() => navigate(-1)} className="back-link">
+          ‹ Back
+        </button>
+        <div className="header-flex">
+          <div>
+            <h1 className="stock-title">{stockData.symbol}</h1>
+            <p className="text-secondary">Real-time Quote</p>
+          </div>
+          <div className="stock-price-display">
+            <span className="current-price">${stockData.price.toFixed(2)}</span>
+            <span className={`price-change-badge ${stockData.change >= 0 ? 'bg-green' : 'bg-red'}`}>
+              {stockData.change >= 0 ? '+' : ''}{stockData.change.toFixed(2)} ({stockData.changePercent.toFixed(2)}%)
+            </span>
+          </div>
         </div>
       </div>
 
-      <div className="stock-info-grid">
-        <div className="card">
-          <h3>Stock Information</h3>
-          <div className="info-row">
-            <span className="info-label">Open:</span>
-            <span>${stockData.open.toFixed(2)}</span>
-          </div>
-          <div className="info-row">
-            <span className="info-label">High:</span>
-            <span>${stockData.high.toFixed(2)}</span>
-          </div>
-          <div className="info-row">
-            <span className="info-label">Low:</span>
-            <span>${stockData.low.toFixed(2)}</span>
-          </div>
-          <div className="info-row">
-            <span className="info-label">Previous Close:</span>
-            <span>${stockData.previousClose.toFixed(2)}</span>
-          </div>
-          <div className="info-row">
-            <span className="info-label">Volume:</span>
-            <span>{stockData.volume.toLocaleString()}</span>
-          </div>
+      <div className="detail-grid">
+        {/* Left Column: Info & Analysis */}
+        <div className="detail-main">
+          <Card className="info-card glass-panel mb-4">
+            <div className="info-grid">
+              <div className="info-item">
+                <span className="label">Open</span>
+                <span className="value">${stockData.open.toFixed(2)}</span>
+              </div>
+              <div className="info-item">
+                <span className="label">High</span>
+                <span className="value">${stockData.high.toFixed(2)}</span>
+              </div>
+              <div className="info-item">
+                <span className="label">Low</span>
+                <span className="value">${stockData.low.toFixed(2)}</span>
+              </div>
+              <div className="info-item">
+                <span className="label">Vol</span>
+                <span className="value">{stockData.volume.toLocaleString()}</span>
+              </div>
+            </div>
+          </Card>
+
+          <Card title="AI Market Analysis" className="analysis-card glass-panel">
+            {analysis ? (
+              <div className="analysis-content text-secondary">
+                {analysis.split('\n').map((paragraph, index) => (
+                  <p key={index} className="mb-2">{paragraph}</p>
+                ))}
+              </div>
+            ) : (
+              <div className="loading-state">
+                <span className="pulse">●</span> Analyzing market sentiment...
+              </div>
+            )}
+          </Card>
         </div>
 
-        <div className="card">
-          <h3>AI Analysis</h3>
-          {analysis ? (
-            <div className="analysis-content">
-              {analysis.split('\n').map((paragraph, index) => (
-                <p key={index}>{paragraph}</p>
-              ))}
-            </div>
-          ) : (
-            <p className="analysis-loading">Loading AI analysis...</p>
-          )}
+        {/* Right Column: Trading Interface */}
+        <div className="detail-sidebar">
+          <Card className="trading-card glass-panel border-glow">
+            <h3 className="card-title mb-4">Trade Execution</h3>
+
+            <form onSubmit={handleTrade} className="trading-form">
+              <div className="trade-tabs mb-4">
+                <button
+                  type="button"
+                  className={`trade-tab ${action === 'buy' ? 'active buy' : ''}`}
+                  onClick={() => setAction('buy')}
+                >
+                  Buy
+                </button>
+                <button
+                  type="button"
+                  className={`trade-tab ${action === 'sell' ? 'active sell' : ''}`}
+                  onClick={() => setAction('sell')}
+                >
+                  Sell
+                </button>
+              </div>
+
+              <div className="form-group">
+                <label>Shares</label>
+                <input
+                  type="number"
+                  value={shares}
+                  onChange={(e) => setShares(e.target.value)}
+                  min="1"
+                  required
+                  placeholder="0"
+                  className="input-large"
+                />
+              </div>
+
+              <div className="order-summary mb-4">
+                <div className="summary-row">
+                  <span>Est. Total</span>
+                  <span className="font-bold">${totalCost.toFixed(2)}</span>
+                </div>
+                {action === 'buy' && (
+                  <div className="summary-row text-xs text-muted">
+                    <span>Available</span>
+                    <span>${user?.virtualBalance?.toFixed(2)}</span>
+                  </div>
+                )}
+              </div>
+
+              {error && <div className="alert alert-error text-sm">{error}</div>}
+              {success && <div className="alert alert-success text-sm">{success}</div>}
+
+              <Button
+                type="submit"
+                variant={action === 'buy' ? 'success' : 'danger'}
+                className="w-full"
+                isLoading={trading}
+              >
+                {action === 'buy' ? 'Submit Buy Order' : 'Submit Sell Order'}
+              </Button>
+            </form>
+          </Card>
         </div>
-      </div>
-
-      <div className="card trading-card">
-        <h3>Trade Stock</h3>
-        {success && <div className="alert alert-success">{success}</div>}
-        {error && <div className="alert alert-error">{error}</div>}
-
-        <form onSubmit={handleTrade} className="trading-form">
-          <div className="form-group">
-            <label>Action</label>
-            <select value={action} onChange={(e) => setAction(e.target.value)}>
-              <option value="buy">Buy</option>
-              <option value="sell">Sell</option>
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label>Number of Shares</label>
-            <input
-              type="number"
-              value={shares}
-              onChange={(e) => setShares(e.target.value)}
-              min="1"
-              required
-              placeholder="Enter number of shares"
-            />
-          </div>
-
-          {shares && (
-            <div className="trade-summary">
-              <p>
-                <strong>Price per share:</strong> ${stockData.price.toFixed(2)}
-              </p>
-              <p>
-                <strong>Total {action === 'buy' ? 'cost' : 'value'}:</strong> ${totalCost.toFixed(2)}
-              </p>
-              {action === 'buy' && (
-                <p>
-                  <strong>Available balance:</strong> ${user?.virtualBalance?.toFixed(2) || '0.00'}
-                </p>
-              )}
-            </div>
-          )}
-
-          <button type="submit" className="btn btn-primary btn-block" disabled={trading}>
-            {trading ? 'Processing...' : `${action === 'buy' ? 'Buy' : 'Sell'} Stock`}
-          </button>
-        </form>
       </div>
     </div>
   );
