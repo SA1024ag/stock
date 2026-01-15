@@ -136,11 +136,19 @@ class StockService {
       { symbol: 'GOOGL', name: 'Alphabet Inc.', type: 'Equity', region: 'United States' },
       { symbol: 'MSFT', name: 'Microsoft Corporation', type: 'Equity', region: 'United States' },
       { symbol: 'AMZN', name: 'Amazon.com Inc.', type: 'Equity', region: 'United States' },
-      { symbol: 'TSLA', name: 'Tesla Inc.', type: 'Equity', region: 'United States' }
+      { symbol: 'TSLA', name: 'Tesla Inc.', type: 'Equity', region: 'United States' },
+      { symbol: 'META', name: 'Meta Platforms Inc.', type: 'Equity', region: 'United States' },
+      { symbol: 'NVDA', name: 'NVIDIA Corporation', type: 'Equity', region: 'United States' },
+      { symbol: 'NFLX', name: 'Netflix Inc.', type: 'Equity', region: 'United States' },
+      { symbol: 'JPM', name: 'JPMorgan Chase & Co.', type: 'Equity', region: 'United States' },
+      { symbol: 'DIS', name: 'The Walt Disney Company', type: 'Equity', region: 'United States' }
     ];
-    return mockStocks.filter(stock => 
-      stock.symbol.toLowerCase().includes(keywords.toLowerCase()) ||
-      stock.name.toLowerCase().includes(keywords.toLowerCase())
+
+    // In dev, we return this small list if API fails, but the main goal is to use the real API
+    const query = keywords.toLowerCase();
+    return mockStocks.filter(stock =>
+      stock.symbol.toLowerCase().includes(query) ||
+      stock.name.toLowerCase().includes(query)
     );
   }
 }
