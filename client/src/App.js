@@ -9,15 +9,16 @@ import StockDetail from './pages/StockDetail';
 import Portfolio from './pages/Portfolio';
 import Home from './pages/Home';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import './App.css';
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
-  
+
   if (loading) {
     return <div className="loading">Loading...</div>;
   }
-  
+
   return user ? children : <Navigate to="/login" />;
 }
 
@@ -75,14 +76,16 @@ function AppRoutes() {
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <div className="App">
-          <Navbar />
-          <main className="main-content">
-            <AppRoutes />
-          </main>
-        </div>
-      </Router>
+      <ThemeProvider>
+        <Router>
+          <div className="App">
+            <Navbar />
+            <main className="main-content">
+              <AppRoutes />
+            </main>
+          </div>
+        </Router>
+      </ThemeProvider>
     </AuthProvider>
   );
 }
