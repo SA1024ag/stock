@@ -4,6 +4,7 @@ import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
+import CandlestickChart from '../components/CandlestickChart';
 import './StockDetail.css';
 
 function StockDetail() {
@@ -12,9 +13,12 @@ function StockDetail() {
   const { user, updateUser } = useAuth();
   const [stockData, setStockData] = useState(null);
   const [analysis, setAnalysis] = useState(null);
+  const [historicalData, setHistoricalData] = useState([]);
+  const [timeframe, setTimeframe] = useState('1M'); // Add timeframe state
   const [shares, setShares] = useState('');
   const [action, setAction] = useState('buy');
   const [loading, setLoading] = useState(true);
+  const [chartLoading, setChartLoading] = useState(false); // Separate loading for chart
   const [trading, setTrading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -22,9 +26,17 @@ function StockDetail() {
   useEffect(() => {
     fetchStockData();
     fetchAnalysis();
+    fetchHistoricalData(timeframe); // Pass timeframe
     const interval = setInterval(fetchStockData, 30000);
     return () => clearInterval(interval);
   }, [symbol]);
+
+  // Refetch when timeframe changes
+  useEffect(() => {
+    if (symbol) {
+      fetchHistoricalData(timeframe);
+    }
+  }, [timeframe]);
 
   const fetchStockData = async () => {
     try {
@@ -45,6 +57,25 @@ function StockDetail() {
     } catch (error) {
       console.error('Error fetching analysis:', error);
     }
+  };
+
+  const fetchHistoricalData = async (selectedTimeframe) => {
+    setChartLoading(true);
+    try {
+      const response = await api.get(`/stocks/${symbol}/history`, {
+        params: { timeframe: selectedTimeframe }
+      });
+      setHistoricalData(response.data);
+    } catch (error) {
+      console.error('Error fetching historical data:', error);
+      setError(`Failed to load ${selectedTimeframe} data`);
+    } finally {
+      setChartLoading(false);
+    }
+  };
+
+  const handleTimeframeChange = (newTimeframe) => {
+    setTimeframe(newTimeframe);
   };
 
   const handleTrade = async (e) => {
@@ -117,8 +148,34 @@ function StockDetail() {
       </div>
 
       <div className="detail-grid">
-        {/* Left Column: Info & Analysis */}
+        {/* Left Column: Chart, Info & Analysis */}
         <div className="detail-main">
+          {/* Candlestick Chart */}
+          {chartLoading ? (
+            <div className="chart-loading" style={{
+              background: 'rgba(17, 24, 39, 0.5)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: '12px',
+              padding: '2rem',
+              marginBottom: '1.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              minHeight: '500px',
+              color: '#9ca3af'
+            }}>
+              <p>Loading chart data...</p>
+            </div>
+          ) : (
+            <CandlestickChart
+              symbol={symbol}
+              data={historicalData}
+              currentPrice={stockData.price}
+              onTimeframeChange={handleTimeframeChange}
+            />
+          )}
+
           <Card className="info-card glass-panel mb-4">
             <div className="info-grid">
               <div className="info-item">
