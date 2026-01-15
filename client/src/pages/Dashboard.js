@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import Card from '../components/common/Card';
+import Button from '../components/common/Button';
 import './Dashboard.css';
 
 function Dashboard() {
@@ -27,77 +29,140 @@ function Dashboard() {
   };
 
   if (loading) {
-    return <div className="loading">Loading dashboard...</div>;
+    return <div className="loading">Initializing Terminal...</div>;
   }
 
+  // Calculate stats safetly
+  const balance = portfolioSummary?.virtualBalance ?? user?.virtualBalance ?? 0;
+  const totalValue = portfolioSummary?.totalValue ?? 0;
+  const totalInvested = portfolioSummary?.totalInvested ?? 0;
+  const totalGainLoss = portfolioSummary?.totalGainLoss ?? 0;
+  const totalGainLossPercent = portfolioSummary?.totalGainLossPercent ?? 0;
+  const isPositive = totalGainLoss >= 0;
+
   return (
-    <div className="dashboard">
-      <h1>Welcome, {user?.username}!</h1>
-      
-      <div className="dashboard-stats">
-        <div className="stat-card">
-          <div className="stat-label">Virtual Balance</div>
-          <div className="stat-value">${portfolioSummary?.virtualBalance?.toFixed(2) || user?.virtualBalance?.toFixed(2) || '0.00'}</div>
+    <div className="dashboard-container">
+      <div className="dashboard-header">
+        <div>
+          <h1>Market Overview</h1>
+          <p className="text-secondary">Welcome back, {user?.username || 'Trader'}</p>
         </div>
-        
-        <div className="stat-card">
-          <div className="stat-label">Portfolio Value</div>
-          <div className="stat-value">${portfolioSummary?.totalValue?.toFixed(2) || '0.00'}</div>
-        </div>
-        
-        <div className="stat-card">
-          <div className="stat-label">Total Invested</div>
-          <div className="stat-value">${portfolioSummary?.totalInvested?.toFixed(2) || '0.00'}</div>
-        </div>
-        
-        <div className={`stat-card ${portfolioSummary?.totalGainLoss >= 0 ? 'positive' : 'negative'}`}>
-          <div className="stat-label">Total Gain/Loss</div>
-          <div className="stat-value">
-            {portfolioSummary?.totalGainLoss >= 0 ? '+' : ''}
-            ${portfolioSummary?.totalGainLoss?.toFixed(2) || '0.00'}
-            <span className="stat-percent">
-              ({portfolioSummary?.totalGainLossPercent >= 0 ? '+' : ''}
-              {portfolioSummary?.totalGainLossPercent?.toFixed(2) || '0.00'}%)
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div className="dashboard-actions">
-        <Link to="/search" className="action-card">
-          <h3>🔍 Search Stocks</h3>
-          <p>Find and analyze stocks</p>
-        </Link>
-        
-        <Link to="/portfolio" className="action-card">
-          <h3>💼 View Portfolio</h3>
-          <p>Manage your holdings</p>
-        </Link>
-      </div>
-
-      {portfolioSummary?.holdings && portfolioSummary.holdings.length > 0 && (
-        <div className="card">
-          <h2 className="card-header">Recent Holdings</h2>
-          <div className="holdings-preview">
-            {portfolioSummary.holdings.slice(0, 5).map((holding) => (
-              <div key={holding.symbol} className="holding-item">
-                <div className="holding-symbol">{holding.symbol}</div>
-                <div className="holding-details">
-                  <span>{holding.shares} shares</span>
-                  <span className={holding.gainLoss >= 0 ? 'positive' : 'negative'}>
-                    {holding.gainLoss >= 0 ? '+' : ''}${holding.gainLoss.toFixed(2)}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-          <Link to="/portfolio" className="btn btn-secondary" style={{ marginTop: '15px', display: 'inline-block' }}>
-            View Full Portfolio
+        <div className="dashboard-actions-header">
+          <Link to="/search">
+            <Button variant="primary">
+              + New Trade
+            </Button>
           </Link>
+        </div>
+      </div>
+
+      {error && (
+        <div className="alert alert-error">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+          {error}
         </div>
       )}
 
-      {error && <div className="alert alert-error">{error}</div>}
+      {/* Main Stats Grid */}
+      <div className="stats-grid">
+        <Card className="stat-card glass-panel">
+          <div className="stat-label">Net Liquidation Value</div>
+          <div className="stat-value-large">
+            ${(balance + totalValue).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </div>
+          <div className={`stat-change ${isPositive ? 'text-green' : 'text-red'}`}>
+            {isPositive ? '▲' : '▼'} Total P/L
+          </div>
+        </Card>
+
+        <Card className="stat-card glass-panel">
+          <div className="stat-label">Day's P/L</div>
+          <div className={`stat-value-large ${isPositive ? 'text-green' : 'text-red'}`}>
+            {isPositive ? '+' : ''}{totalGainLoss.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </div>
+          <div className={`stat-subvalue ${isPositive ? 'text-green' : 'text-red'}`}>
+            {isPositive ? '+' : ''}{totalGainLossPercent.toFixed(2)}%
+          </div>
+        </Card>
+
+        <Card className="stat-card glass-panel">
+          <div className="stat-label">Buying Power</div>
+          <div className="stat-value-large text-secondary">
+            ${balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </div>
+          <Link to="/search" className="link-small">Top Up ›</Link>
+        </Card>
+
+        <Card className="stat-card glass-panel">
+          <div className="stat-label">Market Status</div>
+          <div className="stat-value-large text-green">OPEN</div>
+          <div className="stat-subvalue text-muted">NYSE / NASDAQ</div>
+        </Card>
+      </div>
+
+      <div className="dashboard-content grid grid-2">
+        {/* Holdings Section */}
+        <div className="holdings-section">
+          <div className="section-header">
+            <h3>Active Positions</h3>
+            <Link to="/portfolio" className="text-muted link-hover">View All ›</Link>
+          </div>
+
+          {portfolioSummary?.holdings && portfolioSummary.holdings.length > 0 ? (
+            <div className="holdings-list">
+              {portfolioSummary.holdings.slice(0, 5).map((holding) => {
+                const gain = holding.gainLoss ?? 0;
+                const isGain = gain >= 0;
+                return (
+                  <Card key={holding.symbol} className="holding-card-row">
+                    <div className="holding-info">
+                      <span className="holding-symbol">{holding.symbol}</span>
+                      <span className="holding-shares text-secondary">{holding.shares} shares</span>
+                    </div>
+                    <div className="holding-values">
+                      <span className="holding-price">${(holding.currentPrice || 0).toFixed(2)}</span>
+                      <span className={`holding-pl ${isGain ? 'text-green' : 'text-red'}`}>
+                        {isGain ? '+' : ''}{gain.toFixed(2)}
+                      </span>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          ) : (
+            <Card className="empty-state">
+              <div className="text-center p-4">
+                <p className="text-secondary mb-3">No active positions</p>
+                <Link to="/search">
+                  <Button variant="primary" size="sm">Start Trading</Button>
+                </Link>
+              </div>
+            </Card>
+          )}
+        </div>
+
+        {/* Quick Actions / Watchlist Placeholder */}
+        <div className="side-section">
+          <Card title="Quick Access" className="h-full">
+            <div className="quick-links">
+              <Link to="/search" className="quick-link-item">
+                <div className="icon-box">🔍</div>
+                <div>
+                  <div className="font-bold">Symbol Search</div>
+                  <div className="text-xs text-muted">Find stocks to trade</div>
+                </div>
+              </Link>
+              <Link to="/portfolio" className="quick-link-item">
+                <div className="icon-box">📊</div>
+                <div>
+                  <div className="font-bold">Portfolio Analysis</div>
+                  <div className="text-xs text-muted">Deep dive into performance</div>
+                </div>
+              </Link>
+            </div>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

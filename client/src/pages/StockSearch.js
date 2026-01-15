@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import Card from '../components/common/Card';
+import Button from '../components/common/Button';
 import './StockSearch.css';
 
 function StockSearch() {
@@ -28,40 +30,47 @@ function StockSearch() {
   };
 
   return (
-    <div className="stock-search">
-      <h1>Search Stocks</h1>
-      
-      <form onSubmit={handleSearch} className="search-form">
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search by symbol or company name (e.g., AAPL, Apple)"
-          className="search-input"
-        />
-        <button type="submit" className="btn btn-primary" disabled={loading}>
-          {loading ? 'Searching...' : 'Search'}
-        </button>
-      </form>
+    <div className="search-page">
+      <div className="search-header">
+        <h1>Market Search</h1>
+        <p className="text-secondary">Explore companies and trading opportunities</p>
+      </div>
+
+      <Card className="search-container glass-panel">
+        <form onSubmit={handleSearch} className="search-form">
+          <div className="search-input-wrapper">
+            <span className="search-icon">🔍</span>
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search by symbol or company name (e.g. AAPL, Apple)"
+              className="search-input-premium"
+            />
+          </div>
+          <Button type="submit" variant="primary" isLoading={loading} className="search-button">
+            Search
+          </Button>
+        </form>
+      </Card>
 
       {error && <div className="alert alert-error">{error}</div>}
 
-      {results.length > 0 && (
-        <div className="search-results">
-          <h2>Search Results</h2>
-          <div className="results-list">
+      <div className="search-results-container">
+        {results.length > 0 ? (
+          <div className="results-grid">
             {results.map((stock) => (
               <StockResultCard key={stock.symbol} stock={stock} />
             ))}
           </div>
-        </div>
-      )}
-
-      {!loading && query && results.length === 0 && (
-        <div className="no-results">
-          <p>No stocks found. Try a different search term.</p>
-        </div>
-      )}
+        ) : (
+          !loading && query && (
+            <div className="no-results text-center text-muted">
+              <p>No results found for "{query}"</p>
+            </div>
+          )
+        )}
+      </div>
     </div>
   );
 }
@@ -74,16 +83,20 @@ function StockResultCard({ stock }) {
   };
 
   return (
-    <div className="result-card" onClick={handleViewDetails}>
-      <div className="result-header">
-        <h3>{stock.symbol}</h3>
-        <span className="result-type">{stock.type}</span>
+    <div className="result-card-premium glass-panel" onClick={handleViewDetails}>
+      <div className="result-card-content">
+        <div className="result-main">
+          <div className="result-symbol">{stock.symbol}</div>
+          <div className="result-type-badge">{stock.type}</div>
+        </div>
+        <div className="result-info">
+          <p className="result-name">{stock.name}</p>
+          <p className="result-region text-muted">{stock.region} - {stock.currency}</p>
+        </div>
       </div>
-      <p className="result-name">{stock.name}</p>
-      <p className="result-region">{stock.region}</p>
-      <button className="btn btn-primary btn-sm" onClick={handleViewDetails}>
-        View Details
-      </button>
+      <div className="result-action">
+        <span className="action-text">Analyze ›</span>
+      </div>
     </div>
   );
 }
