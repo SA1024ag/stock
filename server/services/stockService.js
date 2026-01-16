@@ -5,14 +5,16 @@ const axios = require('axios');
 const ALPHA_VANTAGE_API_KEY = process.env.ALPHA_VANTAGE_API_KEY;
 const BASE_URL = 'https://www.alphavantage.co/query';
 
-// Timeframe configuration
+// Timeframe configuration (aligned with standard TradingView timeframes)
 const TIMEFRAME_CONFIG = {
   '1D': { days: 1, resolution: '5min', apiFunction: 'TIME_SERIES_INTRADAY', interval: '5min' },
   '1W': { days: 7, resolution: '30min', apiFunction: 'TIME_SERIES_INTRADAY', interval: '30min' },
   '1M': { days: 30, resolution: 'daily', apiFunction: 'TIME_SERIES_DAILY' },
-  '3M': { days: 90, resolution: 'daily', apiFunction: 'TIME_SERIES_DAILY' },
   '1Y': { days: 365, resolution: 'daily', apiFunction: 'TIME_SERIES_DAILY' }
 };
+
+// In-memory mock database to ensure consistency
+const mockDatabase = {};
 
 class StockService {
   // Get real-time stock quote
@@ -108,7 +110,16 @@ class StockService {
 
       // Fallback to mock data
       if (process.env.NODE_ENV === 'development') {
-        return this.getMockHistoricalData(symbol, config.days, config.resolution);
+        // Ensure we have a base price in the database or fetch it/create it
+        let currentPrice;
+        if (mockDatabase[symbol]) {
+          currentPrice = mockDatabase[symbol].price;
+        } else {
+          // If not in DB, try to get a quote first to initialize it
+          const quote = await this.getQuote(symbol); // This will handle mock initialization
+          currentPrice = quote.price;
+        }
+        return this.getMockHistoricalData(symbol, config.days, config.resolution, currentPrice);
       }
       throw error;
     }
@@ -190,34 +201,41 @@ class StockService {
   }
 
   // Enhanced mock data generator with resolution support
-  getMockHistoricalData(symbol, days, resolution) {
+  getMockHistoricalData(symbol, days, resolution, currentPrice) {
     const data = [];
-    let basePrice = 100 + Math.random() * 200;
     const now = new Date();
+
+    // Use the current price as the anchor point (end of the graph)
+    // If no current price is provided, generate a random one
+    let closePrice = currentPrice || (100 + Math.random() * 200);
 
     // Calculate interval based on resolution
     let intervalMs;
     let pointsPerDay;
+    let volatility; // Price volatility based on timeframe
 
     switch (resolution) {
       case '5min':
         intervalMs = 5 * 60 * 1000;
         pointsPerDay = (24 * 60) / 5; // 288 points per day
+        volatility = 0.3; // Lower volatility for shorter timeframes
         break;
       case '30min':
         intervalMs = 30 * 60 * 1000;
         pointsPerDay = (24 * 60) / 30; // 48 points per day
+        volatility = 0.5;
         break;
       case 'daily':
       default:
         intervalMs = 24 * 60 * 60 * 1000;
         pointsPerDay = 1;
+        volatility = 2; // Higher volatility for daily data
     }
 
-    // Generate data points
+    // Generate data points BACKWARDS from now
     const totalPoints = resolution === 'daily' ? days : Math.floor(days * pointsPerDay);
 
-    for (let i = totalPoints - 1; i >= 0; i--) {
+    for (let i = 0; i < totalPoints; i++) {
       const timestamp = new Date(now.getTime() - (i * intervalMs));
 
       // Skip weekends for daily data
@@ -225,34 +243,68 @@ class StockService {
         continue;
       }
 
-      const change = (Math.random() - 0.5) * 10;
-      basePrice += change;
+      // We are walking backwards, so:
+      // current loop 'closePrice' is essentially the 'close' of this candle.
+      // We need to generate the 'open', 'high', 'low' relative to this close, 
+      // AND determine the 'close' of the PREVIOUS candle (which is the 'open' of this one approx).
 
-      const open = basePrice + (Math.random() - 0.5) * 5;
-      const close = basePrice + (Math.random() - 0.5) * 5;
-      const high = Math.max(open, close) + Math.random() * 3;
-      const low = Math.min(open, close) - Math.random() * 3;
+      // Let's generate the candle properties for the current point (i)
+
+      const change = (Math.random() - 0.5) * volatility * 2;
+      const openPrice = closePrice - change; // Reverse the change to find open
+
+      // High and low relative to max/min of open/close
+      const maxBody = Math.max(openPrice, closePrice);
+      const minBody = Math.min(openPrice, closePrice);
+
+      const highPrice = maxBody + Math.random() * volatility;
+      const lowPrice = minBody - Math.random() * volatility;
 
       data.push({
         date: resolution === 'daily'
           ? timestamp.toISOString().split('T')[0]
           : timestamp.toISOString().replace('T', ' ').substring(0, 19),
-        open: parseFloat(open.toFixed(2)),
-        high: parseFloat(high.toFixed(2)),
-        low: parseFloat(low.toFixed(2)),
-        close: parseFloat(close.toFixed(2)),
+        open: parseFloat(openPrice.toFixed(2)),
+        high: parseFloat(highPrice.toFixed(2)),
+        low: parseFloat(lowPrice.toFixed(2)),
+        close: parseFloat(closePrice.toFixed(2)),
         volume: Math.floor(Math.random() * 10000000)
       });
+
+      // Set the close price for the NEXT iteration (which is the previous candle in time)
+      // Ideally, the previous candle's close should be close to this candle's open.
+      // We add a small random gap/noise for realism
+      closePrice = openPrice + (Math.random() - 0.5) * (volatility * 0.2);
     }
 
-    return data;
+    return data.reverse(); // Reverse back to chronological order
   }
 
   // Mock data for development/testing
   getMockQuote(symbol) {
+    // Check if we already have this stock in memory
+    if (mockDatabase[symbol]) {
+      // Update price slightly to simulate real-time movement
+      const currentData = mockDatabase[symbol];
+      const change = (Math.random() - 0.5) * 0.5; // Small random movement
+      let newPrice = currentData.price + change;
+      newPrice = Math.max(newPrice, 1.00); // Minimum price
+
+      // Update database
+      mockDatabase[symbol] = {
+        ...currentData,
+        price: parseFloat(newPrice.toFixed(2)),
+        change: parseFloat((newPrice - currentData.previousClose).toFixed(2)),
+        changePercent: parseFloat(((newPrice - currentData.previousClose) / currentData.previousClose * 100).toFixed(2))
+      };
+
+      return mockDatabase[symbol];
+    }
+
+    // Initialize new stock in mock database
     const basePrice = 100 + Math.random() * 200;
     const change = (Math.random() - 0.5) * 10;
-    return {
+    const stockData = {
       symbol: symbol.toUpperCase(),
       price: parseFloat(basePrice.toFixed(2)),
       change: parseFloat(change.toFixed(2)),
@@ -263,6 +315,9 @@ class StockService {
       open: parseFloat((basePrice + (Math.random() - 0.5) * 3).toFixed(2)),
       previousClose: parseFloat((basePrice - change).toFixed(2))
     };
+
+    mockDatabase[symbol] = stockData;
+    return stockData;
   }
 
   getMockSearchResults(keywords) {

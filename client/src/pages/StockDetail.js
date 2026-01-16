@@ -173,6 +173,7 @@ function StockDetail() {
               data={historicalData}
               currentPrice={stockData.price}
               onTimeframeChange={handleTimeframeChange}
+              selectedTimeframe={timeframe}
             />
           )}
 
