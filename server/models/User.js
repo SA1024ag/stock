@@ -27,6 +27,24 @@ const userSchema = new mongoose.Schema({
     default: 10000, // Starting with $10,000 virtual money
     min: 0
   },
+  newsPreferences: {
+    sectors: {
+      type: [String],
+      default: []
+    },
+    indices: {
+      type: [String],
+      default: ['NIFTY', 'SENSEX']
+    },
+    notificationsEnabled: {
+      type: Boolean,
+      default: true
+    }
+  },
+  watchlist: {
+    type: [String],
+    default: []
+  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -34,14 +52,14 @@ const userSchema = new mongoose.Schema({
 });
 
 // Hash password before saving
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
   this.password = await bcrypt.hash(this.password, 10);
   next();
 });
 
 // Compare password method
-userSchema.methods.comparePassword = async function(candidatePassword) {
+userSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
