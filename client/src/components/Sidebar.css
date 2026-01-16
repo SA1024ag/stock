@@ -1,34 +1,38 @@
 /* Hamburger Button */
 .hamburger-btn {
     position: fixed;
-    top: 80px;
-    left: 20px;
-    z-index: 1001;
-    width: 50px;
-    height: 50px;
-    background: linear-gradient(135deg, var(--accent-blue) 0%, #2563eb 100%);
-    border: none;
+    top: 110px;
+    left: 24px;
+    z-index: 1100;
+    width: 44px;
+    height: 44px;
+    background: var(--bg-card);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: var(--border-glass);
     border-radius: 12px;
     cursor: pointer;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: 6px;
-    padding: 12px;
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    gap: 5px;
+    padding: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .hamburger-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+    background: var(--bg-card-hover);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.2);
 }
 
 .hamburger-btn span {
-    width: 24px;
-    height: 3px;
-    background: white;
+    width: 22px;
+    height: 2px;
+    background: var(--text-primary);
     border-radius: 2px;
     transition: all 0.3s ease;
 }
@@ -72,15 +76,12 @@
 .sidebar {
     position: fixed;
     top: 0;
-    left: -320px;
-    width: 320px;
+    left: -260px;
+    width: 260px;
     height: 100vh;
-    background: linear-gradient(180deg,
-            rgba(15, 23, 42, 0.98) 0%,
-            rgba(30, 41, 59, 0.98) 100%);
-    backdrop-filter: blur(20px);
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 4px 0 30px rgba(0, 0, 0, 0.3);
+    background: var(--bg-deep);
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 5px 0 30px rgba(0, 0, 0, 0.3);
     z-index: 1000;
     overflow-y: auto;
     overflow-x: hidden;
@@ -111,11 +112,9 @@
 
 /* Sidebar Header */
 .sidebar-header {
-    padding: 28px 24px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    background: linear-gradient(135deg,
-            rgba(59, 130, 246, 0.1) 0%,
-            rgba(37, 99, 235, 0.05) 100%);
+    padding: 30px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.01);
 }
 
 .sidebar-header h2 {
@@ -277,12 +276,13 @@
 /* Responsive */
 @media (max-width: 768px) {
     .sidebar {
-        width: 280px;
-        left: -280px;
+        width: 240px;
+        left: -240px;
     }
 
     .hamburger-btn {
-        top: 70px;
+        top: 90px;
+
         left: 16px;
         width: 45px;
         height: 45px;
