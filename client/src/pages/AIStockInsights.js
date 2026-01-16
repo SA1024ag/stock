@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import './AIPages.css';
 
 const AIStockInsights = () => {
@@ -22,8 +22,8 @@ const AIStockInsights = () => {
 
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.post(
-                'http://localhost:5000/api/ai/analyze',
+            const response = await api.post(
+                '/ai/analyze',
                 { symbol: symbol.toUpperCase() },
                 {
                     headers: {

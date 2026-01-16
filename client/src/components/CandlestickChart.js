@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { createChart } from 'lightweight-charts';
+import { createChart, CandlestickSeries } from 'lightweight-charts';
 import './CandlestickChart.css';
 
 function CandlestickChart({ symbol, data, currentPrice, onTimeframeChange }) {
@@ -49,8 +49,8 @@ function CandlestickChart({ symbol, data, currentPrice, onTimeframeChange }) {
 
         chartRef.current = chart;
 
-        // Add candlestick series - using v4.x API
-        const candlestickSeries = chart.addCandlestickSeries({
+        // Add candlestick series - using v5.x API
+        const candlestickSeries = chart.addSeries(CandlestickSeries, {
             upColor: '#10b981',
             downColor: '#ef4444',
             borderUpColor: '#10b981',
