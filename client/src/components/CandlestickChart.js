@@ -2,15 +2,13 @@ import React, { useEffect, useRef, useState } from 'react';
 import { createChart } from 'lightweight-charts';
 import './CandlestickChart.css';
 
-function CandlestickChart({ symbol, data, currentPrice, onTimeframeChange }) {
+function CandlestickChart({ symbol, data, currentPrice, onTimeframeChange, selectedTimeframe }) {
     const chartContainerRef = useRef(null);
     const chartRef = useRef(null);
     const candlestickSeriesRef = useRef(null);
-    const [timeframe, setTimeframe] = useState('1M'); // Default to 1 month
 
     // Handle timeframe change
     const handleTimeframeChange = (newTimeframe) => {
-        setTimeframe(newTimeframe);
         if (onTimeframeChange) {
             onTimeframeChange(newTimeframe);
         }
@@ -37,11 +35,20 @@ function CandlestickChart({ symbol, data, currentPrice, onTimeframeChange }) {
             },
             rightPriceScale: {
                 borderColor: 'rgba(197, 203, 206, 0.4)',
+                autoScale: true,
+                scaleMargins: {
+                    top: 0.1,
+                    bottom: 0.1,
+                },
             },
             timeScale: {
                 borderColor: 'rgba(197, 203, 206, 0.4)',
                 timeVisible: true,
                 secondsVisible: false,
+                rightOffset: 5,
+                barSpacing: 10,
+                fixLeftEdge: false,
+                fixRightEdge: false,
             },
             width: chartContainerRef.current.clientWidth,
             height: 400,
@@ -107,9 +114,15 @@ function CandlestickChart({ symbol, data, currentPrice, onTimeframeChange }) {
             if (formattedData.length > 0) {
                 candlestickSeriesRef.current.setData(formattedData);
 
-                // Fit content
+                // Fit content and ensure proper scaling
                 if (chartRef.current) {
                     chartRef.current.timeScale().fitContent();
+                    // Small delay to ensure chart renders properly
+                    setTimeout(() => {
+                        if (chartRef.current) {
+                            chartRef.current.timeScale().scrollToRealTime();
+                        }
+                    }, 100);
                 }
             }
         } catch (error) {
@@ -123,6 +136,14 @@ function CandlestickChart({ symbol, data, currentPrice, onTimeframeChange }) {
 
         try {
             const lastCandle = data[data.length - 1];
+
+            // Validate that current price is reasonable (within 20% of last close)
+            const priceChangePercent = Math.abs((currentPrice - lastCandle.close) / lastCandle.close);
+            if (priceChangePercent > 0.2) {
+                console.warn('Current price change too large, skipping update:', priceChangePercent);
+                return;
+            }
+
             const updatedCandle = {
                 time: new Date(lastCandle.date).getTime() / 1000,
                 open: lastCandle.open,
@@ -142,10 +163,10 @@ function CandlestickChart({ symbol, data, currentPrice, onTimeframeChange }) {
             <div className="chart-header">
                 <h3 className="chart-title">Price Chart</h3>
                 <div className="timeframe-selector">
-                    {['1D', '1W', '1M', '3M', '1Y'].map((tf) => (
+                    {['1D', '1W', '1M', '1Y'].map((tf) => (
                         <button
                             key={tf}
-                            className={`timeframe-btn ${timeframe === tf ? 'active' : ''}`}
+                            className={`timeframe-btn ${selectedTimeframe === tf ? 'active' : ''}`}
                             onClick={() => handleTimeframeChange(tf)}
                         >
                             {tf}
