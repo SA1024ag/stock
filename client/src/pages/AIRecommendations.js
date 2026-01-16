@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import './AIPages.css';
 
 const AIRecommendations = () => {
@@ -15,7 +15,7 @@ const AIRecommendations = () => {
     const fetchPortfolio = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:5000/api/portfolio', {
+            const response = await api.get('/portfolio', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             setPortfolio(response.data);
@@ -32,8 +32,8 @@ const AIRecommendations = () => {
             const token = localStorage.getItem('token');
 
             // Get portfolio analysis first
-            const analysisResponse = await axios.post(
-                'http://localhost:5000/api/ai/portfolio-review',
+            const analysisResponse = await api.post(
+                '/ai/portfolio-review',
                 {},
                 {
                     headers: {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import './AIPages.css';
 
 const AIPortfolioAnalysis = () => {
@@ -14,8 +14,8 @@ const AIPortfolioAnalysis = () => {
 
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.post(
-                'http://localhost:5000/api/ai/portfolio-review',
+            const response = await api.post(
+                '/ai/portfolio-review',
                 {},
                 {
                     headers: {
