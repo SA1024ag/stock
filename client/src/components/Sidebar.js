@@ -84,6 +84,16 @@ const Sidebar = () => {
                 </div>
 
                 <nav className="sidebar-nav">
+                    {/* Direct News Link */}
+                    <Link
+                        to="/news"
+                        className={`sidebar-link direct-link ${isActiveLink('/news') ? 'active' : ''}`}
+                        onClick={() => setIsOpen(false)}
+                    >
+                        <span className="item-icon">📰</span>
+                        <span className="item-name">Market News</span>
+                    </Link>
+
                     {menuSections.map((section) => (
                         <div key={section.name} className="sidebar-section">
                             <button

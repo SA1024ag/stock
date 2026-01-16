@@ -41,6 +41,7 @@ async function startServer() {
     app.use('/api/stocks', require('./routes/stocks'));
     app.use('/api/portfolio', require('./routes/portfolio'));
     app.use('/api/ai', require('./routes/ai'));
+    app.use('/api/news', require('./routes/news'));
 
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);

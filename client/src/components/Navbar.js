@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import './Navbar.css';
 import api from '../services/api';
+import NewsPanel from './NewsPanel';
 
 function Navbar() {
   const { user, logout } = useAuth();
@@ -14,6 +15,7 @@ function Navbar() {
   const [searchResults, setSearchResults] = React.useState([]);
   const [showSuggestions, setShowSuggestions] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
+  const [showNewsPanel, setShowNewsPanel] = React.useState(false);
 
   const handleLogout = () => {
     logout();
@@ -89,6 +91,9 @@ function Navbar() {
               </Link>
               <Link to="/portfolio" className={`nav-link ${isActive('/portfolio')}`}>
                 Portfolio
+              </Link>
+              <Link to="/news" className={`nav-link ${isActive('/news')}`}>
+                News
               </Link>
             </div>
 
@@ -177,6 +182,8 @@ function Navbar() {
           </div>
         )}
       </div>
+
+      <NewsPanel isOpen={showNewsPanel} onClose={() => setShowNewsPanel(false)} />
     </nav>
   );
 }
