@@ -1,0 +1,207 @@
+/* Profile Dropdown Container */
+.profile-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 12px;
+    width: 320px;
+    background: rgba(10, 14, 23, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: var(--border-glass);
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    z-index: 1000;
+    animation: dropdownFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    transform-origin: top right;
+}
+
+@keyframes dropdownFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Header Section */
+.profile-dropdown-header {
+    padding: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%);
+}
+
+.dropdown-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: white;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+.dropdown-user-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.dropdown-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.dropdown-handle {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.account-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--accent-green);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    margin-top: 4px;
+    width: fit-content;
+}
+
+/* Menu Content */
+.profile-dropdown-content {
+    padding: 8px 0;
+    max-height: calc(80vh - 100px);
+    overflow-y: auto;
+}
+
+.profile-dropdown-content::-webkit-scrollbar {
+    width: 4px;
+}
+
+.profile-dropdown-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+}
+
+/* Menu Section */
+.menu-section {
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.menu-section:last-child {
+    border-bottom: none;
+}
+
+.menu-section-title {
+    padding: 8px 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+}
+
+/* Menu Item */
+.menu-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 20px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    text-align: left;
+}
+
+.menu-item:hover {
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-primary);
+    padding-left: 24px;
+}
+
+.menu-item-icon {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.7;
+}
+
+.menu-item:hover .menu-item-icon {
+    opacity: 1;
+    color: var(--accent-blue);
+}
+
+.menu-item-label {
+    flex: 1;
+}
+
+.menu-item-value {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* Footer */
+.profile-dropdown-footer {
+    padding: 12px 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.btn-dropdown-logout {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px;
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--accent-red);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-dropdown-logout:hover {
+    background: rgba(239, 68, 68, 0.2);
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.2);
+}
+
+.version-info {
+    display: block;
+    text-align: center;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-top: 12px;
+    opacity: 0.5;
+}
