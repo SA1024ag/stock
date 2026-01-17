@@ -75,7 +75,7 @@ router.get('/summary', async (req, res) => {
 // Buy stocks
 router.post('/buy', async (req, res) => {
   try {
-    const { symbol, shares } = req.body;
+    const { symbol, shares, stopLoss, takeProfit } = req.body;
 
     if (!symbol || !shares || shares <= 0) {
       return res.status(400).json({ message: 'Symbol and valid number of shares required' });
@@ -100,6 +100,8 @@ router.post('/buy', async (req, res) => {
     // Find or create portfolio entry
     let portfolio = await Portfolio.findOne({ user: req.user._id, symbol: symbol.toUpperCase() });
 
+    const autoSellEnabled = !!(stopLoss || takeProfit);
+
     if (portfolio) {
       // Update existing holding
       const newTotalShares = portfolio.shares + shares;
@@ -107,6 +109,12 @@ router.post('/buy', async (req, res) => {
       portfolio.averagePrice = newTotalInvested / newTotalShares;
       portfolio.shares = newTotalShares;
       portfolio.totalInvested = newTotalInvested;
+
+      // Update SL/TP only if provided (allows overriding)
+      if (stopLoss !== undefined) portfolio.stopLoss = stopLoss;
+      if (takeProfit !== undefined) portfolio.takeProfit = takeProfit;
+      if (autoSellEnabled) portfolio.autoSellEnabled = true;
+
     } else {
       // Create new holding
       portfolio = new Portfolio({
@@ -114,7 +122,10 @@ router.post('/buy', async (req, res) => {
         symbol: symbol.toUpperCase(),
         shares: shares,
         averagePrice: quote.price,
-        totalInvested: totalCost
+        totalInvested: totalCost,
+        stopLoss: stopLoss || null,
+        takeProfit: takeProfit || null,
+        autoSellEnabled: autoSellEnabled
       });
     }
 
@@ -148,55 +159,30 @@ router.post('/sell', async (req, res) => {
       return res.status(400).json({ message: 'Symbol and valid number of shares required' });
     }
 
-    // Find portfolio entry
-    const portfolio = await Portfolio.findOne({
-      user: req.user._id,
-      symbol: symbol.toUpperCase()
+    const { transactionService } = require('../services/transactionService');
+    // Note: Since transactionService is exported as exports.sellStock in the file I viewed earlier, 
+    // I should check how it is imported. 
+    // Actually, looking at previous summary, I see `const transactionService = require('../services/transactionService');`
+    // was added to imports. Let me check the imports of this file again.
+    // The view_file output did NOT show transactionService imported.
+    // I will use `require` inline or add it to top. Inline is safer to avoid modifying top of file blindly.
+
+    const transactionServiceModule = require('../services/transactionService');
+
+    const result = await transactionServiceModule.sellStock(
+      req.user._id,
+      symbol,
+      shares,
+      null, // Fetch current price inside service
+      'MANUAL'
+    );
+
+    res.json({
+      message: `Successfully sold ${result.sharesSold} shares of ${symbol.toUpperCase()} at $${result.sellPrice.toFixed(2)}`,
+      portfolio: result.portfolio,
+      remainingBalance: result.remainingBalance
     });
 
-    if (!portfolio || portfolio.shares < shares) {
-      return res.status(400).json({
-        message: `Insufficient shares. You have ${portfolio?.shares || 0} shares of ${symbol.toUpperCase()}`
-      });
-    }
-
-    // Get current stock price
-    const quote = await stockService.getQuote(symbol);
-    const totalValue = quote.price * shares;
-
-    // Update user balance
-    const user = await User.findById(req.user._id);
-    user.virtualBalance += totalValue;
-    await user.save();
-
-    // Update portfolio
-    portfolio.shares -= shares;
-    portfolio.totalInvested = portfolio.averagePrice * portfolio.shares;
-
-    // Add transaction
-    portfolio.transactions.push({
-      type: 'sell',
-      shares: shares,
-      price: quote.price,
-      timestamp: new Date()
-    });
-
-    // Remove portfolio entry if no shares left
-    if (portfolio.shares === 0) {
-      await Portfolio.findByIdAndDelete(portfolio._id);
-      res.json({
-        message: `Successfully sold ${shares} shares of ${symbol.toUpperCase()} at $${quote.price.toFixed(2)}`,
-        portfolio: null,
-        remainingBalance: user.virtualBalance
-      });
-    } else {
-      await portfolio.save();
-      res.json({
-        message: `Successfully sold ${shares} shares of ${symbol.toUpperCase()} at $${quote.price.toFixed(2)}`,
-        portfolio: portfolio,
-        remainingBalance: user.virtualBalance
-      });
-    }
   } catch (error) {
     console.error('Sell stock error:', error);
     res.status(500).json({ message: 'Error selling stock', error: error.message });

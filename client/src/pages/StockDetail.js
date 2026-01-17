@@ -16,6 +16,8 @@ function StockDetail() {
   const [historicalData, setHistoricalData] = useState([]);
   const [timeframe, setTimeframe] = useState('1M'); // Add timeframe state
   const [shares, setShares] = useState('');
+  const [stopLoss, setStopLoss] = useState('');
+  const [takeProfit, setTakeProfit] = useState('');
   const [action, setAction] = useState('buy');
   const [loading, setLoading] = useState(true);
   const [chartLoading, setChartLoading] = useState(false); // Separate loading for chart
@@ -90,10 +92,17 @@ function StockDetail() {
     setSuccess('');
 
     try {
-      const response = await api.post(`/portfolio/${action}`, {
+      const payload = {
         symbol,
         shares: parseInt(shares)
-      });
+      };
+
+      if (action === 'buy') {
+        if (stopLoss) payload.stopLoss = parseFloat(stopLoss);
+        if (takeProfit) payload.takeProfit = parseFloat(takeProfit);
+      }
+
+      const response = await api.post(`/portfolio/${action}`, payload);
 
       setSuccess(response.data.message);
       setShares('');
@@ -125,6 +134,60 @@ function StockDetail() {
     );
   }
 
+  // Calculate stats based on timeframe
+  const getDisplayStats = () => {
+    if (!stockData) return { open: 0, high: 0, low: 0, volume: 0 };
+
+    // For 1D, use the live data directly
+    if (timeframe === '1D') {
+      return {
+        open: stockData.open,
+        high: stockData.high,
+        low: stockData.low,
+        volume: stockData.volume
+      };
+    }
+
+    // For other timeframes, calculate from historical data
+    if (historicalData.length > 0) {
+      let min = Infinity;
+      let max = -Infinity;
+      let open = historicalData[0].open;
+      const totalVol = historicalData.reduce((sum, item) => sum + (item.volume || 0), 0);
+
+      historicalData.forEach(item => {
+        if (item.high > max) max = item.high;
+        if (item.low < min) min = item.low;
+      });
+
+      return {
+        open: open,
+        high: max === -Infinity ? stockData.high : max,
+        low: min === Infinity ? stockData.low : min,
+        // For larger timeframes, showing total volume might be too large, 
+        // maybe show Average Daily Vol? Or just keep it as 'Vol'. 
+        // Let's stick to simple Total for now or fallback to current if confusing.
+        // Actually, users usually expect Volume to be "Volume for the period" or "Avg Vol".
+        // Given the request focused on High/Low, let's just use the current stock Data volume 
+        // for simplicity unless asked, as summing 1Y volume gives a huge number.
+        // But to be consistent with "stats for this view", let's use stockData.volume (Current) 
+        // for Volume, as that's often a separate indicator. 
+        // WAIT: The image shows Vol changing slightly? No, it's 1,40,04,870 in all.
+        // We will keep Volume as "Today's Volume" to avoid confusion, 
+        // but update High/Low/Open.
+        volume: stockData.volume
+      };
+    }
+
+    return {
+      open: stockData.open,
+      high: stockData.high,
+      low: stockData.low,
+      volume: stockData.volume
+    };
+  };
+
+  const displayStats = getDisplayStats();
   const totalCost = stockData.price * (parseInt(shares) || 0);
 
   return (
@@ -180,20 +243,20 @@ function StockDetail() {
           <Card className="info-card glass-panel mb-4">
             <div className="info-grid">
               <div className="info-item">
-                <span className="label">Open</span>
-                <span className="value">₹{(stockData.open || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <span className="label">Open ({timeframe})</span>
+                <span className="value">₹{(displayStats.open || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
               <div className="info-item">
-                <span className="label">High</span>
-                <span className="value">₹{(stockData.high || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <span className="label">High ({timeframe})</span>
+                <span className="value">₹{(displayStats.high || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
               <div className="info-item">
-                <span className="label">Low</span>
-                <span className="value">₹{(stockData.low || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <span className="label">Low ({timeframe})</span>
+                <span className="value">₹{(displayStats.low || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
               <div className="info-item">
                 <span className="label">Vol</span>
-                <span className="value">{(stockData.volume || 0).toLocaleString('en-IN')}</span>
+                <span className="value">{(displayStats.volume || 0).toLocaleString('en-IN')}</span>
               </div>
             </div>
           </Card>
@@ -248,6 +311,35 @@ function StockDetail() {
                   className="input-large"
                 />
               </div>
+
+              {action === 'buy' && (
+                <>
+                  <div className="form-group">
+                    <label>Stop Loss ($)</label>
+                    <input
+                      type="number"
+                      value={stopLoss}
+                      onChange={(e) => setStopLoss(e.target.value)}
+                      min="0"
+                      step="0.01"
+                      placeholder="Optional"
+                      className="input-medium"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Take Profit ($)</label>
+                    <input
+                      type="number"
+                      value={takeProfit}
+                      onChange={(e) => setTakeProfit(e.target.value)}
+                      min="0"
+                      step="0.01"
+                      placeholder="Optional"
+                      className="input-medium"
+                    />
+                  </div>
+                </>
+              )}
 
               <div className="order-summary mb-4">
                 <div className="summary-row">
