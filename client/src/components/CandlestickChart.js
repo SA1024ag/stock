@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { createChart } from 'lightweight-charts';
+import React, { useEffect, useRef } from 'react';
+import { createChart, CandlestickSeries } from 'lightweight-charts';
 import './CandlestickChart.css';
 
 function CandlestickChart({ symbol, data, currentPrice, onTimeframeChange, selectedTimeframe }) {
@@ -57,7 +57,7 @@ function CandlestickChart({ symbol, data, currentPrice, onTimeframeChange, selec
         chartRef.current = chart;
 
         // Add candlestick series - using v5.x API
-        const candlestickSeries = chart.addCandlestickSeries({
+        const candlestickSeries = chart.addSeries(CandlestickSeries, {
             upColor: '#10b981',
             downColor: '#ef4444',
             borderUpColor: '#10b981',
@@ -140,8 +140,8 @@ function CandlestickChart({ symbol, data, currentPrice, onTimeframeChange, selec
             // Validate that current price is reasonable (within 20% of last close)
             const priceChangePercent = Math.abs((currentPrice - lastCandle.close) / lastCandle.close);
             if (priceChangePercent > 0.2) {
-                console.warn('Current price change too large, skipping update:', priceChangePercent);
-                return;
+                // console.warn('Current price change too large, skipping update:', priceChangePercent);
+                // return;
             }
 
             const updatedCandle = {

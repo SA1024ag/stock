@@ -10,7 +10,7 @@ import StockDetail from './pages/StockDetail';
 import Portfolio from './pages/Portfolio';
 import News from './pages/News';
 import Home from './pages/Home';
-import News from './pages/News';
+
 
 // AI & Insights Pages
 import AIStockInsights from './pages/AIStockInsights';
@@ -50,10 +50,10 @@ function AppRoutes() {
       <Route path="/stock/:symbol" element={<PrivateRoute><StockDetail /></PrivateRoute>} />
       <Route path="/portfolio" element={<PrivateRoute><Portfolio /></PrivateRoute>} />
       <Route path="/news" element={<PrivateRoute><News /></PrivateRoute>} />
-<<<<<<< HEAD
+
       <Route path="/news/:symbol" element={<PrivateRoute><News /></PrivateRoute>} />
-=======
->>>>>>> 019e19f41111e0bcae56f49a6e2ebdfe431d05b3
+
+
 
       {/* AI & Insights */}
       <Route path="/ai-insights" element={<PrivateRoute><AIStockInsights /></PrivateRoute>} />

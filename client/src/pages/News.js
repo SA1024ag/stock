@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getPersonalizedNews, getNewsByCategory } from '../services/newsApi';
 import NewsCard from '../components/NewsCard';
+import { getNews } from '../services/newsApi';
 import './News.css';
 
 function News() {
