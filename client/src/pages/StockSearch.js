@@ -44,7 +44,7 @@ function StockSearch() {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search by symbol or company name (e.g. AAPL, Apple)"
+              placeholder="Search by symbol (e.g. RELIANCE, TATASTEEL)"
               className="search-input-premium"
             />
           </div>
@@ -91,7 +91,7 @@ function StockResultCard({ stock }) {
         </div>
         <div className="result-info">
           <p className="result-name">{stock.name}</p>
-          <p className="result-region text-muted">{stock.region} - {stock.currency}</p>
+          <p className="result-region text-muted">{stock.exchange}</p>
         </div>
       </div>
       <div className="result-action">

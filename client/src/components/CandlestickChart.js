@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { createChart, CandlestickSeries } from 'lightweight-charts';
 import './CandlestickChart.css';
 
@@ -140,8 +140,8 @@ function CandlestickChart({ symbol, data, currentPrice, onTimeframeChange, selec
             // Validate that current price is reasonable (within 20% of last close)
             const priceChangePercent = Math.abs((currentPrice - lastCandle.close) / lastCandle.close);
             if (priceChangePercent > 0.2) {
-                console.warn('Current price change too large, skipping update:', priceChangePercent);
-                return;
+                // console.warn('Current price change too large, skipping update:', priceChangePercent);
+                // return;
             }
 
             const updatedCandle = {

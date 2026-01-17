@@ -3,6 +3,24 @@ const stockService = require('../services/stockService');
 const router = express.Router();
 
 // Search stocks
+router.get('/debug/instruments', async (req, res) => {
+  try {
+    const result = await stockService.downloadMasterList();
+    res.json({ is_updated: true, ...result });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.get('/debug/quote/:symbol', async (req, res) => {
+  try {
+    const quote = await stockService.getQuote(req.params.symbol);
+    res.json(quote);
+  } catch (e) {
+    res.status(500).json({ error: e.message, stack: e.stack });
+  }
+});
+
 router.get('/search', async (req, res) => {
   try {
     const { q } = req.query;
@@ -16,6 +34,17 @@ router.get('/search', async (req, res) => {
   } catch (error) {
     console.error('Stock search error:', error);
     res.status(500).json({ message: 'Error searching stocks', error: error.message });
+  }
+});
+
+// Get major market indices
+router.get('/market/indices', async (req, res) => {
+  try {
+    const indices = await stockService.getMarketIndices();
+    res.json(indices);
+  } catch (error) {
+    console.error('Get indices error:', error);
+    res.status(500).json({ message: 'Error fetching indices', error: error.message });
   }
 });
 

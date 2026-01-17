@@ -6,6 +6,7 @@ import ProfileDropdown from './ProfileDropdown';
 import './Navbar.css';
 import api from '../services/api';
 
+
 function Navbar() {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -17,6 +18,7 @@ function Navbar() {
 
   const [showProfileDropdown, setShowProfileDropdown] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
+
 
   // Close dropdown when clicking outside
   React.useEffect(() => {
@@ -105,6 +107,9 @@ function Navbar() {
               <Link to="/portfolio" className={`nav-link ${isActive('/portfolio')}`}>
                 Portfolio
               </Link>
+              <Link to="/news" className={`nav-link ${isActive('/news')}`}>
+                News
+              </Link>
             </div>
 
             <div className="navbar-actions">
@@ -192,6 +197,8 @@ function Navbar() {
           </div>
         )}
       </div>
+
+
     </nav>
   );
 }
