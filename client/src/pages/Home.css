@@ -5,11 +5,11 @@
 
 .home h1 {
   margin-bottom: 10px;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .home-subtitle {
-  color: #666;
+  color: var(--text-secondary);
   margin-bottom: 25px;
 }
 
@@ -26,7 +26,8 @@
 }
 
 .home-stock {
-  background: #f8f9fa;
+  background: var(--bg-card);
+  border: var(--border-glass);
   border-radius: 8px;
   padding: 12px 14px;
   display: flex;
@@ -38,7 +39,8 @@
 
 .home-stock:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background: var(--bg-card-hover);
 }
 
 .home-stock-header {
@@ -50,7 +52,7 @@
 .home-stock-symbol {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .home-stock-body {
@@ -62,7 +64,7 @@
 .home-stock-price {
   font-size: 1.3rem;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .home-stock-change {
@@ -83,7 +85,7 @@
   gap: 10px;
   flex-wrap: wrap;
   font-size: 0.85rem;
-  color: #555;
+  color: var(--text-muted);
 }
 
 .home-stock-meta span::before {
@@ -102,4 +104,3 @@
     grid-template-columns: 1fr;
   }
 }
-

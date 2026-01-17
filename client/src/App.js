@@ -9,6 +9,7 @@ import StockSearch from './pages/StockSearch';
 import StockDetail from './pages/StockDetail';
 import Portfolio from './pages/Portfolio';
 import Home from './pages/Home';
+import News from './pages/News';
 
 // AI & Insights Pages
 import AIStockInsights from './pages/AIStockInsights';
@@ -47,6 +48,7 @@ function AppRoutes() {
       <Route path="/search" element={<PrivateRoute><StockSearch /></PrivateRoute>} />
       <Route path="/stock/:symbol" element={<PrivateRoute><StockDetail /></PrivateRoute>} />
       <Route path="/portfolio" element={<PrivateRoute><Portfolio /></PrivateRoute>} />
+      <Route path="/news" element={<PrivateRoute><News /></PrivateRoute>} />
 
       {/* AI & Insights */}
       <Route path="/ai-insights" element={<PrivateRoute><AIStockInsights /></PrivateRoute>} />
