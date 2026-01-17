@@ -38,6 +38,7 @@ async function startServer() {
 
     // Routes (ONLY after DB is connected)
     app.use('/api/auth', require('./routes/auth'));
+    app.use('/api/auth/upstox', require('./routes/upstoxAuth'));
     app.use('/api/stocks', require('./routes/stocks'));
     app.use('/api/portfolio', require('./routes/portfolio'));
     app.use('/api/ai', require('./routes/ai'));
@@ -45,6 +46,14 @@ async function startServer() {
 
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
+      // Initialize Upstox Socket
+      const socketService = require('./services/socketService');
+      const upstoxAuthService = require('./services/upstoxAuthService');
+
+      // Try to auto-refresh token on start
+      upstoxAuthService.refreshAccessToken().then(() => {
+        socketService.connect().catch(err => console.error('Socket init failed:', err.message));
+      });
     });
   } catch (err) {
     console.error('Server startup failed:', err.message);
