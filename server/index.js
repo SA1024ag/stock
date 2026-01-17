@@ -1,6 +1,5 @@
 console.log('RUNNING SERVER INDEX.JS FROM /server');
-console.log('RUNNING SERVER INDEX.JS FROM /server');
-// Trigger restart for env vars and new dependencies
+// Trigger restart for env vars
 
 // Always load env vars from the server/.env file,
 // regardless of where the process is started from.
@@ -11,6 +10,7 @@ console.log('MONGODB_URI =>', process.env.MONGODB_URI);
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const socketService = require('./services/socketService');
 
 const app = express();
 
@@ -38,25 +38,19 @@ async function startServer() {
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('MongoDB connected');
 
+    // Initialize Upstox Socket
+    socketService.connect().catch(err => console.error('Socket init warning:', err.message));
+
     // Routes (ONLY after DB is connected)
     app.use('/api/auth', require('./routes/auth'));
-    app.use('/api/auth/upstox', require('./routes/upstoxAuth'));
     app.use('/api/stocks', require('./routes/stocks'));
     app.use('/api/portfolio', require('./routes/portfolio'));
     app.use('/api/ai', require('./routes/ai'));
-    app.use('/api/payment', require('./routes/payment'));
     app.use('/api/news', require('./routes/news'));
+    app.use('/api/payment', require('./routes/payment'));
 
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
-      // Initialize Upstox Socket
-      const socketService = require('./services/socketService');
-      const upstoxAuthService = require('./services/upstoxAuthService');
-
-      // Try to auto-refresh token on start
-      upstoxAuthService.refreshAccessToken().then(() => {
-        socketService.connect().catch(err => console.error('Socket init failed:', err.message));
-      });
     });
   } catch (err) {
     console.error('Server startup failed:', err.message);
@@ -65,3 +59,4 @@ async function startServer() {
 }
 
 startServer();
+

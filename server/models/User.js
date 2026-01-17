@@ -27,30 +27,12 @@ const userSchema = new mongoose.Schema({
     default: 10000, // Starting with $10,000 virtual money
     min: 0
   },
-  newsPreferences: {
-    sectors: {
-      type: [String],
-      default: []
-    },
-    indices: {
-      type: [String],
-      default: ['NIFTY', 'SENSEX']
-    },
-    notificationsEnabled: {
-      type: Boolean,
-      default: true
-    }
-  },
-  watchlist: {
-    type: [String],
-    default: []
-  },
   createdAt: {
     type: Date,
     default: Date.now
   },
   twoFactorSecret: {
-    type: String,
+    type: String
   },
   isTwoFactorEnabled: {
     type: Boolean,

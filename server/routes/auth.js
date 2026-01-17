@@ -1,8 +1,6 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const { authenticator } = require('otplib');
-const qrcode = require('qrcode');
 const router = express.Router();
 
 // Register

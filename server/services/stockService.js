@@ -27,22 +27,6 @@ class StockService {
     return instrumentList;
   }
 
-      return {
-        symbol: quote['01. symbol'],
-        price: parseFloat(quote['05. price']),
-        change: parseFloat(quote['09. change']),
-        changePercent: parseFloat(quote['10. change percent'].replace('%', '')),
-        volume: parseInt(quote['06. volume']),
-        high: parseFloat(quote['03. high']),
-        low: parseFloat(quote['04. low']),
-        open: parseFloat(quote['02. open']),
-        previousClose: parseFloat(quote['08. previous close'])
-      };
-    } catch (error) {
-      console.error('Error fetching stock quote:', error.message);
-      // Fallback: Return mock data for development
-      if (process.env.NODE_ENV !== 'production') {
-        return this.getMockQuote(symbol);
   // --- 1. Master List Management ---
 
   async downloadMasterList() {
@@ -105,21 +89,7 @@ class StockService {
 
     const query = keywords.toUpperCase();
 
-      const matches = response.data.bestMatches || [];
-      return matches.map(match => ({
-        symbol: match['1. symbol'],
-        name: match['2. name'],
-        type: match['3. type'],
-        region: match['4. region']
-      }));
-    } catch (error) {
-      console.error('Error searching stocks:', error.message);
-      // Fallback: Return mock data for development
-      if (process.env.NODE_ENV !== 'production') {
-        return this.getMockSearchResults(keywords);
-      }
-      throw error;
-    }
+
     // Simple filter
     // Prioritize startsWith, then includes
     const results = instrumentList.filter(item => {
@@ -169,106 +139,51 @@ class StockService {
         if (search.length > 0) instrumentKey = search[0].instrument_key;
       }
 
-      // For daily data (1M, 3M, 1Y)
-      return await this.getDailyData(symbol, config);
-    } catch (error) {
-      console.error('Error fetching historical data:', error.message);
-
-      // Fallback to mock data
-      if (process.env.NODE_ENV !== 'production') {
-        // Ensure we have a base price in the database or fetch it/create it
-        let currentPrice;
-        if (mockDatabase[symbol]) {
-          currentPrice = mockDatabase[symbol].price;
-        } else {
-          // If not in DB, try to get a quote first to initialize it
-          const quote = await this.getQuote(symbol); // This will handle mock initialization
-          currentPrice = quote.price;
       const headers = await this.getHeaders();
+      const results = await Promise.allSettled([
+        axios.get(`${BASE_URL_V3}/market-quote/ltp`, { headers, params: { instrument_key: instrumentKey } }),
+        axios.get(`${BASE_URL_V3}/market-quote/ohlc`, { headers, params: { instrument_key: instrumentKey, interval: '1d' } })
+      ]);
 
-      // Parallel call to LTP and OHLC to build a "Full Quote"
-      // V3 LTP: /market-quote/ltp
-      // V3 OHLC: /market-quote/ohlc
+      const ltpRes = results[0].status === 'fulfilled' ? results[0].value : null;
+      const ohlcRes = results[1].status === 'fulfilled' ? results[1].value : null;
 
-      try {
-        // Promise.allSettled ...
-        const results = await Promise.allSettled([
-          axios.get(`${BASE_URL_V3}/market-quote/ltp`, { headers, params: { instrument_key: instrumentKey } }),
-          axios.get(`${BASE_URL_V3}/market-quote/ohlc`, { headers, params: { instrument_key: instrumentKey, interval: '1d' } })
-        ]);
+      const findData = (response, key, symbol) => {
+        if (!response?.data?.data) return null;
+        const data = response.data.data;
+        if (data[key]) return data[key];
+        if (Object.keys(data).length > 0) return Object.values(data)[0];
+        return null;
+      };
 
-        const ltpRes = results[0].status === 'fulfilled' ? results[0].value : null;
-        const ohlcRes = results[1].status === 'fulfilled' ? results[1].value : null;
+      const ltpData = findData(ltpRes, instrumentKey, symbol);
+      const ohlcData = findData(ohlcRes, instrumentKey, symbol);
 
-        // CRITICAL FIX: Upstox API response might use "NSE_EQ:SYMBOL" format as key 
-        // even if we requested with "NSE_EQ|INE..." key.
-        // We need to try multiple keys or iterate.
-
-        const findData = (response, key, symbol) => {
-          if (!response?.data?.data) return null;
-          const data = response.data.data;
-
-          // 1. Try exact instrument key
-          if (data[key]) return data[key];
-
-          // 2. Try Exchange:Symbol format (e.g. NSE_EQ:RELIANCE)
-          // We need to derive this.
-          // We can infer exchange and symbol from instrumentList if available, or guess.
-          // But simpler: just find the first key in data object if we requested only one!
-          if (Object.keys(data).length > 0) {
-            return Object.values(data)[0];
-          }
-          return null;
-        };
-
-        const ltpData = findData(ltpRes, instrumentKey, symbol);
-        const ohlcData = findData(ohlcRes, instrumentKey, symbol);
-
-        // DEBUG logging for failures
-        if (!ltpData && results[0].status === 'rejected') {
-          console.log(`[DEBUG] LTP Failed for ${instrumentKey}:`, results[0].reason?.response?.status);
-        }
-        if (!ohlcData && results[1].status === 'rejected') {
-          console.log(`[DEBUG] OHLC Failed for ${instrumentKey}:`, results[1].reason?.response?.status);
-        }
-
-        // fallback checks
-        if (!ltpData && !ohlcData) {
-          throw new Error(`No data from Upstox V3 for key: ${instrumentKey}`);
-        }
-
-        const price = ltpData ? ltpData.last_price : 0;
-        const prevClose = ohlcData && ohlcData.previous_close ? ohlcData.previous_close : (ltpData?.last_price || 0);
-
-        // Upstox V3 returns 'ohlc' or 'live_ohlc'
-        const ohlc = ohlcData ? (ohlcData.ohlc || ohlcData.live_ohlc || {}) : {};
-
-        return {
-          symbol: symbol.toUpperCase(),
-          price: price,
-          change: price - prevClose,
-          changePercent: prevClose ? ((price - prevClose) / prevClose * 100) : 0,
-          volume: ohlc.volume || (ohlcData ? ohlcData.volume : 0),
-          high: ohlc.high || price,
-          low: ohlc.low || price,
-          open: ohlc.open || price,
-          previousClose: prevClose,
-          instrument_key: instrumentKey
-        };
-
-      } catch (apiError) {
-        // Special handling for US Stocks (Legacy Portfolio support)
-        // If 404/400 and looks like a US symbol, return mock to avoid crash
-        if (!this.getInstrumentKeySync(symbol) && symbol.match(/^[A-Z]{1,5}$/)) {
-          console.warn(`Assuming US/Legacy Stock for ${symbol}. Returning Mock.`);
-          return this.getMockQuote(symbol);
-        }
-        throw apiError;
+      if (!ltpData && !ohlcData) {
+        throw new Error(`No data from Upstox V3 for key: ${instrumentKey}`);
       }
+
+      const price = ltpData ? ltpData.last_price : 0;
+      const prevClose = ohlcData && ohlcData.previous_close ? ohlcData.previous_close : (ltpData?.last_price || 0);
+      const ohlc = ohlcData ? (ohlcData.ohlc || ohlcData.live_ohlc || {}) : {};
+
+      return {
+        symbol: symbol.toUpperCase(),
+        price: price,
+        change: price - prevClose,
+        changePercent: prevClose ? ((price - prevClose) / prevClose * 100) : 0,
+        volume: ohlc.volume || (ohlcData ? ohlcData.volume : 0),
+        high: ohlc.high || price,
+        low: ohlc.low || price,
+        open: ohlc.open || price,
+        previousClose: prevClose,
+        instrument_key: instrumentKey
+      };
 
     } catch (error) {
       console.error(`Upstox V3 Quote Error (${symbol}):`, error.response?.data || error.message);
-      if (process.env.NODE_ENV === 'development' && !upstoxAuthService.accessToken) {
+      if (process.env.NODE_ENV !== 'production') {
+        // Fallback to mock
         return this.getMockQuote(symbol);
       }
       throw error;
