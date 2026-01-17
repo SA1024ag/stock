@@ -240,15 +240,15 @@ class StockService {
         const price = ltpData ? ltpData.last_price : 0;
         const prevClose = ohlcData && ohlcData.previous_close ? ohlcData.previous_close : (ltpData?.last_price || 0);
 
-        // OHLC data often has 'ohlc' object inside
-        const ohlc = ohlcData && ohlcData.ohlc ? ohlcData.ohlc : {};
+        // Upstox V3 returns 'ohlc' or 'live_ohlc'
+        const ohlc = ohlcData ? (ohlcData.ohlc || ohlcData.live_ohlc || {}) : {};
 
         return {
           symbol: symbol.toUpperCase(),
           price: price,
           change: price - prevClose,
           changePercent: prevClose ? ((price - prevClose) / prevClose * 100) : 0,
-          volume: ohlcData ? ohlcData.volume : 0,
+          volume: ohlc.volume || (ohlcData ? ohlcData.volume : 0),
           high: ohlc.high || price,
           low: ohlc.low || price,
           open: ohlc.open || price,

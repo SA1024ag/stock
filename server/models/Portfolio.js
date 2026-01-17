@@ -26,6 +26,18 @@ const portfolioSchema = new mongoose.Schema({
     required: true,
     min: 0
   },
+  stopLoss: {
+    type: Number,
+    default: null
+  },
+  takeProfit: {
+    type: Number,
+    default: null
+  },
+  autoSellEnabled: {
+    type: Boolean,
+    default: false
+  },
   transactions: [{
     type: {
       type: String,
@@ -39,6 +51,11 @@ const portfolioSchema = new mongoose.Schema({
     price: {
       type: Number,
       required: true
+    },
+    reason: {
+      type: String,
+      enum: ['MANUAL', 'STOP_LOSS', 'TAKE_PROFIT'],
+      default: 'MANUAL'
     },
     timestamp: {
       type: Date,
@@ -56,7 +73,7 @@ const portfolioSchema = new mongoose.Schema({
 });
 
 // Update timestamp before saving
-portfolioSchema.pre('save', function(next) {
+portfolioSchema.pre('save', function (next) {
   this.updatedAt = Date.now();
   next();
 });
