@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { getNews } from '../services/newsApi';
+import React, { useState, useEffect } from 'react';
+import { getPersonalizedNews, getNewsByCategory } from '../services/newsApi';
+import NewsCard from '../components/NewsCard';
 import './News.css';
 
 function News() {
@@ -34,6 +35,7 @@ function News() {
                     </div>
                 ))}
             </div>
+
         </div>
     );
 }
