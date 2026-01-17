@@ -15,13 +15,7 @@ function NewsCard({ article }) {
     const formatTimestamp = (timestamp) => {
         if (!timestamp) return '';
 
-        const year = timestamp.substring(0, 4);
-        const month = timestamp.substring(4, 6);
-        const day = timestamp.substring(6, 8);
-        const hour = timestamp.substring(9, 11);
-        const minute = timestamp.substring(11, 13);
-
-        const date = new Date(`${year}-${month}-${day}T${hour}:${minute}:00`);
+        const date = new Date(timestamp);
         const now = new Date();
         const diffMs = now - date;
         const diffMins = Math.floor(diffMs / 60000);
@@ -34,7 +28,7 @@ function NewsCard({ article }) {
         return date.toLocaleDateString();
     };
 
-    const impact = getImpactBadge(article.sentimentScore || article.overall_sentiment_score);
+    const impact = getImpactBadge(article.sentimentScore);
 
     const handleTickerClick = (ticker, e) => {
         e.preventDefault();
@@ -86,7 +80,7 @@ function NewsCard({ article }) {
                     <div className="news-meta">
                         <span className="news-source">{article.source}</span>
                         <span className="news-dot">•</span>
-                        <span className="news-time">{formatTimestamp(article.publishedAt || article.time_published)}</span>
+                        <span className="news-time">{formatTimestamp(article.publishedAt)}</span>
                         {article.category && (
                             <>
                                 <span className="news-dot">•</span>

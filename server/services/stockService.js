@@ -373,6 +373,7 @@ class StockService {
   getMockQuote(symbol) { return { symbol, price: 500, change: 10, changePercent: 2, volume: 5000, high: 510, low: 490, open: 495, previousClose: 490 }; }
   getMockSearchResults(q) { return [{ symbol: 'MOCK', name: 'Mock Stock', exchange: 'NSE', instrument_key: 'NSE_EQ|MOCK' }]; }
 
+
 }
 
 module.exports = new StockService();
