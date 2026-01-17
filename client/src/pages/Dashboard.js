@@ -9,11 +9,13 @@ import './Dashboard.css';
 function Dashboard() {
   const { user } = useAuth();
   const [portfolioSummary, setPortfolioSummary] = useState(null);
+  const [indices, setIndices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     fetchPortfolioSummary();
+    fetchIndices();
   }, []);
 
   const fetchPortfolioSummary = async () => {
@@ -25,6 +27,15 @@ function Dashboard() {
       setError('Failed to load portfolio data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchIndices = async () => {
+    try {
+      const response = await api.get('/stocks/market/indices');
+      setIndices(response.data);
+    } catch (error) {
+      console.error('Error fetching indices:', error);
     }
   };
 
@@ -68,7 +79,7 @@ function Dashboard() {
         <Card className="stat-card glass-panel">
           <div className="stat-label">Net Liquidation Value</div>
           <div className="stat-value-large">
-            ${(balance + totalValue).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            ₹{(balance + totalValue).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
           <div className={`stat-change ${isPositive ? 'text-green' : 'text-red'}`}>
             {isPositive ? '▲' : '▼'} Total P/L
@@ -78,7 +89,7 @@ function Dashboard() {
         <Card className="stat-card glass-panel">
           <div className="stat-label">Day's P/L</div>
           <div className={`stat-value-large ${isPositive ? 'text-green' : 'text-red'}`}>
-            {isPositive ? '+' : ''}{totalGainLoss.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            {isPositive ? '+' : ''}₹{totalGainLoss.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
           <div className={`stat-subvalue ${isPositive ? 'text-green' : 'text-red'}`}>
             {isPositive ? '+' : ''}{totalGainLossPercent.toFixed(2)}%
@@ -88,15 +99,32 @@ function Dashboard() {
         <Card className="stat-card glass-panel">
           <div className="stat-label">Buying Power</div>
           <div className="stat-value-large text-secondary">
-            ${balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            ₹{balance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
           <Link to="/search" className="link-small">Top Up ›</Link>
         </Card>
 
         <Card className="stat-card glass-panel">
           <div className="stat-label">Market Status</div>
-          <div className="stat-value-large text-green">OPEN</div>
-          <div className="stat-subvalue text-muted">NYSE / NASDAQ</div>
+          {indices.length > 0 ? (
+            <div className="indices-rotate">
+              <div className="stat-value-small">
+                {indices[0].name}: <span className={indices[0].change >= 0 ? 'text-green' : 'text-red'}>
+                  {indices[0].price.toFixed(2)} ({indices[0].changePercent.toFixed(2)}%)
+                </span>
+              </div>
+              {indices[1] && (
+                <div className="stat-subvalue text-muted mt-1">
+                  {indices[1].name}: {indices[1].price.toFixed(2)}
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              <div className="stat-value-large text-green">OPEN</div>
+              <div className="stat-subvalue text-muted">NSE / BSE</div>
+            </>
+          )}
         </Card>
       </div>
 
@@ -120,9 +148,9 @@ function Dashboard() {
                       <span className="holding-shares text-secondary">{holding.shares} shares</span>
                     </div>
                     <div className="holding-values">
-                      <span className="holding-price">${(holding.currentPrice || 0).toFixed(2)}</span>
+                      <span className="holding-price">₹{(holding.currentPrice || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                       <span className={`holding-pl ${isGain ? 'text-green' : 'text-red'}`}>
-                        {isGain ? '+' : ''}{gain.toFixed(2)}
+                        {isGain ? '+' : ''}{gain.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                     </div>
                   </Card>

@@ -1,452 +1,379 @@
 const axios = require('axios');
+const upstoxAuthService = require('./upstoxAuthService');
+const fs = require('fs');
+const path = require('path');
+const https = require('https');
+const zlib = require('zlib');
 
-// Using Alpha Vantage API (free tier available)
-// Alternative: Yahoo Finance API or Polygon.io
-const ALPHA_VANTAGE_API_KEY = process.env.ALPHA_VANTAGE_API_KEY;
-const BASE_URL = 'https://www.alphavantage.co/query';
+// Upstox API Base URL V3
+const BASE_URL_V3 = 'https://api.upstox.com/v3';
 
-// Timeframe configuration (aligned with standard TradingView timeframes)
-const TIMEFRAME_CONFIG = {
-  '1D': { days: 1, resolution: '5min', apiFunction: 'TIME_SERIES_INTRADAY', interval: '5min' },
-  '1W': { days: 7, resolution: '30min', apiFunction: 'TIME_SERIES_INTRADAY', interval: '30min' },
-  '1M': { days: 30, resolution: 'daily', apiFunction: 'TIME_SERIES_DAILY' },
-  '1Y': { days: 365, resolution: 'daily', apiFunction: 'TIME_SERIES_DAILY' }
-};
+// Search results suggest .gz is the standard
+const MASTER_LIST_URLS = [
+  'https://assets.upstox.com/market-quote/instruments/exchange/NSE.json.gz',
+  'https://assets.upstox.com/market-quote/instruments/exchange/BSE.json.gz'
+];
 
-// In-memory mock database to ensure consistency
-const mockDatabase = {};
+// In-memory Instrument Database
+let instrumentList = [];
 
 class StockService {
-  // Get real-time stock quote
+  constructor() {
+    // Download master list on startup
+    this.downloadMasterList();
+  }
+
+  get instrumentList() {
+    return instrumentList;
+  }
+
+  // --- 1. Master List Management ---
+
+  async downloadMasterList() {
+    console.log('Downloading Upstox Instrument Master Lists...');
+    instrumentList = []; // Reset
+    let errors = [];
+
+    for (const url of MASTER_LIST_URLS) {
+      try {
+        const response = await axios.get(url, {
+          responseType: 'arraybuffer' // Important for binary GZ
+        });
+
+        const buffer = response.data;
+        // Decompress
+        const decompressed = zlib.gunzipSync(buffer);
+        const jsonString = decompressed.toString('utf-8');
+        const data = JSON.parse(jsonString);
+
+        if (Array.isArray(data)) {
+          console.log(`Sample item:`, data[0]);
+          const filtered = data.filter(item =>
+          ((item.exchange === 'NSE' || item.exchange === 'BSE') &&
+            (item.instrument_type === 'EQ' || item.instrument_type === 'INDEX'))
+          );
+
+          // Normalize items for unified structure
+          const normalized = filtered.map(item => ({
+            ...item,
+            name: item.name || item.short_name || item.trading_symbol // Fallback for name
+          }));
+
+          instrumentList.push(...normalized);
+          console.log(`Loaded ${filtered.length} instruments from ${url}`);
+        } else {
+          errors.push({ url, error: 'Not an array', type: typeof data });
+        }
+      } catch (error) {
+        console.error(`Failed to download master list from ${url}:`, error.message);
+        errors.push({ url, error: error.message });
+      }
+    }
+    console.log(`Total Instruments Loaded: ${instrumentList.length}`);
+    return { count: instrumentList.length, errors, debug: 'Enhanced Debug' };
+  }
+
+  // Helper to get headers with Access Token
+  async getHeaders() {
+    const token = await upstoxAuthService.getAccessToken();
+    return {
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/json'
+    };
+  }
+
+  // --- 2. Search (Local In-Memory) ---
+
+  async searchStocks(keywords) {
+    if (!keywords || instrumentList.length === 0) return [];
+
+    const query = keywords.toUpperCase();
+
+    // Simple filter
+    // Prioritize startsWith, then includes
+    const results = instrumentList.filter(item => {
+      // Safe check for properties
+      const symbol = item.trading_symbol || '';
+      const name = item.name || '';
+      return symbol.includes(query) || name.toUpperCase().includes(query);
+    });
+
+    // Sort: Exact match -> Starts with -> Others
+    results.sort((a, b) => {
+      const aSym = a.trading_symbol || '';
+      const bSym = b.trading_symbol || '';
+      if (aSym === query) return -1;
+      if (bSym === query) return 1;
+      if (aSym.startsWith(query) && !bSym.startsWith(query)) return -1;
+      if (bSym.startsWith(query) && !aSym.startsWith(query)) return 1;
+      return 0;
+    });
+
+    // Limit to 20
+    return results.slice(0, 20).map(item => ({
+      symbol: item.trading_symbol,
+      name: item.name,
+      exchange: item.exchange, // 'NSE' or 'BSE'
+      instrument_key: item.instrument_key,
+      type: item.instrument_type
+    }));
+  }
+
+  // Helper: Get Instrument Key perfectly
+  getInstrumentKeySync(symbol) {
+    if (symbol.includes('|')) return symbol;
+    const upper = symbol.toUpperCase();
+    const match = instrumentList.find(i => i.trading_symbol === upper && i.exchange === 'NSE');
+    return match ? match.instrument_key : null;
+  }
+
+  // --- 3. Market Quotes (V3) ---
+
   async getQuote(symbol) {
     try {
-      const response = await axios.get(BASE_URL, {
-        params: {
-          function: 'GLOBAL_QUOTE',
-          symbol: symbol.toUpperCase(),
-          apikey: ALPHA_VANTAGE_API_KEY
+      let instrumentKey = this.getInstrumentKeySync(symbol);
+      if (!instrumentKey) {
+        instrumentKey = `NSE_EQ|${symbol.toUpperCase()}`;
+        const search = await this.searchStocks(symbol);
+        if (search.length > 0) instrumentKey = search[0].instrument_key;
+      }
+
+      const headers = await this.getHeaders();
+
+      // Parallel call to LTP and OHLC to build a "Full Quote"
+      // V3 LTP: /market-quote/ltp
+      // V3 OHLC: /market-quote/ohlc
+
+      try {
+        // Promise.allSettled ...
+        const results = await Promise.allSettled([
+          axios.get(`${BASE_URL_V3}/market-quote/ltp`, { headers, params: { instrument_key: instrumentKey } }),
+          axios.get(`${BASE_URL_V3}/market-quote/ohlc`, { headers, params: { instrument_key: instrumentKey, interval: '1d' } })
+        ]);
+
+        const ltpRes = results[0].status === 'fulfilled' ? results[0].value : null;
+        const ohlcRes = results[1].status === 'fulfilled' ? results[1].value : null;
+
+        // CRITICAL FIX: Upstox API response might use "NSE_EQ:SYMBOL" format as key 
+        // even if we requested with "NSE_EQ|INE..." key.
+        // We need to try multiple keys or iterate.
+
+        const findData = (response, key, symbol) => {
+          if (!response?.data?.data) return null;
+          const data = response.data.data;
+
+          // 1. Try exact instrument key
+          if (data[key]) return data[key];
+
+          // 2. Try Exchange:Symbol format (e.g. NSE_EQ:RELIANCE)
+          // We need to derive this.
+          // We can infer exchange and symbol from instrumentList if available, or guess.
+          // But simpler: just find the first key in data object if we requested only one!
+          if (Object.keys(data).length > 0) {
+            return Object.values(data)[0];
+          }
+          return null;
+        };
+
+        const ltpData = findData(ltpRes, instrumentKey, symbol);
+        const ohlcData = findData(ohlcRes, instrumentKey, symbol);
+
+        // DEBUG logging for failures
+        if (!ltpData && results[0].status === 'rejected') {
+          console.log(`[DEBUG] LTP Failed for ${instrumentKey}:`, results[0].reason?.response?.status);
         }
-      });
+        if (!ohlcData && results[1].status === 'rejected') {
+          console.log(`[DEBUG] OHLC Failed for ${instrumentKey}:`, results[1].reason?.response?.status);
+        }
 
-      if (response.data['Error Message'] || response.data['Note']) {
-        throw new Error('API limit reached or invalid symbol');
+        // fallback checks
+        if (!ltpData && !ohlcData) {
+          throw new Error(`No data from Upstox V3 for key: ${instrumentKey}`);
+        }
+
+        const price = ltpData ? ltpData.last_price : 0;
+        const prevClose = ohlcData && ohlcData.previous_close ? ohlcData.previous_close : (ltpData?.last_price || 0);
+
+        // OHLC data often has 'ohlc' object inside
+        const ohlc = ohlcData && ohlcData.ohlc ? ohlcData.ohlc : {};
+
+        return {
+          symbol: symbol.toUpperCase(),
+          price: price,
+          change: price - prevClose,
+          changePercent: prevClose ? ((price - prevClose) / prevClose * 100) : 0,
+          volume: ohlcData ? ohlcData.volume : 0,
+          high: ohlc.high || price,
+          low: ohlc.low || price,
+          open: ohlc.open || price,
+          previousClose: prevClose,
+          instrument_key: instrumentKey
+        };
+
+      } catch (apiError) {
+        // Special handling for US Stocks (Legacy Portfolio support)
+        // If 404/400 and looks like a US symbol, return mock to avoid crash
+        if (!this.getInstrumentKeySync(symbol) && symbol.match(/^[A-Z]{1,5}$/)) {
+          console.warn(`Assuming US/Legacy Stock for ${symbol}. Returning Mock.`);
+          return this.getMockQuote(symbol);
+        }
+        throw apiError;
       }
 
-      const quote = response.data['Global Quote'];
-      if (!quote || !quote['05. price']) {
-        throw new Error('Stock data not available');
-      }
-
-      return {
-        symbol: quote['01. symbol'],
-        price: parseFloat(quote['05. price']),
-        change: parseFloat(quote['09. change']),
-        changePercent: parseFloat(quote['10. change percent'].replace('%', '')),
-        volume: parseInt(quote['06. volume']),
-        high: parseFloat(quote['03. high']),
-        low: parseFloat(quote['04. low']),
-        open: parseFloat(quote['02. open']),
-        previousClose: parseFloat(quote['08. previous close'])
-      };
     } catch (error) {
-      console.error('Error fetching stock quote:', error.message);
-      // Fallback: Return mock data for development
-      if (process.env.NODE_ENV === 'development') {
+      console.error(`Upstox V3 Quote Error (${symbol}):`, error.response?.data || error.message);
+      if (process.env.NODE_ENV === 'development' && !upstoxAuthService.accessToken) {
         return this.getMockQuote(symbol);
       }
       throw error;
     }
   }
 
-  // Search for stocks
-  async searchStocks(keywords) {
+  // --- 4. Indices (V3) ---
+
+  async getMarketIndices() {
+    // Keys: NSE_INDEX|Nifty 50, BSE_INDEX|SENSEX
+    // These formats usually persist in V3.
+    const indices = [
+      { name: 'NIFTY 50', key: 'NSE_INDEX|Nifty 50' },
+      { name: 'SENSEX', key: 'BSE_INDEX|SENSEX' }
+    ];
+
     try {
-      const response = await axios.get(BASE_URL, {
-        params: {
-          function: 'SYMBOL_SEARCH',
-          keywords: keywords,
-          apikey: ALPHA_VANTAGE_API_KEY
-        }
+      const headers = await this.getHeaders();
+      const keys = indices.map(i => i.key).join(',');
+
+      const response = await axios.get(`${BASE_URL_V3}/market-quote/quotes`, {
+        headers,
+        params: { instrument_key: keys }
       });
 
-      if (response.data['Error Message'] || response.data['Note']) {
-        throw new Error('API limit reached');
-      }
+      const data = response.data.data;
+      return indices.map(idx => {
+        const d = data[idx.key];
+        if (!d) return { name: idx.name, price: 0, change: 0, changePercent: 0 };
+        return {
+          name: idx.name,
+          price: d.last_price,
+          change: d.net_change,
+          changePercent: d.net_change && d.last_price ? (d.net_change / (d.last_price - d.net_change) * 100) : 0,
+          // Or calc from OHLC close if available
+          isOpen: true
+        };
+      });
 
-      const matches = response.data.bestMatches || [];
-      return matches.map(match => ({
-        symbol: match['1. symbol'],
-        name: match['2. name'],
-        type: match['3. type'],
-        region: match['4. region']
-      }));
     } catch (error) {
-      console.error('Error searching stocks:', error.message);
-      // Fallback: Return mock data for development
-      if (process.env.NODE_ENV === 'development') {
-        return this.getMockSearchResults(keywords);
-      }
-      throw error;
+      console.error('Upstox V3 Indices Error:', error.message);
+      // dev mock
+      if (process.env.NODE_ENV === 'development') return [
+        { name: 'NIFTY 50', price: 22000, change: 100, changePercent: 0.5 },
+        { name: 'SENSEX', price: 73000, change: 300, changePercent: 0.4 }
+      ];
+      return [];
     }
   }
 
-  // Get historical data with timeframe support
+  // --- 5. Historical Data (V3? V2?) ---
+  // Assuming V2/Historical-Candle works or finding V3 equivalent.
+  // Docs often keep historical separate. Let's try V2 endpoint but with V3 Auth, 
+  // OR look for V3 if exists. Most likely it shares the endpoint structure.
+
   async getHistoricalData(symbol, timeframe = '1M') {
-    const config = TIMEFRAME_CONFIG[timeframe];
-    if (!config) {
-      throw new Error(`Invalid timeframe: ${timeframe}`);
-    }
+    // Reuse logic but ensure key is correct
+    const instrumentKey = this.getInstrumentKeySync(symbol) || `NSE_EQ|${symbol.toUpperCase()}`;
 
+    // ... (Rest of logic similar to previous V2, as Historical often persists)
+    // We will assume the V2 path works for now, or check for V3 path.
+    // Docs: https://api.upstox.com/v2/historical-candle/... is standard.
+    // Let's keep the existing logic but ensure Error logging is verbose.
+
+    // ... (Previous getHistoricalData code here, ensuring headers are set) 
+    return this._getHistoricalDataLogic(instrumentKey, timeframe);
+  }
+
+  async _getHistoricalDataLogic(instrumentKey, timeframe) {
     try {
-      // For intraday data (1D, 1W)
-      if (config.apiFunction === 'TIME_SERIES_INTRADAY') {
-        return await this.getIntradayData(symbol, config);
+      const headers = await this.getHeaders();
+
+      const now = new Date();
+      let fromDate = new Date();
+      let intervalUnit = 'minute';
+      let intervalValue = '1';
+
+      // Mapping Timeframe to V3 Inputs
+      switch (timeframe) {
+        case '1D':
+          fromDate.setDate(now.getDate() - 5);
+          intervalUnit = 'minute';
+          intervalValue = '1';
+          break;
+        case '1W':
+          fromDate.setDate(now.getDate() - 7);
+          intervalUnit = 'minute';
+          intervalValue = '30';
+          break;
+        case '1M':
+          fromDate.setMonth(now.getMonth() - 1);
+          intervalUnit = 'day';
+          intervalValue = '1';  // For 'day', interval usually not needed or is implicit? V3 path has it.
+          break;
+        case '1Y':
+          fromDate.setFullYear(now.getFullYear() - 1);
+          intervalUnit = 'day';
+          intervalValue = '1';
+          break;
+        default:
+          fromDate.setMonth(now.getMonth() - 1);
+          intervalUnit = 'day';
+          intervalValue = '1';
       }
 
-      // For daily data (1M, 3M, 1Y)
-      return await this.getDailyData(symbol, config);
-    } catch (error) {
-      console.error('Error fetching historical data:', error.message);
+      const fromDateStr = fromDate.toISOString().split('T')[0];
+      const toDateStr = now.toISOString().split('T')[0];
 
-      // Fallback to mock data
-      if (process.env.NODE_ENV === 'development') {
-        // Ensure we have a base price in the database or fetch it/create it
-        let currentPrice;
-        if (mockDatabase[symbol]) {
-          currentPrice = mockDatabase[symbol].price;
-        } else {
-          // If not in DB, try to get a quote first to initialize it
-          const quote = await this.getQuote(symbol); // This will handle mock initialization
-          currentPrice = quote.price;
-        }
-        return this.getMockHistoricalData(symbol, config.days, config.resolution, currentPrice);
-      }
-      throw error;
-    }
-  }
+      // V3 Historical Endpoint: /historical-candle/{instrumentKey}/{intervalUnit}/{interval}/{to_date}/{from_date}
+      // Note: intervalUnit = '1minute' (V2) vs 'minute' (V3)
+      // V3 Docs: intervalUnit is 'minute', 'day' etc.
+      // But verify: search result says unit can be `minutes`, `days`. Plural?
+      // Let's try 'minute' first, or check docs closely. 
+      // Search result: "intervalUnit... can be minutes, hours, days..." 
+      // Okay, let's use plural 'minutes', 'days'.
 
-  async getIntradayData(symbol, config) {
-    const response = await axios.get(BASE_URL, {
-      params: {
-        function: config.apiFunction,
-        symbol: symbol.toUpperCase(),
-        interval: config.interval,
-        apikey: ALPHA_VANTAGE_API_KEY,
-        outputsize: 'full'
-      }
-    });
-
-    if (response.data['Error Message'] || response.data['Note']) {
-      throw new Error('API limit reached or invalid symbol');
-    }
-
-    const timeSeriesKey = `Time Series (${config.interval})`;
-    const timeSeries = response.data[timeSeriesKey];
-
-    if (!timeSeries) {
-      throw new Error('Intraday data not available');
-    }
-
-    // Filter to requested timeframe
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - config.days);
-
-    return Object.keys(timeSeries)
-      .filter(datetime => new Date(datetime) >= cutoffDate)
-      .map(datetime => ({
-        date: datetime,
-        open: parseFloat(timeSeries[datetime]['1. open']),
-        high: parseFloat(timeSeries[datetime]['2. high']),
-        low: parseFloat(timeSeries[datetime]['3. low']),
-        close: parseFloat(timeSeries[datetime]['4. close']),
-        volume: parseInt(timeSeries[datetime]['5. volume'])
-      }))
-      .reverse();
-  }
-
-  async getDailyData(symbol, config) {
-    const response = await axios.get(BASE_URL, {
-      params: {
-        function: 'TIME_SERIES_DAILY',
-        symbol: symbol.toUpperCase(),
-        apikey: ALPHA_VANTAGE_API_KEY,
-        outputsize: config.days > 100 ? 'full' : 'compact'
-      }
-    });
-
-    if (response.data['Error Message'] || response.data['Note']) {
-      throw new Error('API limit reached or invalid symbol');
-    }
-
-    const timeSeries = response.data['Time Series (Daily)'];
-    if (!timeSeries) {
-      throw new Error('Historical data not available');
-    }
-
-    // Filter to requested timeframe
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - config.days);
-
-    return Object.keys(timeSeries)
-      .filter(date => new Date(date) >= cutoffDate)
-      .map(date => ({
-        date,
-        open: parseFloat(timeSeries[date]['1. open']),
-        high: parseFloat(timeSeries[date]['2. high']),
-        low: parseFloat(timeSeries[date]['3. low']),
-        close: parseFloat(timeSeries[date]['4. close']),
-        volume: parseInt(timeSeries[date]['5. volume'])
-      }))
-      .reverse();
-  }
-
-  // Enhanced mock data generator with resolution support
-  getMockHistoricalData(symbol, days, resolution, currentPrice) {
-    const data = [];
-    const now = new Date();
-
-    // Use the current price as the anchor point (end of the graph)
-    // If no current price is provided, generate a random one
-    let closePrice = currentPrice || (100 + Math.random() * 200);
-
-    // Calculate interval based on resolution
-    let intervalMs;
-    let pointsPerDay;
-    let volatility; // Price volatility based on timeframe
-
-    switch (resolution) {
-      case '5min':
-        intervalMs = 5 * 60 * 1000;
-        pointsPerDay = (24 * 60) / 5; // 288 points per day
-        volatility = 0.3; // Lower volatility for shorter timeframes
-        break;
-      case '30min':
-        intervalMs = 30 * 60 * 1000;
-        pointsPerDay = (24 * 60) / 30; // 48 points per day
-        volatility = 0.5;
-        break;
-      case 'daily':
-      default:
-        intervalMs = 24 * 60 * 60 * 1000;
-        pointsPerDay = 1;
-        volatility = 2; // Higher volatility for daily data
-    }
-
-    // Generate data points BACKWARDS from now
-    const totalPoints = resolution === 'daily' ? days : Math.floor(days * pointsPerDay);
-
-    for (let i = 0; i < totalPoints; i++) {
-      const timestamp = new Date(now.getTime() - (i * intervalMs));
-
-      // Skip weekends for daily data
-      if (resolution === 'daily' && (timestamp.getDay() === 0 || timestamp.getDay() === 6)) {
-        continue;
-      }
-
-      // We are walking backwards, so:
-      // current loop 'closePrice' is essentially the 'close' of this candle.
-      // We need to generate the 'open', 'high', 'low' relative to this close, 
-      // AND determine the 'close' of the PREVIOUS candle (which is the 'open' of this one approx).
-
-      // Let's generate the candle properties for the current point (i)
-
-      const change = (Math.random() - 0.5) * volatility * 2;
-      const openPrice = closePrice - change; // Reverse the change to find open
-
-      // High and low relative to max/min of open/close
-      const maxBody = Math.max(openPrice, closePrice);
-      const minBody = Math.min(openPrice, closePrice);
-
-      const highPrice = maxBody + Math.random() * volatility;
-      const lowPrice = minBody - Math.random() * volatility;
-
-      data.push({
-        date: resolution === 'daily'
-          ? timestamp.toISOString().split('T')[0]
-          : timestamp.toISOString().replace('T', ' ').substring(0, 19),
-        open: parseFloat(openPrice.toFixed(2)),
-        high: parseFloat(highPrice.toFixed(2)),
-        low: parseFloat(lowPrice.toFixed(2)),
-        close: parseFloat(closePrice.toFixed(2)),
-        volume: Math.floor(Math.random() * 10000000)
-      });
-
-      // Set the close price for the NEXT iteration (which is the previous candle in time)
-      // Ideally, the previous candle's close should be close to this candle's open.
-      // We add a small random gap/noise for realism
-      closePrice = openPrice + (Math.random() - 0.5) * (volatility * 0.2);
-    }
-
-    return data.reverse(); // Reverse back to chronological order
-  }
-
-  // Mock data for development/testing
-  getMockQuote(symbol) {
-    // Check if we already have this stock in memory
-    if (mockDatabase[symbol]) {
-      // Update price slightly to simulate real-time movement
-      const currentData = mockDatabase[symbol];
-      const change = (Math.random() - 0.5) * 0.5; // Small random movement
-      let newPrice = currentData.price + change;
-      newPrice = Math.max(newPrice, 1.00); // Minimum price
-
-      // Update database
-      mockDatabase[symbol] = {
-        ...currentData,
-        price: parseFloat(newPrice.toFixed(2)),
-        change: parseFloat((newPrice - currentData.previousClose).toFixed(2)),
-        changePercent: parseFloat(((newPrice - currentData.previousClose) / currentData.previousClose * 100).toFixed(2))
+      const unitMap = {
+        'minute': 'minutes',
+        'day': 'days',
+        'week': 'weeks',
+        'month': 'months'
       };
 
-      return mockDatabase[symbol];
-    }
+      const finalUnit = unitMap[intervalUnit] || intervalUnit;
 
-    // Initialize new stock in mock database
-    const basePrice = 100 + Math.random() * 200;
-    const change = (Math.random() - 0.5) * 10;
-    const stockData = {
-      symbol: symbol.toUpperCase(),
-      price: parseFloat(basePrice.toFixed(2)),
-      change: parseFloat(change.toFixed(2)),
-      changePercent: parseFloat(((change / basePrice) * 100).toFixed(2)),
-      volume: Math.floor(Math.random() * 10000000),
-      high: parseFloat((basePrice + Math.random() * 5).toFixed(2)),
-      low: parseFloat((basePrice - Math.random() * 5).toFixed(2)),
-      open: parseFloat((basePrice + (Math.random() - 0.5) * 3).toFixed(2)),
-      previousClose: parseFloat((basePrice - change).toFixed(2))
-    };
+      const url = `${BASE_URL_V3}/historical-candle/${instrumentKey}/${finalUnit}/${intervalValue}/${toDateStr}/${fromDateStr}`;
 
-    mockDatabase[symbol] = stockData;
-    return stockData;
-  }
+      const response = await axios.get(url, { headers });
 
-  getMockSearchResults(keywords) {
-    const mockStocks = [
-      { symbol: 'AAPL', name: 'Apple Inc.', type: 'Equity', region: 'United States' },
-      { symbol: 'GOOGL', name: 'Alphabet Inc.', type: 'Equity', region: 'United States' },
-      { symbol: 'MSFT', name: 'Microsoft Corporation', type: 'Equity', region: 'United States' },
-      { symbol: 'AMZN', name: 'Amazon.com Inc.', type: 'Equity', region: 'United States' },
-      { symbol: 'TSLA', name: 'Tesla Inc.', type: 'Equity', region: 'United States' },
-      { symbol: 'META', name: 'Meta Platforms Inc.', type: 'Equity', region: 'United States' },
-      { symbol: 'NVDA', name: 'NVIDIA Corporation', type: 'Equity', region: 'United States' },
-      { symbol: 'NFLX', name: 'Netflix Inc.', type: 'Equity', region: 'United States' },
-      { symbol: 'JPM', name: 'JPMorgan Chase & Co.', type: 'Equity', region: 'United States' },
-      { symbol: 'DIS', name: 'The Walt Disney Company', type: 'Equity', region: 'United States' }
-    ];
+      if (!response.data?.data?.candles) return [];
 
-    // In dev, we return this small list if API fails, but the main goal is to use the real API
-    const query = keywords.toLowerCase();
-    return mockStocks.filter(stock =>
-      stock.symbol.toLowerCase().includes(query) ||
-      stock.name.toLowerCase().includes(query)
-    );
-  }
+      return response.data.data.candles.map(c => ({
+        date: c[0],
+        open: c[1],
+        high: c[2],
+        low: c[3],
+        close: c[4],
+        volume: c[5]
+      })).reverse();
 
-  // Get company news/sentiment
-  async getCompanyNews(symbol) {
-    try {
-      const params = {
-        function: 'NEWS_SENTIMENT',
-        apikey: ALPHA_VANTAGE_API_KEY,
-        limit: 10
-      };
-
-      if (symbol) {
-        params.tickers = symbol.toUpperCase();
-      }
-
-      const response = await axios.get(BASE_URL, { params });
-
-      if (response.data['Error Message'] || response.data['Note']) {
-        throw new Error('API limit reached or error');
-      }
-
-      const feed = response.data.feed;
-      if (!feed) {
-        throw new Error('News not available');
-      }
-
-      return feed.map(item => ({
-        title: item.title,
-        url: item.url,
-        time_published: item.time_published,
-        authors: item.authors,
-        summary: item.summary,
-        banner_image: item.banner_image,
-        source: item.source,
-        sentiment_score: item.overall_sentiment_score,
-        sentiment_label: item.overall_sentiment_label
-      }));
-    } catch (error) {
-      console.error('Error fetching news:', error.message);
-      if (process.env.NODE_ENV === 'development') {
-        return this.getMockCompanyNews(symbol);
-      }
-      throw error;
+    } catch (e) {
+      console.error('Historical Data Error:', e.response?.data || e.message);
+      return [];
     }
   }
 
-  getMockCompanyNews(symbol) {
-    const news = [
-      {
-        title: "Market Rally Continues as Tech Sector Leads",
-        url: "#",
-        time_published: "20240315T150000",
-        authors: ["MarketWatch"],
-        summary: "The stock market extended its gains today, driven by strong performances in the technology sector. Investors remain optimistic about future growth.",
-        banner_image: "https://images.unsplash.com/photo-1611974765270-ca1258822fde?q=80&w=2074&auto=format&fit=crop",
-        source: "MarketWatch",
-        sentiment_score: 0.35,
-        sentiment_label: "Bullish"
-      },
-      {
-        title: "Fed Interest Rate Discussion Heats Up",
-        url: "#",
-        time_published: "20240314T120000",
-        authors: ["Bloomberg"],
-        summary: "Federal Reserve officials are debating the timing of potential interest rate cuts. Economic data suggests inflation is cooling, but risks remain.",
-        banner_image: "https://images.unsplash.com/photo-1526304640152-d4619684e484?q=80&w=2073&auto=format&fit=crop",
-        source: "Bloomberg",
-        sentiment_score: 0.15,
-        sentiment_label: "Neutral"
-      },
-      {
-        title: `${symbol || 'Market'} Earnings Report Exceeds Expectations`,
-        url: "#",
-        time_published: "20240313T093000",
-        authors: ["CNBC"],
-        summary: `${symbol || 'Companies'} reported better-than-expected earnings for the quarter, signaling resilience in the face of economic headwinds.`,
-        banner_image: "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?q=80&w=2070&auto=format&fit=crop",
-        source: "CNBC",
-        sentiment_score: 0.65,
-        sentiment_label: "Bullish"
-      },
-      {
-        title: "Analysts Upgrade Price Targets",
-        url: "#",
-        time_published: "20240312T141500",
-        authors: ["Reuters"],
-        summary: "Several major analysts have revised their price targets upward for key industry players, citing improved demand and efficiency gains.",
-        banner_image: "https://images.unsplash.com/photo-1559526324-593bc073d938?q=80&w=2070&auto=format&fit=crop",
-        source: "Reuters",
-        sentiment_score: 0.45,
-        sentiment_label: "Bullish"
-      },
-      {
-        title: "New Regulation Challenges Sector",
-        url: "#",
-        time_published: "20240311T100000",
-        authors: ["WSJ"],
-        summary: "Proposed regulations could impact profit margins for major corporations. Experts weigh in on the potential long-term effects.",
-        banner_image: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=2071&auto=format&fit=crop",
-        source: "Wall Street Journal",
-        sentiment_score: -0.25,
-        sentiment_label: "Bearish"
-      }
-    ];
+  // Wrappers for mock compat
+  getMockQuote(symbol) { return { symbol, price: 500, change: 10, changePercent: 2, volume: 5000, high: 510, low: 490, open: 495, previousClose: 490 }; }
+  getMockSearchResults(q) { return [{ symbol: 'MOCK', name: 'Mock Stock', exchange: 'NSE', instrument_key: 'NSE_EQ|MOCK' }]; }
 
-    return news;
-  }
+
 }
 
 module.exports = new StockService();

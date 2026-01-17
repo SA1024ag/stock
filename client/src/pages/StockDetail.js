@@ -139,9 +139,9 @@ function StockDetail() {
             <p className="text-secondary">Real-time Quote</p>
           </div>
           <div className="stock-price-display">
-            <span className="current-price">${stockData.price.toFixed(2)}</span>
+            <span className="current-price">₹{(stockData.price || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             <span className={`price-change-badge ${stockData.change >= 0 ? 'bg-green' : 'bg-red'}`}>
-              {stockData.change >= 0 ? '+' : ''}{stockData.change.toFixed(2)} ({stockData.changePercent.toFixed(2)}%)
+              {stockData.change >= 0 ? '+' : ''}₹{Math.abs(stockData.change || 0).toFixed(2)} ({(stockData.changePercent || 0).toFixed(2)}%)
             </span>
           </div>
         </div>
@@ -181,19 +181,19 @@ function StockDetail() {
             <div className="info-grid">
               <div className="info-item">
                 <span className="label">Open</span>
-                <span className="value">${stockData.open.toFixed(2)}</span>
+                <span className="value">₹{(stockData.open || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
               <div className="info-item">
                 <span className="label">High</span>
-                <span className="value">${stockData.high.toFixed(2)}</span>
+                <span className="value">₹{(stockData.high || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
               <div className="info-item">
                 <span className="label">Low</span>
-                <span className="value">${stockData.low.toFixed(2)}</span>
+                <span className="value">₹{(stockData.low || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
               <div className="info-item">
                 <span className="label">Vol</span>
-                <span className="value">{stockData.volume.toLocaleString()}</span>
+                <span className="value">{(stockData.volume || 0).toLocaleString('en-IN')}</span>
               </div>
             </div>
           </Card>
@@ -252,12 +252,12 @@ function StockDetail() {
               <div className="order-summary mb-4">
                 <div className="summary-row">
                   <span>Est. Total</span>
-                  <span className="font-bold">${totalCost.toFixed(2)}</span>
+                  <span className="font-bold">₹{totalCost.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </div>
                 {action === 'buy' && (
                   <div className="summary-row text-xs text-muted">
                     <span>Available</span>
-                    <span>${user?.virtualBalance?.toFixed(2)}</span>
+                    <span>₹{user?.virtualBalance?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                   </div>
                 )}
               </div>
