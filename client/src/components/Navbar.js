@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import ProfileDropdown from './ProfileDropdown';
 import './Navbar.css';
 import api from '../services/api';
 import NewsPanel from './NewsPanel';
@@ -14,8 +15,22 @@ function Navbar() {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [searchResults, setSearchResults] = React.useState([]);
   const [showSuggestions, setShowSuggestions] = React.useState(false);
+
+  const [showProfileDropdown, setShowProfileDropdown] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
   const [showNewsPanel, setShowNewsPanel] = React.useState(false);
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showProfileDropdown && !event.target.closest('.user-menu')) {
+        setShowProfileDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showProfileDropdown]);
 
   const handleLogout = () => {
     logout();
@@ -167,16 +182,16 @@ function Navbar() {
               </div>
 
               <div className="user-menu">
-                <div className="user-avatar">
+                <div
+                  className="user-avatar"
+                  onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                  style={{ cursor: 'pointer' }}
+                >
                   {user.username?.charAt(0).toUpperCase()}
                 </div>
-                <button onClick={handleLogout} className="btn-logout" title="Logout">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                    <polyline points="16 17 21 12 16 7"></polyline>
-                    <line x1="21" y1="12" x2="9" y2="12"></line>
-                  </svg>
-                </button>
+                {showProfileDropdown && (
+                  <ProfileDropdown onClose={() => setShowProfileDropdown(false)} />
+                )}
               </div>
             </div>
           </div>
