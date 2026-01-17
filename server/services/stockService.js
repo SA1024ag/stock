@@ -341,6 +341,112 @@ class StockService {
       stock.name.toLowerCase().includes(query)
     );
   }
+
+  // Get company news/sentiment
+  async getCompanyNews(symbol) {
+    try {
+      const params = {
+        function: 'NEWS_SENTIMENT',
+        apikey: ALPHA_VANTAGE_API_KEY,
+        limit: 10
+      };
+
+      if (symbol) {
+        params.tickers = symbol.toUpperCase();
+      }
+
+      const response = await axios.get(BASE_URL, { params });
+
+      if (response.data['Error Message'] || response.data['Note']) {
+        throw new Error('API limit reached or error');
+      }
+
+      const feed = response.data.feed;
+      if (!feed) {
+        throw new Error('News not available');
+      }
+
+      return feed.map(item => ({
+        title: item.title,
+        url: item.url,
+        time_published: item.time_published,
+        authors: item.authors,
+        summary: item.summary,
+        banner_image: item.banner_image,
+        source: item.source,
+        sentiment_score: item.overall_sentiment_score,
+        sentiment_label: item.overall_sentiment_label
+      }));
+    } catch (error) {
+      console.error('Error fetching news:', error.message);
+      if (process.env.NODE_ENV === 'development') {
+        return this.getMockCompanyNews(symbol);
+      }
+      throw error;
+    }
+  }
+
+  getMockCompanyNews(symbol) {
+    const news = [
+      {
+        title: "Market Rally Continues as Tech Sector Leads",
+        url: "#",
+        time_published: "20240315T150000",
+        authors: ["MarketWatch"],
+        summary: "The stock market extended its gains today, driven by strong performances in the technology sector. Investors remain optimistic about future growth.",
+        banner_image: "https://images.unsplash.com/photo-1611974765270-ca1258822fde?q=80&w=2074&auto=format&fit=crop",
+        source: "MarketWatch",
+        sentiment_score: 0.35,
+        sentiment_label: "Bullish"
+      },
+      {
+        title: "Fed Interest Rate Discussion Heats Up",
+        url: "#",
+        time_published: "20240314T120000",
+        authors: ["Bloomberg"],
+        summary: "Federal Reserve officials are debating the timing of potential interest rate cuts. Economic data suggests inflation is cooling, but risks remain.",
+        banner_image: "https://images.unsplash.com/photo-1526304640152-d4619684e484?q=80&w=2073&auto=format&fit=crop",
+        source: "Bloomberg",
+        sentiment_score: 0.15,
+        sentiment_label: "Neutral"
+      },
+      {
+        title: `${symbol || 'Market'} Earnings Report Exceeds Expectations`,
+        url: "#",
+        time_published: "20240313T093000",
+        authors: ["CNBC"],
+        summary: `${symbol || 'Companies'} reported better-than-expected earnings for the quarter, signaling resilience in the face of economic headwinds.`,
+        banner_image: "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?q=80&w=2070&auto=format&fit=crop",
+        source: "CNBC",
+        sentiment_score: 0.65,
+        sentiment_label: "Bullish"
+      },
+      {
+        title: "Analysts Upgrade Price Targets",
+        url: "#",
+        time_published: "20240312T141500",
+        authors: ["Reuters"],
+        summary: "Several major analysts have revised their price targets upward for key industry players, citing improved demand and efficiency gains.",
+        banner_image: "https://images.unsplash.com/photo-1559526324-593bc073d938?q=80&w=2070&auto=format&fit=crop",
+        source: "Reuters",
+        sentiment_score: 0.45,
+        sentiment_label: "Bullish"
+      },
+      {
+        title: "New Regulation Challenges Sector",
+        url: "#",
+        time_published: "20240311T100000",
+        authors: ["WSJ"],
+        summary: "Proposed regulations could impact profit margins for major corporations. Experts weigh in on the potential long-term effects.",
+        banner_image: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=2071&auto=format&fit=crop",
+        source: "Wall Street Journal",
+        sentiment_score: -0.25,
+        sentiment_label: "Bearish"
+      }
+    ];
+
+    return news;
+  }
 }
 
 module.exports = new StockService();

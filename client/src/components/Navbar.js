@@ -90,6 +90,9 @@ function Navbar() {
               <Link to="/portfolio" className={`nav-link ${isActive('/portfolio')}`}>
                 Portfolio
               </Link>
+              <Link to="/news" className={`nav-link ${isActive('/news')}`}>
+                News
+              </Link>
             </div>
 
             <div className="navbar-actions">

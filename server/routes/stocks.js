@@ -19,6 +19,19 @@ router.get('/search', async (req, res) => {
   }
 });
 
+// Get company news (General or Specific)
+router.get('/news/:symbol?', async (req, res) => {
+  try {
+    const { symbol } = req.params;
+    const news = await stockService.getCompanyNews(symbol);
+    res.json(news);
+  } catch (error) {
+    console.error('Get news error:', error);
+    res.status(500).json({ message: 'Error fetching news', error: error.message });
+  }
+});
+
+
 // Get stock quote
 router.get('/:symbol', async (req, res) => {
   try {
