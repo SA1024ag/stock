@@ -150,13 +150,13 @@ class NewsPersonalizationService {
         }
 
         // Recency boost (newer articles get higher scores)
-        const publishedAt = new Date(this.parseAlphaVantageDate(article.time_published));
+        const publishedAt = this.parseDate(article.publishedAt);
         const hoursOld = (Date.now() - publishedAt.getTime()) / (1000 * 60 * 60);
         const recencyBoost = Math.max(0, 30 - hoursOld);
         score += recencyBoost;
 
         // Sentiment impact boost
-        const sentimentScore = parseFloat(article.overall_sentiment_score) || 0;
+        const sentimentScore = parseFloat(article.sentimentScore) || 0;
         if (Math.abs(sentimentScore) > 0.5) {
             score += 20;
         }
@@ -168,19 +168,11 @@ class NewsPersonalizationService {
     }
 
     /**
-     * Parse Alpha Vantage date format (YYYYMMDDTHHMMSS)
+     * Parse date (handles ISO strings)
      */
-    parseAlphaVantageDate(timestamp) {
+    parseDate(timestamp) {
         if (!timestamp) return new Date();
-
-        const year = timestamp.substring(0, 4);
-        const month = timestamp.substring(4, 6);
-        const day = timestamp.substring(6, 8);
-        const hour = timestamp.substring(9, 11);
-        const minute = timestamp.substring(11, 13);
-        const second = timestamp.substring(13, 15);
-
-        return `${year}-${month}-${day}T${hour}:${minute}:${second}Z`;
+        return new Date(timestamp);
     }
 
     /**
@@ -272,7 +264,7 @@ class NewsPersonalizationService {
      */
     filterBySentiment(newsArticles, sentiment) {
         return newsArticles.filter(article => {
-            const score = parseFloat(article.overall_sentiment_score) || 0;
+            const score = parseFloat(article.sentimentScore) || 0;
             if (sentiment === 'Positive') return score > 0.3;
             if (sentiment === 'Negative') return score < -0.3;
             if (sentiment === 'Neutral') return Math.abs(score) <= 0.3;
