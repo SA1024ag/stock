@@ -17,6 +17,9 @@
     "jsonwebtoken": "^9.0.2",
     "lightweight-charts": "^5.1.0",
     "mongoose": "^8.0.3",
+    "otplib": "^13.1.1",
+    "qrcode": "^1.5.4",
+    "razorpay": "^2.9.6"
     "upstox-js-sdk": "^2.21.0",
     "ws": "^8.19.0",
     "xml2js": "^0.6.2"

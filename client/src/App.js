@@ -18,8 +18,16 @@ import AIPortfolioAnalysis from './pages/AIPortfolioAnalysis';
 import AIRecommendations from './pages/AIRecommendations';
 
 // Learning Pages
+// Learning Pages
 import LearningHub from './pages/LearningHub';
 import { StockExplainers, BeginnerGuides, PortfolioReport, Transactions, ProfitLoss, Watchlist, Alerts, MarketMovers } from './pages/PlaceholderPages';
+
+// Profile Pages
+import Account from './pages/profile/Account';
+import Settings from './pages/profile/Settings';
+import Security from './pages/profile/Security';
+import Help from './pages/profile/Help';
+import Payment from './pages/Payment';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -74,6 +82,14 @@ function AppRoutes() {
       <Route path="/watchlist" element={<PrivateRoute><Watchlist /></PrivateRoute>} />
       <Route path="/alerts" element={<PrivateRoute><Alerts /></PrivateRoute>} />
       <Route path="/market-movers" element={<PrivateRoute><MarketMovers /></PrivateRoute>} />
+
+      {/* Profile */}
+      <Route path="/profile" element={<PrivateRoute><Account /></PrivateRoute>} /> {/* Default redirect/page */}
+      <Route path="/profile/account" element={<PrivateRoute><Account /></PrivateRoute>} />
+      <Route path="/profile/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
+      <Route path="/profile/security" element={<PrivateRoute><Security /></PrivateRoute>} />
+      <Route path="/profile/help" element={<PrivateRoute><Help /></PrivateRoute>} />
+      <Route path="/payment" element={<PrivateRoute><Payment /></PrivateRoute>} />
     </Routes>
   );
 }

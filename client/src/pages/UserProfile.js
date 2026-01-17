@@ -62,15 +62,16 @@ function UserProfile() {
 
     const tabs = [
         { id: 'personal', label: 'Personal Details' },
+        { id: 'settings', label: 'App & Settings' },
         { id: 'security', label: 'Security' },
-        { id: 'preferences', label: 'Preferences' }
+        { id: 'help', label: 'Help & Support' }
     ];
 
     return (
         <div className="profile-page-container">
             <div className="page-header">
                 <h1>Account Settings</h1>
-                <p className="text-secondary">Manage your profile and trading preferences</p>
+                <p className="text-secondary">Manage your profile and application preferences</p>
             </div>
 
             <div className="profile-tabs">
@@ -165,9 +166,10 @@ function UserProfile() {
                         </div>
                     )}
 
-                    {activeTab === 'preferences' && (
+                    {activeTab === 'settings' && (
                         <div className="preferences-section">
-                            <h3>Trading Preferences</h3>
+                            <h3>App & Trading Preferences</h3>
+                            <p className="text-secondary mb-4">Customize your trading experience.</p>
 
                             <div className="form-group">
                                 <label>Default Order Type</label>
@@ -206,6 +208,38 @@ function UserProfile() {
                                     <option>Medium (Suggestions)</option>
                                     <option>High (Auto-trading)</option>
                                 </select>
+                            </div>
+
+                            <div className="form-group">
+                                <label>Notifications</label>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '8px' }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={preferences.notifications}
+                                        onChange={(e) => handlePreferenceChange('notifications', e.target.checked)}
+                                        style={{ width: '20px', height: '20px' }}
+                                    />
+                                    <span className="text-secondary">Enable push notifications for trade alerts</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'help' && (
+                        <div className="help-section">
+                            <h3>Help & Support</h3>
+                            <p className="text-secondary mb-4">How can we assist you today?</p>
+
+                            <div className="help-card glass-panel" style={{ padding: '20px', marginBottom: '20px', borderRadius: '12px' }}>
+                                <h4>Documentation</h4>
+                                <p className="text-secondary">Read our detailed guides on how to use the platform.</p>
+                                <Button variant="secondary" className="mt-2">View Docs</Button>
+                            </div>
+
+                            <div className="help-card glass-panel" style={{ padding: '20px', borderRadius: '12px' }}>
+                                <h4>Contact Support</h4>
+                                <p className="text-secondary">Need direct help? Our team is available 24/7.</p>
+                                <Button variant="primary" className="mt-2">Chat with Support</Button>
                             </div>
                         </div>
                     )}

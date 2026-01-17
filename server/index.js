@@ -1,4 +1,6 @@
 console.log('RUNNING SERVER INDEX.JS FROM /server');
+console.log('RUNNING SERVER INDEX.JS FROM /server');
+// Trigger restart for env vars and new dependencies
 
 // Always load env vars from the server/.env file,
 // regardless of where the process is started from.
@@ -42,6 +44,7 @@ async function startServer() {
     app.use('/api/stocks', require('./routes/stocks'));
     app.use('/api/portfolio', require('./routes/portfolio'));
     app.use('/api/ai', require('./routes/ai'));
+    app.use('/api/payment', require('./routes/payment'));
     app.use('/api/news', require('./routes/news'));
 
     app.listen(PORT, () => {

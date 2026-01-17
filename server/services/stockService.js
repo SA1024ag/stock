@@ -27,6 +27,22 @@ class StockService {
     return instrumentList;
   }
 
+      return {
+        symbol: quote['01. symbol'],
+        price: parseFloat(quote['05. price']),
+        change: parseFloat(quote['09. change']),
+        changePercent: parseFloat(quote['10. change percent'].replace('%', '')),
+        volume: parseInt(quote['06. volume']),
+        high: parseFloat(quote['03. high']),
+        low: parseFloat(quote['04. low']),
+        open: parseFloat(quote['02. open']),
+        previousClose: parseFloat(quote['08. previous close'])
+      };
+    } catch (error) {
+      console.error('Error fetching stock quote:', error.message);
+      // Fallback: Return mock data for development
+      if (process.env.NODE_ENV !== 'production') {
+        return this.getMockQuote(symbol);
   // --- 1. Master List Management ---
 
   async downloadMasterList() {
@@ -89,6 +105,21 @@ class StockService {
 
     const query = keywords.toUpperCase();
 
+      const matches = response.data.bestMatches || [];
+      return matches.map(match => ({
+        symbol: match['1. symbol'],
+        name: match['2. name'],
+        type: match['3. type'],
+        region: match['4. region']
+      }));
+    } catch (error) {
+      console.error('Error searching stocks:', error.message);
+      // Fallback: Return mock data for development
+      if (process.env.NODE_ENV !== 'production') {
+        return this.getMockSearchResults(keywords);
+      }
+      throw error;
+    }
     // Simple filter
     // Prioritize startsWith, then includes
     const results = instrumentList.filter(item => {
@@ -138,6 +169,21 @@ class StockService {
         if (search.length > 0) instrumentKey = search[0].instrument_key;
       }
 
+      // For daily data (1M, 3M, 1Y)
+      return await this.getDailyData(symbol, config);
+    } catch (error) {
+      console.error('Error fetching historical data:', error.message);
+
+      // Fallback to mock data
+      if (process.env.NODE_ENV !== 'production') {
+        // Ensure we have a base price in the database or fetch it/create it
+        let currentPrice;
+        if (mockDatabase[symbol]) {
+          currentPrice = mockDatabase[symbol].price;
+        } else {
+          // If not in DB, try to get a quote first to initialize it
+          const quote = await this.getQuote(symbol); // This will handle mock initialization
+          currentPrice = quote.price;
       const headers = await this.getHeaders();
 
       // Parallel call to LTP and OHLC to build a "Full Quote"

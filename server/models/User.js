@@ -48,6 +48,13 @@ const userSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now
+  },
+  twoFactorSecret: {
+    type: String,
+  },
+  isTwoFactorEnabled: {
+    type: Boolean,
+    default: false
   }
 });
 

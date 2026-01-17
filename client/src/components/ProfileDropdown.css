@@ -109,6 +109,12 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.03);
 }
 
+.menu-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.05);
+    margin: 4px 12px;
+}
+
 .menu-section:last-child {
     border-bottom: none;
 }
