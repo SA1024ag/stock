@@ -5,7 +5,7 @@ import { useTheme } from '../context/ThemeContext';
 import ProfileDropdown from './ProfileDropdown';
 import './Navbar.css';
 import api from '../services/api';
-import NewsPanel from './NewsPanel';
+
 
 function Navbar() {
   const { user, logout } = useAuth();
@@ -18,7 +18,7 @@ function Navbar() {
 
   const [showProfileDropdown, setShowProfileDropdown] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
-  const [showNewsPanel, setShowNewsPanel] = React.useState(false);
+
 
   // Close dropdown when clicking outside
   React.useEffect(() => {
@@ -198,7 +198,7 @@ function Navbar() {
         )}
       </div>
 
-      <NewsPanel isOpen={showNewsPanel} onClose={() => setShowNewsPanel(false)} />
+
     </nav>
   );
 }

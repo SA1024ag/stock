@@ -38,14 +38,7 @@ function NewsPanel({ isOpen, onClose }) {
     const formatTimestamp = (timestamp) => {
         if (!timestamp) return '';
 
-        // Alpha Vantage format: YYYYMMDDTHHMMSS
-        const year = timestamp.substring(0, 4);
-        const month = timestamp.substring(4, 6);
-        const day = timestamp.substring(6, 8);
-        const hour = timestamp.substring(9, 11);
-        const minute = timestamp.substring(11, 13);
-
-        const date = new Date(`${year}-${month}-${day}T${hour}:${minute}:00`);
+        const date = new Date(timestamp);
         const now = new Date();
         const diffMs = now - date;
         const diffMins = Math.floor(diffMs / 60000);
