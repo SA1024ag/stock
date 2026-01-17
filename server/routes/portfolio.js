@@ -369,4 +369,25 @@ async function calculateCurrentPortfolioValue(portfolio) {
   return totalValue;
 }
 
+// Reset portfolio
+router.post('/reset', async (req, res) => {
+  try {
+    // Delete all portfolio entries for the user
+    await Portfolio.deleteMany({ user: req.user._id });
+
+    // Reset user balance to 10000
+    const user = await User.findById(req.user._id);
+    user.virtualBalance = 10000;
+    await user.save();
+
+    res.json({
+      message: 'Portfolio reset successfully',
+      balance: user.virtualBalance
+    });
+  } catch (error) {
+    console.error('Reset portfolio error:', error);
+    res.status(500).json({ message: 'Error resetting portfolio' });
+  }
+});
+
 module.exports = router;

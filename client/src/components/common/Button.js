@@ -7,16 +7,19 @@ const Button = ({
     className = '',
     isLoading = false,
     disabled,
+    fullWidth = false,
     ...props
 }) => {
     const baseClass = 'btn';
     const variantClass = `btn-${variant}`;
     const sizeClass = size === 'sm' ? 'btn-sm' : size === 'lg' ? 'btn-lg' : '';
+    const widthStyle = fullWidth ? { width: '100%' } : {};
 
     return (
         <button
             className={`${baseClass} ${variantClass} ${sizeClass} ${className}`}
             disabled={disabled || isLoading}
+            style={widthStyle}
             {...props}
         >
             {isLoading ? (

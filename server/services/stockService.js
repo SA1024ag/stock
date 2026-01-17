@@ -51,7 +51,7 @@ class StockService {
     } catch (error) {
       console.error('Error fetching stock quote:', error.message);
       // Fallback: Return mock data for development
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env.NODE_ENV !== 'production') {
         return this.getMockQuote(symbol);
       }
       throw error;
@@ -83,7 +83,7 @@ class StockService {
     } catch (error) {
       console.error('Error searching stocks:', error.message);
       // Fallback: Return mock data for development
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env.NODE_ENV !== 'production') {
         return this.getMockSearchResults(keywords);
       }
       throw error;
@@ -109,7 +109,7 @@ class StockService {
       console.error('Error fetching historical data:', error.message);
 
       // Fallback to mock data
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env.NODE_ENV !== 'production') {
         // Ensure we have a base price in the database or fetch it/create it
         let currentPrice;
         if (mockDatabase[symbol]) {

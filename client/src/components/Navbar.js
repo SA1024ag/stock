@@ -64,7 +64,7 @@ function Navbar() {
   };
 
   // Memoize the debounced search function
-  const debouncedSearch = React.useCallback(debounce(searchStocks, 500), []);
+  const debouncedSearch = React.useCallback(debounce(searchStocks, 300), []);
 
   const handleSearchChange = (e) => {
     const query = e.target.value;
