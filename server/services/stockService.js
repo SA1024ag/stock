@@ -10,8 +10,8 @@ const BASE_URL_V3 = 'https://api.upstox.com/v3';
 
 // Search results suggest .gz is the standard
 const MASTER_LIST_URLS = [
-  'https://assets.upstox.com/market-quote/instruments/exchange/NSE.json.gz',
-  'https://assets.upstox.com/market-quote/instruments/exchange/BSE.json.gz'
+  { url: 'https://assets.upstox.com/market-quote/instruments/exchange/NSE.json.gz', exchange: 'NSE' },
+  { url: 'https://assets.upstox.com/market-quote/instruments/exchange/BSE.json.gz', exchange: 'BSE' }
 ];
 
 // In-memory Instrument Database
@@ -20,7 +20,11 @@ let instrumentList = [];
 class StockService {
   constructor() {
     // Download master list on startup
-    this.downloadMasterList();
+    this.initPromise = this.downloadMasterList();
+  }
+
+  async ensureInitialized() {
+    if (this.initPromise) await this.initPromise;
   }
 
   get instrumentList() {
@@ -34,9 +38,9 @@ class StockService {
     instrumentList = []; // Reset
     let errors = [];
 
-    for (const url of MASTER_LIST_URLS) {
+    for (const source of MASTER_LIST_URLS) {
       try {
-        const response = await axios.get(url, {
+        const response = await axios.get(source.url, {
           responseType: 'arraybuffer' // Important for binary GZ
         });
 
@@ -47,26 +51,28 @@ class StockService {
         const data = JSON.parse(jsonString);
 
         if (Array.isArray(data)) {
-          console.log(`Sample item:`, data[0]);
+          console.log(`Sample item from ${source.exchange}:`, data[0]);
           const filtered = data.filter(item =>
-          ((item.exchange === 'NSE' || item.exchange === 'BSE') &&
-            (item.instrument_type === 'EQ' || item.instrument_type === 'INDEX'))
+            // item.exchange might be missing in V3 files, so we rely on source.exchange context
+            // checking instrument_type is still valid?
+            (item.instrument_type === 'EQ' || item.instrument_type === 'INDEX')
           );
 
-          // Normalize items for unified structure
+          // Normalize items for unified structure and INJECT exchange
           const normalized = filtered.map(item => ({
             ...item,
+            exchange: source.exchange, // Explicitly set based on source
             name: item.name || item.short_name || item.trading_symbol // Fallback for name
           }));
 
           instrumentList.push(...normalized);
-          console.log(`Loaded ${filtered.length} instruments from ${url}`);
+          console.log(`Loaded ${filtered.length} instruments from ${source.exchange}`);
         } else {
-          errors.push({ url, error: 'Not an array', type: typeof data });
+          errors.push({ url: source.url, error: 'Not an array', type: typeof data });
         }
       } catch (error) {
-        console.error(`Failed to download master list from ${url}:`, error.message);
-        errors.push({ url, error: error.message });
+        console.error(`Failed to download master list from ${source.url}:`, error.message);
+        errors.push({ url: source.url, error: error.message });
       }
     }
     console.log(`Total Instruments Loaded: ${instrumentList.length}`);
@@ -85,6 +91,9 @@ class StockService {
   // --- 2. Search (Local In-Memory) ---
 
   async searchStocks(keywords) {
+    if (!this.initPromise) this.initPromise = this.downloadMasterList();
+    await this.initPromise;
+
     if (!keywords || instrumentList.length === 0) return [];
 
     const query = keywords.toUpperCase();
@@ -133,6 +142,12 @@ class StockService {
   async getQuote(symbol) {
     try {
       let instrumentKey = this.getInstrumentKeySync(symbol);
+      if (!instrumentKey) {
+        // Wait for init if not found immediately
+        await this.ensureInitialized();
+        instrumentKey = this.getInstrumentKeySync(symbol);
+      }
+
       if (!instrumentKey) {
         instrumentKey = `NSE_EQ|${symbol.toUpperCase()}`;
         const search = await this.searchStocks(symbol);
@@ -190,35 +205,57 @@ class StockService {
     }
   }
 
-  // --- 4. Indices (V3) ---
+  // --- 4. Indices & Movers (V3) ---
 
   async getMarketIndices() {
     // Keys: NSE_INDEX|Nifty 50, BSE_INDEX|SENSEX
     // These formats usually persist in V3.
     const indices = [
       { name: 'NIFTY 50', key: 'NSE_INDEX|Nifty 50' },
-      { name: 'SENSEX', key: 'BSE_INDEX|SENSEX' }
+      { name: 'SENSEX', key: 'BSE_INDEX|SENSEX' },
+      { name: 'BANK NIFTY', key: 'NSE_INDEX|Nifty Bank' }
     ];
 
     try {
       const headers = await this.getHeaders();
       const keys = indices.map(i => i.key).join(',');
 
-      const response = await axios.get(`${BASE_URL_V3}/market-quote/quotes`, {
-        headers,
-        params: { instrument_key: keys }
-      });
+      // Parallel LTP & OHLC Fetch (Batch Quotes endpoint is unreliable)
+      const [ltpRes, ohlcRes] = await Promise.allSettled([
+        axios.get(`${BASE_URL_V3}/market-quote/ltp`, { headers, params: { instrument_key: keys } }),
+        axios.get(`${BASE_URL_V3}/market-quote/ohlc`, { headers, params: { instrument_key: keys, interval: '1d' } })
+      ]);
 
-      const data = response.data.data;
+      const ltpData = ltpRes.status === 'fulfilled' ? ltpRes.value.data.data : {};
+      const ohlcData = ohlcRes.status === 'fulfilled' ? ohlcRes.value.data.data : {};
+
+      // Helper to find data matching a key
+      const findInResponse = (dataObj, key) => {
+        if (!dataObj) return null;
+        // Exact match
+        if (dataObj[key]) return dataObj[key];
+        // Try replacing | with : (API often returns : format e.g. NSE_INDEX:Nifty 50)
+        const altKey = key.replace('|', ':');
+        if (dataObj[altKey]) return dataObj[altKey];
+        return null;
+      };
+
       return indices.map(idx => {
-        const d = data[idx.key];
-        if (!d) return { name: idx.name, price: 0, change: 0, changePercent: 0 };
+        const ltp = findInResponse(ltpData, idx.key);
+        const ohlc = findInResponse(ohlcData, idx.key);
+
+        const price = ltp ? ltp.last_price : 0;
+        // LTP endpoint gives 'cp' (Close Price / Previous Close)
+        const prevClose = ltp && ltp.cp ? ltp.cp : (ohlc && ohlc.previous_close ? ohlc.previous_close : price);
+
+        const change = price - prevClose;
+        const changePercent = prevClose ? (change / prevClose * 100) : 0;
+
         return {
           name: idx.name,
-          price: d.last_price,
-          change: d.net_change,
-          changePercent: d.net_change && d.last_price ? (d.net_change / (d.last_price - d.net_change) * 100) : 0,
-          // Or calc from OHLC close if available
+          price: price,
+          change: change,
+          changePercent: changePercent,
           isOpen: true
         };
       });
@@ -231,6 +268,103 @@ class StockService {
         { name: 'SENSEX', price: 73000, change: 300, changePercent: 0.4 }
       ];
       return [];
+    }
+  }
+
+  // Get Top Gainers and Losers from a curated NIFTY list
+  async getTopMovers() {
+    const POPULAR_SYMBOLS = [
+      'RELIANCE', 'TCS', 'HDFCBANK', 'ICICIBANK', 'INFY',
+      'SBIN', 'BHARTIARTL', 'ITC', 'LICI', 'LT',
+      'TATAMOTORS', 'AXISBANK', 'HCLTECH', 'MARUTI', 'SUNPHARMA'
+    ];
+
+    const quotes = [];
+    const keysToFetch = [];
+    const symbolMap = {};
+
+    // 1. Resolve Keys (After ensuring Init)
+    await this.ensureInitialized();
+
+    POPULAR_SYMBOLS.forEach(sym => {
+      const key = this.getInstrumentKeySync(sym);
+      if (key) {
+        keysToFetch.push(key);
+        symbolMap[key] = sym;
+      }
+    });
+
+    if (keysToFetch.length === 0) return { gainers: [], losers: [] };
+
+    try {
+      const headers = await this.getHeaders();
+      const params = { instrument_key: keysToFetch.join(',') };
+
+      // 2. Batch Fetch LTP and OHLC in parallel
+      // Note: 'quotes' endpoint failed, so we construct it manually
+      const [ltpRes, ohlcRes] = await Promise.allSettled([
+        axios.get(`${BASE_URL_V3}/market-quote/ltp`, { headers, params }),
+        axios.get(`${BASE_URL_V3}/market-quote/ohlc`, { headers, params: { ...params, interval: '1d' } })
+      ]);
+
+      const ltpData = ltpRes.status === 'fulfilled' ? ltpRes.value.data.data : {};
+      const ohlcData = ohlcRes.status === 'fulfilled' ? ohlcRes.value.data.data : {};
+
+      // Helper to find data matching a key (handles NSE_EQ:SYMBOL format vs keys)
+      const findInResponse = (dataObj, key, sym) => {
+        if (!dataObj) return null;
+        if (dataObj[key]) return dataObj[key]; // Exact match
+        // Try format NSE_EQ:SYMBOL
+        const altKey = `NSE_EQ:${sym}`;
+        if (dataObj[altKey]) return dataObj[altKey];
+        return null;
+      };
+
+      // 3. Process & Merge
+      keysToFetch.forEach(key => {
+        const sym = symbolMap[key];
+        const ltp = findInResponse(ltpData, key, sym);
+        const ohlc = findInResponse(ohlcData, key, sym);
+
+        if (ltp) {
+          const price = ltp.last_price;
+          // Use 'cp' from LTP data for previous close
+          const prevClose = ltp.cp || (ohlc && ohlc.previous_close ? ohlc.previous_close : price);
+          const change = price - prevClose;
+          const changePercent = prevClose ? (change / prevClose * 100) : 0;
+
+          quotes.push({
+            symbol: sym,
+            price: price,
+            change: change,
+            changePercent: changePercent,
+            open: ohlc?.ohlc?.open || price,
+            high: ohlc?.ohlc?.high || price,
+            low: ohlc?.ohlc?.low || price,
+            volume: ohlc?.volume || 0
+          });
+        }
+      });
+
+      // 4. Sort
+      quotes.sort((a, b) => b.changePercent - a.changePercent);
+
+      return {
+        gainers: quotes.slice(0, 5),
+        losers: quotes.slice(-5).reverse()
+      };
+
+    } catch (e) {
+      console.error('getTopMovers Error:', e.message);
+
+      // Check if it's an authentication error
+      if (e.response?.status === 401) {
+        console.error('❌ Upstox Token Expired! Please re-authenticate at: http://localhost:5000/api/auth/upstox/login');
+      } else if (e.response) {
+        console.error('API Error Data:', JSON.stringify(e.response.data, null, 2));
+      }
+
+      return { gainers: [], losers: [] };
     }
   }
 

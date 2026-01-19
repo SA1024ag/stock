@@ -143,7 +143,7 @@ const ProfilePanel = ({ isOpen, onClose, anchorRef }) => {
                 <div className="profile-balance">
                     <span className="label">Net Worth</span>
                     <span className="value text-green">
-                        ${(user?.virtualBalance || 0).toLocaleString()}
+                        ₹{(user?.virtualBalance || 0).toLocaleString('en-IN')}
                     </span>
                 </div>
             </div>

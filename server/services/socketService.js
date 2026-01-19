@@ -54,6 +54,9 @@ class SocketService {
             if (error.message.includes('No access token')) {
                 console.log('Upstox WebSocket: Waiting for user login...');
                 this.scheduleReconnect(30000); // Wait 30s if not logged in
+            } else if (error.response?.status === 401) {
+                console.error('❌ Upstox Token Expired! Please re-authenticate at: http://localhost:5000/api/auth/upstox/login');
+                this.scheduleReconnect(60000); // Wait 60s before retry to avoid spam
             } else {
                 console.error('Failed to connect to Upstox WS:', error.message);
                 this.scheduleReconnect();

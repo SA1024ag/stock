@@ -121,7 +121,7 @@ function Portfolio() {
         <Card className="summary-card glass-card glow-border-blue">
           <div className="summary-content">
             <span className="summary-label">Total Portfolio Value</span>
-            <span className="summary-value-xl">${portfolioSummary.totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            <span className="summary-value-xl">₹{portfolioSummary.totalValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             <div className="summary-meta">
               <span className={`day-change ${dayChangePercent >= 0 ? 'positive' : 'negative'}`}>
                 {dayChangePercent >= 0 ? '▲' : '▼'} {Math.abs(dayChangePercent).toFixed(2)}% today
@@ -134,7 +134,7 @@ function Portfolio() {
           <div className="summary-content">
             <span className="summary-label">Total Profit/Loss</span>
             <span className={`summary-value-xl ${isPositive ? 'text-green' : 'text-red'}`}>
-              {isPositive ? '+' : ''}${Math.abs(portfolioSummary.totalGainLoss).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {isPositive ? '+' : ''}₹{Math.abs(portfolioSummary.totalGainLoss).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
             <div className="summary-meta">
               <span className={`percent-badge ${isPositive ? 'badge-green' : 'badge-red'}`}>
@@ -147,7 +147,7 @@ function Portfolio() {
         <Card className="summary-card glass-card">
           <div className="summary-content">
             <span className="summary-label">Cash Balance</span>
-            <span className="summary-value-xl">${portfolioSummary.virtualBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            <span className="summary-value-xl">₹{portfolioSummary.virtualBalance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             <div className="summary-meta">
               <span className="meta-text">Available for trading</span>
             </div>
@@ -157,7 +157,7 @@ function Portfolio() {
         <Card className="summary-card glass-card">
           <div className="summary-content">
             <span className="summary-label">Total Invested</span>
-            <span className="summary-value-xl text-muted">${portfolioSummary.totalInvested.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            <span className="summary-value-xl text-muted">₹{portfolioSummary.totalInvested.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             <div className="summary-meta">
               <span className="meta-text">{portfolioSummary.holdings.length} positions</span>
             </div>
@@ -203,7 +203,7 @@ function Portfolio() {
                 stroke="#6b7280"
                 style={{ fontSize: '12px' }}
                 tickLine={false}
-                tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+                tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`}
               />
               <Tooltip
                 contentStyle={{
@@ -214,7 +214,7 @@ function Portfolio() {
                 }}
                 labelStyle={{ color: '#9ca3af' }}
                 itemStyle={{ color: '#3b82f6' }}
-                formatter={(value) => [`$${value.toLocaleString()}`, 'Value']}
+                formatter={(value) => [`₹${value.toLocaleString('en-IN')}`, 'Value']}
               />
               <Line
                 type="monotone"
@@ -265,7 +265,7 @@ function Portfolio() {
                     <span className="holding-shares">{holding.shares || 0} shares</span>
                   </div>
                   <div className={`holding-pnl ${isGain ? 'positive' : 'negative'}`}>
-                    <span className="pnl-amount">{isGain ? '+' : ''}${Math.abs(gain).toFixed(2)}</span>
+                    <span className="pnl-amount">{isGain ? '+' : ''}₹{Math.abs(gain).toFixed(2)}</span>
                     <span className="pnl-percent">{isGain ? '+' : ''}{gainLossPercent.toFixed(2)}%</span>
                   </div>
                 </div>
@@ -273,15 +273,15 @@ function Portfolio() {
                 <div className="holding-details">
                   <div className="detail-row">
                     <span className="detail-label">Avg Price</span>
-                    <span className="detail-value">${averagePrice.toFixed(2)}</span>
+                    <span className="detail-value">₹{averagePrice.toFixed(2)}</span>
                   </div>
                   <div className="detail-row">
                     <span className="detail-label">Current</span>
-                    <span className="detail-value">${currentPrice.toFixed(2)}</span>
+                    <span className="detail-value">₹{currentPrice.toFixed(2)}</span>
                   </div>
                   <div className="detail-row">
                     <span className="detail-label">Total Value</span>
-                    <span className="detail-value-bold">${currentValue.toFixed(2)}</span>
+                    <span className="detail-value-bold">₹{currentValue.toFixed(2)}</span>
                   </div>
                   {holding.stopLoss && (
                     <div className="detail-row">
@@ -361,11 +361,11 @@ function Portfolio() {
                       <Link to={`/stock/${trade.symbol}`} className="trade-symbol">
                         {trade.symbol}
                       </Link>
-                      <span className="trade-quantity">{trade.shares} shares @ ${trade.price.toFixed(2)}</span>
+                      <span className="trade-quantity">{trade.shares} shares @ ₹{trade.price.toFixed(2)}</span>
                     </div>
                   </div>
                   <div className="trade-meta">
-                    <span className="trade-total">${(trade.shares * trade.price).toFixed(2)}</span>
+                    <span className="trade-total">₹{(trade.shares * trade.price).toFixed(2)}</span>
                     <span className="trade-date">
                       {tradeDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} • {tradeDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                     </span>

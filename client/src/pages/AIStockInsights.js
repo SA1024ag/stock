@@ -94,7 +94,7 @@ const AIStockInsights = () => {
                         <div className="stock-header">
                             <h2>{analysis.symbol}</h2>
                             <div className={`price-badge ${analysis.stockData.change >= 0 ? 'positive' : 'negative'}`}>
-                                ${analysis.stockData.price.toFixed(2)}
+                                ₹{analysis.stockData.price.toFixed(2)}
                             </div>
                         </div>
 
@@ -112,11 +112,11 @@ const AIStockInsights = () => {
                             </div>
                             <div className="metric">
                                 <span className="metric-label">52W High</span>
-                                <span className="metric-value">${analysis.stockData.high.toFixed(2)}</span>
+                                <span className="metric-value">₹{analysis.stockData.high.toFixed(2)}</span>
                             </div>
                             <div className="metric">
                                 <span className="metric-label">52W Low</span>
-                                <span className="metric-value">${analysis.stockData.low.toFixed(2)}</span>
+                                <span className="metric-value">₹{analysis.stockData.low.toFixed(2)}</span>
                             </div>
                         </div>
                     </div>

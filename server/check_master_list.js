@@ -17,11 +17,30 @@ async function check() {
             try {
                 const decompressed = zlib.gunzipSync(response.data);
                 const json = JSON.parse(decompressed.toString('utf-8'));
-                console.log('First Item Keys:', Object.keys(json[0]));
-                console.log('First Item Values:', json[0]);
+                console.log(`Total Items: ${json.length}`);
 
-                const eq = json.find(i => i.symbol === 'RELIANCE' || i.trading_symbol === 'RELIANCE');
-                if (eq) console.log('Reliance Item:', eq);
+                // EXACT FILTER FROM stockService.js
+                const filtered = json.filter(item =>
+                ((item.exchange === 'NSE' || item.exchange === 'BSE') &&
+                    (item.instrument_type === 'EQ' || item.instrument_type === 'INDEX'))
+                );
+
+                console.log(`Filtered Items: ${filtered.length}`);
+
+                const eq = filtered.find(i => i.trading_symbol === 'RELIANCE');
+                if (eq) {
+                    console.log('Reliance SURVIVED filter:', eq);
+                } else {
+                    console.log('Reliance REJECTED by filter.');
+                    // Find it in raw
+                    const raw = json.find(i => i.trading_symbol === 'RELIANCE');
+                    if (raw) {
+                        console.log('Raw Reliance:', raw);
+                        console.log(`EXCHANGE PROPERTY: '${raw.exchange}'`);
+                        console.log(`TYPE PROPERTY: '${raw.instrument_type}'`);
+                    }
+                }
+
             } catch (e) {
                 console.log('Not GZIP, trying string...');
                 const text = response.data.toString('utf-8');

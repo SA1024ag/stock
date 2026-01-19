@@ -17,10 +17,11 @@ async function testQuote() {
         console.log('Using Access Token:', accessToken.substring(0, 10) + '...');
 
         const instrumentKey = 'NSE_EQ|INE002A01018'; // Reliance
+        // const instrumentKey = 'NSE_INDEX|Nifty 50'; 
 
-        console.log(`Fetching LTP for ${instrumentKey}...`);
+        console.log(`Fetching OHLC for ${instrumentKey}...`);
 
-        const url = `https://api.upstox.com/v3/market-quote/ltp?instrument_key=${encodeURIComponent(instrumentKey)}`;
+        const url = `https://api.upstox.com/v3/market-quote/ohlc?instrument_key=${encodeURIComponent(instrumentKey)}&interval=1d`;
 
         try {
             const response = await axios.get(url, {
