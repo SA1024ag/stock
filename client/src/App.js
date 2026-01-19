@@ -9,6 +9,7 @@ import StockSearch from './pages/StockSearch';
 import StockDetail from './pages/StockDetail';
 import Portfolio from './pages/Portfolio';
 import News from './pages/News';
+import Community from './pages/Community';
 import Home from './pages/Home';
 
 
@@ -58,6 +59,7 @@ function AppRoutes() {
       <Route path="/stock/:symbol" element={<PrivateRoute><StockDetail /></PrivateRoute>} />
       <Route path="/portfolio" element={<PrivateRoute><Portfolio /></PrivateRoute>} />
       <Route path="/news" element={<PrivateRoute><News /></PrivateRoute>} />
+      <Route path="/community" element={<PrivateRoute><Community /></PrivateRoute>} />
 
       <Route path="/news/:symbol" element={<PrivateRoute><News /></PrivateRoute>} />
 
