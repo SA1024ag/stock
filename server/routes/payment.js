@@ -5,15 +5,29 @@ const crypto = require('crypto');
 const auth = require('../middleware/auth');
 const User = require('../models/User');
 
-// Initialize Razorpay
-const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET
-});
+// Initialize Razorpay only if credentials are available
+let razorpay = null;
+
+if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
+    razorpay = new Razorpay({
+        key_id: process.env.RAZORPAY_KEY_ID,
+        key_secret: process.env.RAZORPAY_KEY_SECRET
+    });
+    console.log('✅ Razorpay initialized successfully');
+} else {
+    console.warn('⚠️ Razorpay credentials not found in .env - Payment features will be disabled');
+}
+
 
 // Create Order
 router.post('/create-order', auth, async (req, res) => {
     try {
+        if (!razorpay) {
+            return res.status(503).json({
+                message: 'Payment service is not configured. Please contact administrator.'
+            });
+        }
+
         const { amount, currency = 'INR' } = req.body;
 
         if (!amount) {

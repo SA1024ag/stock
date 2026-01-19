@@ -140,6 +140,25 @@ class StockService {
   // --- 3. Market Quotes (V3) ---
 
   async getQuote(symbol) {
+    // Try Upstox first if token is available
+    const hasValidToken = upstoxAuthService.accessToken && !upstoxAuthService.isTokenExpired();
+
+    if (hasValidToken) {
+      try {
+        return await this.getQuoteFromUpstox(symbol);
+      } catch (error) {
+        console.warn(`⚠️ Upstox quote failed for ${symbol}, falling back to Yahoo Finance:`, error.message);
+        // Fall through to Yahoo Finance
+      }
+    }
+
+    // Fallback to Yahoo Finance
+    const yahooFinanceService = require('./yahooFinanceService');
+    return await yahooFinanceService.getQuote(symbol);
+  }
+
+  // Original Upstox implementation
+  async getQuoteFromUpstox(symbol) {
     try {
       let instrumentKey = this.getInstrumentKeySync(symbol);
       if (!instrumentKey) {
@@ -192,15 +211,12 @@ class StockService {
         low: ohlc.low || price,
         open: ohlc.open || price,
         previousClose: prevClose,
-        instrument_key: instrumentKey
+        instrument_key: instrumentKey,
+        source: 'upstox'
       };
 
     } catch (error) {
       console.error(`Upstox V3 Quote Error (${symbol}):`, error.response?.data || error.message);
-      if (process.env.NODE_ENV !== 'production') {
-        // Fallback to mock
-        return this.getMockQuote(symbol);
-      }
       throw error;
     }
   }
@@ -273,6 +289,28 @@ class StockService {
 
   // Get Top Gainers and Losers from a curated NIFTY list
   async getTopMovers() {
+    // Try Upstox first if token is available and not expired
+    const hasValidToken = upstoxAuthService.accessToken && !upstoxAuthService.isTokenExpired();
+
+    if (hasValidToken) {
+      try {
+        console.log('📊 Fetching top movers from Upstox...');
+        return await this.getTopMoversFromUpstox();
+      } catch (e) {
+        console.warn('⚠️ Upstox failed, falling back to Yahoo Finance:', e.message);
+        // Fall through to Yahoo Finance
+      }
+    } else {
+      console.log('🌐 Using Yahoo Finance (Upstox token not available)');
+    }
+
+    // Fallback to Yahoo Finance
+    const yahooFinanceService = require('./yahooFinanceService');
+    return await yahooFinanceService.getTopMovers();
+  }
+
+  // Original Upstox implementation (renamed)
+  async getTopMoversFromUpstox() {
     const POPULAR_SYMBOLS = [
       'RELIANCE', 'TCS', 'HDFCBANK', 'ICICIBANK', 'INFY',
       'SBIN', 'BHARTIARTL', 'ITC', 'LICI', 'LT',
@@ -341,7 +379,8 @@ class StockService {
             open: ohlc?.ohlc?.open || price,
             high: ohlc?.ohlc?.high || price,
             low: ohlc?.ohlc?.low || price,
-            volume: ohlc?.volume || 0
+            volume: ohlc?.volume || 0,
+            source: 'upstox'
           });
         }
       });
@@ -351,11 +390,12 @@ class StockService {
 
       return {
         gainers: quotes.slice(0, 5),
-        losers: quotes.slice(-5).reverse()
+        losers: quotes.slice(-5).reverse(),
+        source: 'upstox'
       };
 
     } catch (e) {
-      console.error('getTopMovers Error:', e.message);
+      console.error('getTopMoversFromUpstox Error:', e.message);
 
       // Check if it's an authentication error
       if (e.response?.status === 401) {
@@ -364,7 +404,7 @@ class StockService {
         console.error('API Error Data:', JSON.stringify(e.response.data, null, 2));
       }
 
-      return { gainers: [], losers: [] };
+      throw e; // Throw to trigger fallback
     }
   }
 
@@ -374,17 +414,36 @@ class StockService {
   // OR look for V3 if exists. Most likely it shares the endpoint structure.
 
   async getHistoricalData(symbol, timeframe = '1M') {
-    // Reuse logic but ensure key is correct
-    const instrumentKey = this.getInstrumentKeySync(symbol) || `NSE_EQ|${symbol.toUpperCase()}`;
+    // Always use Yahoo Finance for historical data to get fresh data
+    console.log(`🌐 Fetching historical data from Yahoo Finance: ${symbol} (${timeframe})`);
+    const yahooFinanceService = require('./yahooFinanceService');
 
-    // ... (Rest of logic similar to previous V2, as Historical often persists)
-    // We will assume the V2 path works for now, or check for V3 path.
-    // Docs: https://api.upstox.com/v2/historical-candle/... is standard.
-    // Let's keep the existing logic but ensure Error logging is verbose.
+    try {
+      const data = await yahooFinanceService.getHistoricalData(symbol, timeframe);
+      if (data && data.length > 0) {
+        return data;
+      }
+    } catch (error) {
+      console.warn(`⚠️ Yahoo Finance failed for ${symbol}, trying Upstox...`);
+    }
 
-    // ... (Previous getHistoricalData code here, ensuring headers are set) 
-    return this._getHistoricalDataLogic(instrumentKey, timeframe);
+    // Fallback to Upstox if Yahoo Finance fails
+    const hasValidToken = upstoxAuthService.accessToken && !upstoxAuthService.isTokenExpired();
+    if (hasValidToken) {
+      try {
+        const instrumentKey = this.getInstrumentKeySync(symbol) || `NSE_EQ|${symbol.toUpperCase()}`;
+        return await this._getHistoricalDataLogic(instrumentKey, timeframe);
+      } catch (error) {
+        console.error(`❌ Both Yahoo Finance and Upstox failed for ${symbol}`);
+      }
+    }
+
+    return [];
   }
+
+
+
+
 
   async _getHistoricalDataLogic(instrumentKey, timeframe) {
     try {
