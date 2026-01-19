@@ -26,6 +26,8 @@
     "nodemon": "^3.0.2"
   },
   "dependencies": {
-    "lightweight-charts": "^5.1.0"
+    "lightweight-charts": "^5.1.0",
+    "razorpay": "^2.9.6",
+    "upstox": "^1.2.3"
   }
 }

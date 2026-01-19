@@ -10,9 +10,31 @@ console.log('MONGODB_URI =>', process.env.MONGODB_URI);
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const http = require('http'); // Import http
+const { Server } = require('socket.io'); // Import Server from socket.io
 const socketService = require('./services/socketService');
 
 const app = express();
+const server = http.createServer(app); // Create HTTP server
+
+// Socket.IO setup
+const io = new Server(server, {
+  cors: {
+    origin: "*", // Allow all origins for simplicity (or specify client URL)
+    methods: ["GET", "POST"]
+  }
+});
+
+// Store io in app instance for routes to use
+app.set('io', io);
+
+io.on('connection', (socket) => {
+  console.log('New client connected (Community):', socket.id);
+
+  socket.on('disconnect', () => {
+    console.log('Client disconnected (Community):', socket.id);
+  });
+});
 
 // Middleware
 app.use(cors());
@@ -48,8 +70,10 @@ async function startServer() {
     app.use('/api/ai', require('./routes/ai'));
     app.use('/api/news', require('./routes/news'));
     app.use('/api/payment', require('./routes/payment'));
+    app.use('/api/blog', require('./routes/blog')); // Add blog routes
 
-    app.listen(PORT, () => {
+    // Use server.listen instead of app.listen
+    server.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
   } catch (err) {
