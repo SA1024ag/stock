@@ -9,6 +9,7 @@ import StockSearch from './pages/StockSearch';
 import StockDetail from './pages/StockDetail';
 import Portfolio from './pages/Portfolio';
 import News from './pages/News';
+import Community from './pages/Community';
 import Home from './pages/Home';
 
 
@@ -16,6 +17,7 @@ import Home from './pages/Home';
 import AIStockInsights from './pages/AIStockInsights';
 import AIPortfolioAnalysis from './pages/AIPortfolioAnalysis';
 import AIRecommendations from './pages/AIRecommendations';
+import ScenarioSimulator from './pages/ScenarioSimulator';
 
 // Learning Pages
 import LearningHub from './pages/LearningHub';
@@ -58,6 +60,7 @@ function AppRoutes() {
       <Route path="/stock/:symbol" element={<PrivateRoute><StockDetail /></PrivateRoute>} />
       <Route path="/portfolio" element={<PrivateRoute><Portfolio /></PrivateRoute>} />
       <Route path="/news" element={<PrivateRoute><News /></PrivateRoute>} />
+      <Route path="/community" element={<PrivateRoute><Community /></PrivateRoute>} />
 
       <Route path="/news/:symbol" element={<PrivateRoute><News /></PrivateRoute>} />
 
@@ -67,6 +70,7 @@ function AppRoutes() {
       <Route path="/ai-insights" element={<PrivateRoute><AIStockInsights /></PrivateRoute>} />
       <Route path="/ai-portfolio" element={<PrivateRoute><AIPortfolioAnalysis /></PrivateRoute>} />
       <Route path="/ai-recommendations" element={<PrivateRoute><AIRecommendations /></PrivateRoute>} />
+      <Route path="/simulate" element={<PrivateRoute><ScenarioSimulator /></PrivateRoute>} />
 
       {/* Learning */}
       <Route path="/learning-hub" element={<PrivateRoute><LearningHub /></PrivateRoute>} />

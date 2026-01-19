@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import CandlestickChart from '../components/CandlestickChart';
+import StockPredictionSimulator from '../components/StockPredictionSimulator';
 import './StockDetail.css';
 
 function StockDetail() {
@@ -274,6 +275,11 @@ function StockDetail() {
               </div>
             )}
           </Card>
+
+          <StockPredictionSimulator
+            symbol={symbol}
+            currentPrice={stockData.price}
+          />
         </div>
 
         {/* Right Column: Trading Interface */}
@@ -315,7 +321,7 @@ function StockDetail() {
               {action === 'buy' && (
                 <>
                   <div className="form-group">
-                    <label>Stop Loss ($)</label>
+                    <label>Stop Loss (₹)</label>
                     <input
                       type="number"
                       value={stopLoss}
@@ -327,7 +333,7 @@ function StockDetail() {
                     />
                   </div>
                   <div className="form-group">
-                    <label>Take Profit ($)</label>
+                    <label>Take Profit (₹)</label>
                     <input
                       type="number"
                       value={takeProfit}

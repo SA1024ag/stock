@@ -12,15 +12,18 @@ class NewsService {
         this.cacheDuration = 15 * 60 * 1000; // 15 minutes
     }
 
-    async getMarketNews(limit = 20) {
+    async getMarketNews(limit = 20, timeRange = '1d') {
         try {
-            if (this.cache.timestamp && Date.now() - this.cache.timestamp < this.cacheDuration) {
-                return this.cache.data.slice(0, limit);
+            // Create a unique cache key based on params
+            const cacheKey = `news_${timeRange}_${limit}`;
+
+            if (this.cache[cacheKey] && Date.now() - this.cache[cacheKey].timestamp < this.cacheDuration) {
+                return this.cache[cacheKey].data;
             }
 
-            console.log('Fetching news from Google RSS...');
+            console.log(`Fetching news from Google RSS (India) for ${timeRange}...`);
             const response = await axios.get(this.baseUrl, {
-                params: { q: 'stock market finance business', hl: 'en-US', gl: 'US', ceid: 'US:en' }
+                params: { q: `stock market finance india NSE BSE when:${timeRange}`, hl: 'en-IN', gl: 'IN', ceid: 'IN:en' }
             });
 
             const result = await this.parser.parseStringPromise(response.data);
@@ -33,10 +36,12 @@ class NewsService {
                 pubDate: new Date(item.pubDate).toISOString(),
                 source: item.source ? (item.source._ || item.source) : 'Google News',
                 snippet: this._stripHtml(item.description || '')
-            }));
+            })).sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
 
-            this.cache = {
-                data: formattedNews,
+            if (!this.cache) this.cache = {}; // Initialize if somehow null
+
+            this.cache[cacheKey] = {
+                data: formattedNews.slice(0, limit),
                 timestamp: Date.now()
             };
 

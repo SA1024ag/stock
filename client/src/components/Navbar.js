@@ -110,6 +110,9 @@ function Navbar() {
               <Link to="/news" className={`nav-link ${isActive('/news')}`}>
                 News
               </Link>
+              <Link to="/community" className={`nav-link ${isActive('/community')}`}>
+                Community
+              </Link>
             </div>
 
             <div className="navbar-actions">
@@ -199,7 +202,7 @@ function Navbar() {
       </div>
 
 
-    </nav>
+    </nav >
   );
 }
 
