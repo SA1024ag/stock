@@ -25,7 +25,7 @@ function Payment() {
                 updateUser({ ...user, virtualBalance: response.data.balance });
             }
 
-            alert('Account reset successfully. Balance restored to $10,000.');
+            alert('Account reset successfully. Balance restored to ₹10,000.');
             navigate('/dashboard');
         } catch (error) {
             console.error('Reset error', error);
@@ -126,7 +126,7 @@ function Payment() {
                 {/* Flashcards Section - Now at Top */}
                 <div className="flashcards-container">
                     <Card className="glass-panel pricing-card">
-                        <div className="price-tag">$3</div>
+                        <div className="price-tag">₹3</div>
                         <h3>Starter Pack</h3>
                         <p className="credit-amount">1,000 Credits</p>
                         <p className="price-subtext">Real Money</p>
@@ -135,7 +135,7 @@ function Payment() {
 
                     <Card className="glass-panel pricing-card popular">
                         <div className="popular-badge">Most Popular</div>
-                        <div className="price-tag">$6</div>
+                        <div className="price-tag">₹6</div>
                         <h3>Trader Pack</h3>
                         <p className="credit-amount">5,000 Credits</p>
                         <p className="price-subtext">Real Money</p>
@@ -143,7 +143,7 @@ function Payment() {
                     </Card>
 
                     <Card className="glass-panel pricing-card">
-                        <div className="price-tag">$10</div>
+                        <div className="price-tag">₹10</div>
                         <h3>Pro Pack</h3>
                         <p className="credit-amount">10,000 Credits</p>
                         <p className="price-subtext">Real Money</p>
@@ -186,7 +186,7 @@ function Payment() {
                                 disabled={loading}
                                 className="btn-reset"
                             >
-                                {loading ? 'Resetting...' : 'Reset Portfolio to Default ($10,000)'}
+                                {loading ? 'Resetting...' : 'Reset Portfolio to Default (₹10,000)'}
                             </Button>
                             <p className="reset-subtext">Warning: This deletes all history and holdings.</p>
                         </div>

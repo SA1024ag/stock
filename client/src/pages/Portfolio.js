@@ -286,13 +286,13 @@ function Portfolio() {
                   {holding.stopLoss && (
                     <div className="detail-row">
                       <span className="detail-label">Stop Loss</span>
-                      <span className="detail-value text-red">${holding.stopLoss.toFixed(2)}</span>
+                      <span className="detail-value text-red">₹{holding.stopLoss.toFixed(2)}</span>
                     </div>
                   )}
                   {holding.takeProfit && (
                     <div className="detail-row">
                       <span className="detail-label">Take Profit</span>
-                      <span className="detail-value text-green">${holding.takeProfit.toFixed(2)}</span>
+                      <span className="detail-value text-green">₹{holding.takeProfit.toFixed(2)}</span>
                     </div>
                   )}
                 </div>
