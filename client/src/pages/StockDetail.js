@@ -315,7 +315,7 @@ function StockDetail() {
               {action === 'buy' && (
                 <>
                   <div className="form-group">
-                    <label>Stop Loss ($)</label>
+                    <label>Stop Loss (₹)</label>
                     <input
                       type="number"
                       value={stopLoss}
@@ -327,7 +327,7 @@ function StockDetail() {
                     />
                   </div>
                   <div className="form-group">
-                    <label>Take Profit ($)</label>
+                    <label>Take Profit (₹)</label>
                     <input
                       type="number"
                       value={takeProfit}
