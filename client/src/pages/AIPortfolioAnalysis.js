@@ -75,7 +75,7 @@ const AIPortfolioAnalysis = () => {
                         <div className="summary-stats">
                             <div className="stat-item">
                                 <span className="stat-label">Total Value</span>
-                                <span className="stat-value primary">${analysis.portfolioValue.toFixed(2)}</span>
+                                <span className="stat-value primary">₹{analysis.portfolioValue.toFixed(2)}</span>
                             </div>
                             <div className="stat-item">
                                 <span className="stat-label">Holdings</span>
@@ -103,10 +103,10 @@ const AIPortfolioAnalysis = () => {
                                         <tr key={holding.symbol}>
                                             <td><strong>{holding.symbol}</strong></td>
                                             <td>{holding.shares}</td>
-                                            <td>${holding.invested.toFixed(2)}</td>
-                                            <td>${holding.currentValue.toFixed(2)}</td>
+                                            <td>₹{holding.invested.toFixed(2)}</td>
+                                            <td>₹{holding.currentValue.toFixed(2)}</td>
                                             <td className={holding.gainLoss >= 0 ? 'text-green' : 'text-red'}>
-                                                {holding.gainLoss >= 0 ? '+' : ''}${holding.gainLoss.toFixed(2)}
+                                                {holding.gainLoss >= 0 ? '+' : ''}₹{holding.gainLoss.toFixed(2)}
                                                 <br />
                                                 <small>({holding.gainLossPercent.toFixed(2)}%)</small>
                                             </td>

@@ -4,22 +4,10 @@ import api from '../services/api';
 import './Home.css';
 
 // A curated list of popular symbols to sample performance from
-const DEFAULT_SYMBOLS = [
-  'AAPL',
-  'MSFT',
-  'GOOGL',
-  'AMZN',
-  'TSLA',
-  'META',
-  'NVDA',
-  'NFLX',
-  'JPM',
-  'DIS'
-];
+// const DEFAULT_SYMBOLS = []; // Removed
 
 function Home() {
-  const [symbols] = useState(DEFAULT_SYMBOLS);
-  const [quotes, setQuotes] = useState([]);
+  const [quotes, setQuotes] = useState({ top: [], worst: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -35,57 +23,36 @@ function Home() {
     setLoading(true);
     setError('');
     try {
-      const results = await Promise.all(
-        symbols.map(async (symbol) => {
-          try {
-            const res = await api.get(`/stocks/${symbol}`);
-            return res.data;
-          } catch (err) {
-            // If one symbol fails, skip it but keep the rest
-            console.error(`Failed to fetch quote for ${symbol}`, err);
-            return null;
-          }
-        })
-      );
+      // Fetch pre-calculated movers from backend
+      const res = await api.get('/stocks/market/movers');
+      setQuotes(res.data); // { gainers: [], losers: [] }
 
-      const validQuotes = results.filter(Boolean);
-      setQuotes(validQuotes);
     } catch (err) {
-      console.error('Error fetching quotes for home page', err);
-      setError('Failed to load top movers. Please try again later.');
+      console.error('Error fetching movers', err);
+      // Fail silently or show error?
+      // setError('Failed to load top movers.');
     } finally {
       setLoading(false);
     }
   };
 
-  const getSortedQuotes = () => {
-    if (!quotes.length) return { top: [], worst: [] };
-    const sorted = [...quotes].sort(
-      (a, b) => b.changePercent - a.changePercent
-    );
-    return {
-      top: sorted.slice(0, 3),
-      worst: sorted.slice(-3).reverse()
-    };
-  };
-
-  const { top, worst } = getSortedQuotes();
+  const { top = [], worst = [] } = { top: quotes.gainers, worst: quotes.losers };
 
   return (
     <div className="home">
       <h1>Market Snapshot</h1>
       <p className="home-subtitle">
-        See today&apos;s top gainers and losers from a curated list of popular stocks.
+        See today&apos;s top gainers and losers from a curated list of popular Indian stocks.
       </p>
 
       {loading && <div className="loading">Loading market data...</div>}
       {error && <div className="alert alert-error">{error}</div>}
 
-      {!loading && !error && quotes.length > 0 && (
+      {!loading && !error && (
         <div className="home-grid">
           <div className="card">
             <h2 className="card-header">Top Performing Stocks</h2>
-            {top.length === 0 ? (
+            {!top || top.length === 0 ? (
               <p>No data available.</p>
             ) : (
               <div className="home-list">
@@ -98,7 +65,7 @@ function Home() {
 
           <div className="card">
             <h2 className="card-header">Worst Performing Stocks</h2>
-            {worst.length === 0 ? (
+            {!worst || worst.length === 0 ? (
               <p>No data available.</p>
             ) : (
               <div className="home-list">
@@ -134,7 +101,7 @@ function StockSummary({ quote, positive }) {
       </div>
       <div className="home-stock-body">
         <div className="home-stock-price">
-          ${quote.price.toFixed(2)}
+          ₹{quote.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </div>
         <div className={`home-stock-change ${directionClass}`}>
           {isUp ? '+' : ''}
@@ -143,9 +110,9 @@ function StockSummary({ quote, positive }) {
         </div>
       </div>
       <div className="home-stock-meta">
-        <span>Open: ${quote.open.toFixed(2)}</span>
-        <span>High: ${quote.high.toFixed(2)}</span>
-        <span>Low: ${quote.low.toFixed(2)}</span>
+        <span>Open: ₹{quote.open.toLocaleString('en-IN')}</span>
+        <span>High: ₹{quote.high.toLocaleString('en-IN')}</span>
+        <span>Low: ₹{quote.low.toLocaleString('en-IN')}</span>
       </div>
     </div>
   );

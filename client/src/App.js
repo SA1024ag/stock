@@ -23,6 +23,8 @@ import { StockExplainers, BeginnerGuides, PortfolioReport, Transactions, ProfitL
 
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import useUpstoxAuth from './hooks/useUpstoxAuth';
+import TokenExpiredNotification from './components/TokenExpiredNotification';
 import './App.css';
 
 function PrivateRoute({ children }) {
@@ -80,11 +82,25 @@ function AppRoutes() {
 
 function AppContent() {
   const { user } = useAuth();
+  const { tokenStatus, openAuthPopup } = useUpstoxAuth();
+
+  const handleReauthenticate = () => {
+    openAuthPopup();
+  };
 
   return (
     <div className="App">
       <Navbar />
       {user && <Sidebar />}
+
+      {/* Token Expiry Notification - Only show for logged-in users */}
+      {user && (
+        <TokenExpiredNotification
+          tokenStatus={tokenStatus}
+          onReauthenticate={handleReauthenticate}
+        />
+      )}
+
       <main className="main-content">
         <AppRoutes />
       </main>

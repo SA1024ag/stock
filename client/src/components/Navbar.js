@@ -177,7 +177,7 @@ function Navbar() {
               <div className="balance-display glass-panel">
                 <span className="balance-label">Buying Power</span>
                 <span className="balance-amount text-green">
-                  ${user.virtualBalance?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
+                  ₹{user.virtualBalance?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
                 </span>
               </div>
 

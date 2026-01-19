@@ -191,7 +191,7 @@ const AIRecommendations = () => {
 
                     <div className="portfolio-value-card glass-panel">
                         <h4>Current Portfolio Value</h4>
-                        <div className="value-display">${recommendations.portfolioValue.toFixed(2)}</div>
+                        <div className="value-display">₹{recommendations.portfolioValue.toFixed(2)}</div>
                     </div>
                 </div>
             )}

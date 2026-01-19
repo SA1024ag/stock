@@ -5,29 +5,29 @@ const upstoxAuthService = require('../services/upstoxAuthService');
 // GET /api/auth/upstox/login
 // Redirects user to Upstox Login Page
 router.get('/login', (req, res) => {
-    const loginUrl = upstoxAuthService.getLoginUrl();
-    console.log('Redirecting to Upstox:', loginUrl);
-    res.redirect(loginUrl);
+  const loginUrl = upstoxAuthService.getLoginUrl();
+  console.log('Redirecting to Upstox:', loginUrl);
+  res.redirect(loginUrl);
 });
 
 // GET /api/auth/upstox/callback
 // Handles the redirect from Upstox with the auth code
 router.get('/callback', async (req, res) => {
-    const { code, error } = req.query;
+  const { code, error } = req.query;
 
-    if (error) {
-        return res.status(400).json({ message: 'Upstox login failed', error });
-    }
+  if (error) {
+    return res.status(400).json({ message: 'Upstox login failed', error });
+  }
 
-    if (!code) {
-        return res.status(400).json({ message: 'No authorization code received' });
-    }
+  if (!code) {
+    return res.status(400).json({ message: 'No authorization code received' });
+  }
 
-    try {
-        const tokenData = await upstoxAuthService.generateToken(code);
-        // res.json({ message: 'Upstox Login Successful', tokenData });
-        // In a real app, you might redirect to a success page or close the popup
-        res.send(`
+  try {
+    const tokenData = await upstoxAuthService.generateToken(code);
+    // res.json({ message: 'Upstox Login Successful', tokenData });
+    // In a real app, you might redirect to a success page or close the popup
+    res.send(`
       <html>
         <body>
           <h1>Login Successful</h1>
@@ -39,10 +39,27 @@ router.get('/callback', async (req, res) => {
         </body>
       </html>
     `);
-    } catch (err) {
-        console.error('Error in Upstox Callback:', err);
-        res.status(500).json({ message: 'Failed to generate token' });
-    }
+  } catch (err) {
+    console.error('Error in Upstox Callback:', err);
+    res.status(500).json({ message: 'Failed to generate token' });
+  }
+});
+
+// GET /api/auth/upstox/status
+// Check token validity status
+router.get('/status', (req, res) => {
+  try {
+    const status = upstoxAuthService.getTokenStatus();
+    res.json(status);
+  } catch (error) {
+    console.error('Error getting token status:', error);
+    res.status(500).json({
+      hasToken: false,
+      isExpired: true,
+      needsReauth: true,
+      error: error.message
+    });
+  }
 });
 
 module.exports = router;

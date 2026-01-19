@@ -21,4 +21,28 @@ api.interceptors.request.use(
   }
 );
 
+// Add response interceptor to handle 401 errors (expired Upstox token)
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Check if it's a 401 error from Upstox-related endpoints
+    if (error.response?.status === 401) {
+      const url = error.config?.url || '';
+
+      // If it's an Upstox-related endpoint, emit a custom event
+      if (url.includes('/stocks') || url.includes('/market') || url.includes('/upstox')) {
+        console.warn('⚠️ Upstox API returned 401 - Token may be expired');
+
+        // Emit custom event that the hook can listen to
+        window.dispatchEvent(new CustomEvent('upstox-token-expired', {
+          detail: { error: error.response }
+        }));
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
 export default api;
+

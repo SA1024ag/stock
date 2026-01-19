@@ -119,6 +119,77 @@ class UpstoxAuthService {
         }
         return this.accessToken;
     }
+
+    // Check if token is expired
+    isTokenExpired() {
+        if (!this.accessToken) return true;
+
+        try {
+            const decoded = this.decodeToken(this.accessToken);
+            if (!decoded || !decoded.exp) return true;
+
+            // Check if expired (with 5 minute buffer)
+            const now = Math.floor(Date.now() / 1000);
+            return now >= decoded.exp;
+        } catch (error) {
+            console.error('Error checking token expiry:', error.message);
+            return true;
+        }
+    }
+
+    // Decode JWT token without verification
+    decodeToken(token) {
+        try {
+            const parts = token.split('.');
+            if (parts.length !== 3) return null;
+
+            const payload = parts[1];
+            const decoded = Buffer.from(payload, 'base64').toString('utf8');
+            return JSON.parse(decoded);
+        } catch (error) {
+            console.error('Error decoding token:', error.message);
+            return null;
+        }
+    }
+
+    // Get token expiry timestamp
+    getTokenExpiry() {
+        if (!this.accessToken) return null;
+
+        try {
+            const decoded = this.decodeToken(this.accessToken);
+            return decoded?.exp ? decoded.exp * 1000 : null; // Convert to milliseconds
+        } catch (error) {
+            return null;
+        }
+    }
+
+    // Get comprehensive token status
+    getTokenStatus() {
+        if (!this.accessToken) {
+            return {
+                hasToken: false,
+                isExpired: true,
+                expiresAt: null,
+                timeRemaining: 0,
+                needsReauth: true
+            };
+        }
+
+        const expiry = this.getTokenExpiry();
+        const isExpired = this.isTokenExpired();
+        const now = Date.now();
+        const timeRemaining = expiry ? Math.max(0, expiry - now) : 0;
+
+        return {
+            hasToken: true,
+            isExpired,
+            expiresAt: expiry,
+            timeRemaining,
+            needsReauth: isExpired,
+            expiresIn: timeRemaining > 0 ? Math.floor(timeRemaining / 1000 / 60) : 0 // minutes
+        };
+    }
 }
 
 module.exports = new UpstoxAuthService();

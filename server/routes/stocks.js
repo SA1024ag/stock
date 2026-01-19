@@ -48,6 +48,17 @@ router.get('/market/indices', async (req, res) => {
   }
 });
 
+// Get top movers (gainers/losers)
+router.get('/market/movers', async (req, res) => {
+  try {
+    const movers = await stockService.getTopMovers();
+    res.json(movers);
+  } catch (error) {
+    console.error('Get movers error:', error);
+    res.status(500).json({ message: 'Error fetching top movers', error: error.message });
+  }
+});
+
 // Get stock quote
 router.get('/:symbol', async (req, res) => {
   try {
