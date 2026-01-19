@@ -74,6 +74,31 @@ router.post('/portfolio-review', async (req, res) => {
   }
 });
 
+// AI Tutor for Study Buddy Chatbot
+router.post('/tutor', async (req, res) => {
+  try {
+    const { message, context } = req.body;
+
+    if (!message) {
+      return res.status(400).json({ message: 'Message is required' });
+    }
+
+    // Call AI tutor with context
+    const response = await aiService.askTutor(message, {
+      ...context,
+      userQuestion: message
+    });
+
+    res.json(response);
+  } catch (error) {
+    console.error('AI tutor error:', error);
+    res.status(500).json({
+      message: 'Error getting tutor response',
+      error: error.message
+    });
+  }
+});
+
 // Simulate market scenario
 router.post('/simulate', async (req, res) => {
   try {

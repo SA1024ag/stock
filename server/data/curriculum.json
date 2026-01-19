@@ -1,0 +1,220 @@
+{
+    "modules": [
+        {
+            "id": "financial-foundations",
+            "title": "Financial Foundations",
+            "description": "Build a strong foundation in personal finance and understand the basics of money management before diving into investing.",
+            "icon": "💰",
+            "keyTerms": [
+                {
+                    "term": "Asset",
+                    "simpleDefinition": "Something you own that has value and can generate income or appreciate over time.",
+                    "realWorldAnalogy": "Like a fruit tree in your backyard - it's yours, it grows, and gives you fruit (income) every season.",
+                    "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                },
+                {
+                    "term": "Liability",
+                    "simpleDefinition": "Money you owe to others, like loans or credit card debt.",
+                    "realWorldAnalogy": "Like borrowing your neighbor's lawn mower - you need to return it (pay it back), and maybe with a favor (interest).",
+                    "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                },
+                {
+                    "term": "Net Worth",
+                    "simpleDefinition": "Your total assets minus your total liabilities - essentially what you'd have if you sold everything and paid off all debts.",
+                    "realWorldAnalogy": "If you sold all your belongings at a garage sale and paid off all your IOUs, what's left in your pocket is your net worth.",
+                    "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                },
+                {
+                    "term": "Compound Interest",
+                    "simpleDefinition": "Earning interest on your interest - your money grows exponentially over time.",
+                    "realWorldAnalogy": "Like a snowball rolling down a hill - it starts small but picks up more snow (interest) as it rolls, getting bigger and bigger.",
+                    "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                }
+            ]
+        },
+        {
+            "id": "market-basics",
+            "title": "Market Basics",
+            "description": "Understand how stock markets work, who the key players are, and how trading happens.",
+            "icon": "📈",
+            "keyTerms": [
+                {
+                    "term": "Stock Exchange",
+                    "simpleDefinition": "A marketplace where buyers and sellers trade stocks of publicly listed companies.",
+                    "realWorldAnalogy": "Like a farmer's market, but instead of vegetables, people buy and sell tiny pieces of companies (stocks).",
+                    "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                },
+                {
+                    "term": "Stock/Share",
+                    "simpleDefinition": "A unit of ownership in a company. When you buy a stock, you own a small piece of that company.",
+                    "realWorldAnalogy": "Like owning a slice of pizza from a whole pizza - you own that slice, and if the pizza becomes more valuable, so does your slice.",
+                    "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                },
+                {
+                    "term": "Bull Market",
+                    "simpleDefinition": "A market condition where stock prices are rising or expected to rise.",
+                    "realWorldAnalogy": "Like a bull charging forward with its horns up - everything is moving upward with optimism.",
+                    "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                },
+                {
+                    "term": "Bear Market",
+                    "simpleDefinition": "A market condition where stock prices are falling or expected to fall by 20% or more.",
+                    "realWorldAnalogy": "Like a bear swiping downward with its paw - prices are being pushed down, and investors are cautious.",
+                    "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                },
+                {
+                    "term": "IPO (Initial Public Offering)",
+                    "simpleDefinition": "When a private company offers its shares to the public for the first time.",
+                    "realWorldAnalogy": "Like a local bakery opening its doors to investors - anyone can now buy a piece of the bakery and share in its profits.",
+                    "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                }
+            ]
+        },
+        {
+            "id": "trading-vs-investing",
+            "title": "Trading vs. Investing",
+            "description": "Learn the key differences between short-term trading and long-term investing strategies.",
+            "icon": "⚖️",
+            "keyTerms": [
+                {
+                    "term": "Day Trading",
+                    "simpleDefinition": "Buying and selling stocks within the same day to profit from short-term price movements.",
+                    "realWorldAnalogy": "Like flipping concert tickets - you buy them in the morning and sell them by evening for a quick profit.",
+                    "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                },
+                {
+                    "term": "Long-Term Investing",
+                    "simpleDefinition": "Buying stocks with the intention of holding them for years to benefit from company growth.",
+                    "realWorldAnalogy": "Like planting an oak tree - you wait patiently for years, and eventually, it becomes strong and valuable.",
+                    "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                },
+                {
+                    "term": "Dividend",
+                    "simpleDefinition": "A portion of a company's profits paid out to shareholders, usually quarterly.",
+                    "realWorldAnalogy": "Like getting a share of the pizza shop's profits every few months just for being a part-owner.",
+                    "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                },
+                {
+                    "term": "Capital Gains",
+                    "simpleDefinition": "The profit you make when you sell a stock for more than you paid for it.",
+                    "realWorldAnalogy": "Like buying a vintage toy for ₹100 and selling it years later for ₹500 - the ₹400 difference is your capital gain.",
+                    "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                }
+            ]
+        },
+        {
+            "id": "fundamental-analysis",
+            "title": "Fundamental Analysis",
+            "description": "Evaluate a company's financial health and intrinsic value to make informed investment decisions.",
+            "icon": "🔍",
+            "keyTerms": [
+                {
+                    "term": "P/E Ratio (Price-to-Earnings)",
+                    "simpleDefinition": "A valuation metric that compares a company's stock price to its earnings per share.",
+                    "realWorldAnalogy": "Like comparing the price of a house to its yearly rental income - it tells you if you're paying too much or getting a good deal.",
+                    "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                },
+                {
+                    "term": "Market Cap",
+                    "simpleDefinition": "The total value of a company's outstanding shares (stock price × number of shares).",
+                    "realWorldAnalogy": "Like the total value of all slices of pizza if you were to sell the entire pizza shop.",
+                    "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                },
+                {
+                    "term": "EPS (Earnings Per Share)",
+                    "simpleDefinition": "The portion of a company's profit allocated to each outstanding share of stock.",
+                    "realWorldAnalogy": "If a pizza shop makes ₹1000 profit and has 100 slices (shares), each slice earns ₹10 - that's the EPS.",
+                    "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                },
+                {
+                    "term": "Balance Sheet",
+                    "simpleDefinition": "A financial statement showing a company's assets, liabilities, and shareholders' equity at a specific point in time.",
+                    "realWorldAnalogy": "Like a snapshot of your bank account, debts, and belongings - it shows your financial position right now.",
+                    "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                },
+                {
+                    "term": "Revenue vs. Profit",
+                    "simpleDefinition": "Revenue is total income, while profit is what's left after subtracting all expenses.",
+                    "realWorldAnalogy": "Revenue is all the money your lemonade stand makes; profit is what you keep after paying for lemons, sugar, and cups.",
+                    "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                }
+            ]
+        },
+        {
+            "id": "technical-analysis",
+            "title": "Technical Analysis",
+            "description": "Use charts, patterns, and indicators to predict future price movements based on historical data.",
+            "icon": "📊",
+            "keyTerms": [
+                {
+                    "term": "Candlestick Chart",
+                    "simpleDefinition": "A chart that shows the open, high, low, and close prices of a stock for a specific time period.",
+                    "realWorldAnalogy": "Like a weather report showing the day's temperature range - the candle shows the stock's price range for the day.",
+                    "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                },
+                {
+                    "term": "Support Level",
+                    "simpleDefinition": "A price level where a stock tends to stop falling and bounce back up.",
+                    "realWorldAnalogy": "Like a trampoline - the stock price hits this level and bounces back up instead of falling further.",
+                    "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                },
+                {
+                    "term": "Resistance Level",
+                    "simpleDefinition": "A price level where a stock tends to stop rising and pull back down.",
+                    "realWorldAnalogy": "Like a ceiling - the stock price hits this level and can't break through, so it falls back down.",
+                    "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                },
+                {
+                    "term": "Moving Average",
+                    "simpleDefinition": "The average price of a stock over a specific number of days, used to smooth out price fluctuations.",
+                    "realWorldAnalogy": "Like tracking your average daily steps over a month - it smooths out the ups and downs to show the overall trend.",
+                    "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                },
+                {
+                    "term": "Volume",
+                    "simpleDefinition": "The number of shares traded during a specific time period.",
+                    "realWorldAnalogy": "Like the number of people at a concert - high volume means lots of activity and interest.",
+                    "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                }
+            ]
+        },
+        {
+            "id": "risk-management",
+            "title": "Risk Management",
+            "description": "Protect your capital and minimize losses through smart portfolio management and risk mitigation strategies.",
+            "icon": "🛡️",
+            "keyTerms": [
+                {
+                    "term": "Diversification",
+                    "simpleDefinition": "Spreading your investments across different assets to reduce risk.",
+                    "realWorldAnalogy": "Like not putting all your eggs in one basket - if one basket drops, you still have eggs in other baskets.",
+                    "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                },
+                {
+                    "term": "Stop Loss",
+                    "simpleDefinition": "An order to automatically sell a stock when it reaches a certain price to limit your losses.",
+                    "realWorldAnalogy": "Like setting a safety net - if the stock falls too far, it automatically sells to prevent bigger losses.",
+                    "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                },
+                {
+                    "term": "Risk-Reward Ratio",
+                    "simpleDefinition": "The potential profit compared to the potential loss of an investment.",
+                    "realWorldAnalogy": "Like betting ₹10 to potentially win ₹30 - you're risking ₹10 for a ₹30 reward (3:1 ratio).",
+                    "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                },
+                {
+                    "term": "Portfolio Allocation",
+                    "simpleDefinition": "How you divide your money among different types of investments (stocks, bonds, cash, etc.).",
+                    "realWorldAnalogy": "Like dividing your monthly budget - 50% for groceries, 30% for rent, 20% for savings.",
+                    "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                },
+                {
+                    "term": "Volatility",
+                    "simpleDefinition": "How much and how quickly a stock's price changes.",
+                    "realWorldAnalogy": "Like a roller coaster - high volatility means big ups and downs, low volatility is a smooth, steady ride.",
+                    "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                }
+            ]
+        }
+    ]
+}

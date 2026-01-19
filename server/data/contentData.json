@@ -1,0 +1,214 @@
+{
+    "modules": {
+        "financial-foundations": {
+            "id": "financial-foundations",
+            "title": "Financial Foundations",
+            "description": "Build a strong foundation in personal finance and understand the basics of money management before diving into investing.",
+            "icon": "💰",
+            "concepts": [
+                {
+                    "id": "asset-vs-liability",
+                    "title": "Asset vs. Liability",
+                    "article": "# Assets vs. Liabilities\n\nUnderstanding the difference between an asset and a liability is the single most important rule in finance.\n\n## The Golden Rule\n\n> **\"An asset puts money in your pocket. A liability takes money out of your pocket.\"** - Robert Kiyosaki\n\n### What is an Asset? 📈\nAnything that has value and can generate income or appreciate over time.\n\n**Examples:**\n- **Stocks:** Pay dividends and grow in value\n- **Real Estate:** Pays rental income\n- **Bonds:** Pay interest\n- **Intellectual Property:** Royalties from books/patents\n\n### What is a Liability? 📉\nAnything that takes money out of your pocket, including expenses and debts.\n\n**Examples:**\n- **Car:** Loses value (depreciation) + fuel + insurance\n- **Credit Card Debt:** High interest payments\n- **Subscription Services:** Monthly cash outflow\n- **Personal Loans:** Monthly EMI\n\n## The Rich vs. Poor Mindset\n\n- **The Poor:** Income → Expenses\n- **The Middle Class:** Income → Buy Liabilities (thinking they are assets, like a big house) → Expenses\n- **The Rich:** Income → Buy Assets → Assets generate more Income\n\n## Real-World Analogy\n\nThink of your finances like a **bucket**.\n- **Assets** are faucets pouring water (money) IN.\n- **Liabilities** are holes letting water (money) leak OUT.\n\nTo fill the bucket, you can either turn up the faucets (buy assets) or patch the leaks (reduce liabilities). Doing both is the fastest way to wealth!",
+                    "videoUrl": "https://www.youtube.com/watch?v=WN9Mks1s4tM",
+                    "resources": [
+                        {
+                            "title": "Rich Dad Poor Dad Summary",
+                            "url": "https://www.investopedia.com/terms/a/asset.asp",
+                            "type": "article"
+                        },
+                        {
+                            "title": "Assets vs Liabilities Video",
+                            "url": "https://www.youtube.com/watch?v=qqT3c5V9B94",
+                            "type": "video"
+                        }
+                    ]
+                },
+                {
+                    "id": "net-worth",
+                    "title": "Net Worth",
+                    "article": "# Net Worth: Your Financial Scorecard\n\nYour net worth is the most accurate measure of your financial health. It's not about how much you earn, but how much you keep.\n\n## The Formula\n\n```\nNet Worth = Total Assets - Total Liabilities\n```\n\n### Step 1: Add up your Assets 💰\n- Cash in bank\n- Investments (Stocks, Mutual Funds)\n- Market value of your home/car\n- Gold/Jewelry\n\n### Step 2: Add up your Liabilities 💸\n- Student loans\n- Credit card debt\n- Home loans (Mortgage)\n- Car loans\n\n### Step 3: Subtract\nIf you have ₹50 Lakh in assets and ₹30 Lakh in debt, your **Net Worth is ₹20 Lakh**.\n\n## Why it Matters\n\nA high income doesn't mean you are rich. If you earn ₹50 Lakh a year but spend ₹55 Lakh, your net worth is decreasing! You are technically getting poorer despite the high salary.\n\n> **\"It's not what you make, it's what you keep.\"**\n\n## Goal\nTrack your net worth every 6 months. It should be trending **upwards**. If it's negative (you owe more than you own), your priority should be debt repayment.",
+                    "videoUrl": "https://www.youtube.com/watch?v=WN9Mks1s4tM",
+                    "resources": [
+                        {
+                            "title": "Calculate Your Net Worth",
+                            "url": "https://www.schwab.com/resource-center/insights/content/how-to-calculate-your-net-worth",
+                            "type": "article"
+                        }
+                    ]
+                },
+                {
+                    "id": "compound-interest",
+                    "title": "Compound Interest",
+                    "article": "# Compound Interest: The 8th Wonder of the World\n\nCompound interest is the cycle of earning \"interest on interest\". It is the secret weapon of all successful long-term investors.\n\n## How it Works\n\nImagine you invest **₹10,000** at **10%** interest.\n\n- **Year 1:** You earn ₹1,000. Total = ₹11,000.\n- **Year 2:** You earn 10% on ₹11,000 (not just the original ₹10k). That's ₹1,100! Total = ₹12,100.\n- **Year 3:** You earn 10% on ₹12,100. That's ₹1,210!\n\nOver 20-30 years, this snowball effect creates massive wealth.\n\n## The Power of Starting Early ⏰\n\n**Person A:** Starts investing at age 25, invests ₹5,000/month for 10 years, then STOPS.\n**Person B:** Starts at age 35, invests ₹5,000/month for 25 years.\n\n**Who has more money at age 60?**\nSurprisingly, **Person A** often wins! Because their money had 10 extra years to compound.\n\n## The Rule of 72\nA shortcut to calculate how long it takes to double your money.\n\n```\nYears to Double = 72 / Interest Rate\n```\n\n**Example:** At 12% return (typical Nifty 50 return), your money doubles in **72 / 12 = 6 Years**.\n\n## Key Takeaway\nYou don't need to be a genius to get rich. You just need **Time** and **Consistency**.",
+                    "videoUrl": "https://www.youtube.com/watch?v=7cZXY2ZmtqI",
+                    "resources": [
+                        {
+                            "title": "Compound Interest Calculator",
+                            "url": "https://www.investor.gov/financial-tools-calculators/calculators/compound-interest-calculator",
+                            "type": "tool"
+                        },
+                        {
+                            "title": "The Power of Compounding",
+                            "url": "https://zerodha.com/varsity/chapter/the-power-of-compounding/",
+                            "type": "article"
+                        }
+                    ]
+                }
+            ]
+        },
+        "market-basics": {
+            "id": "market-basics",
+            "title": "Market Basics",
+            "description": "Understand how stock markets work, who the key players are, and how trading happens.",
+            "icon": "📈",
+            "concepts": [
+                {
+                    "id": "what-is-stock",
+                    "title": "What is a Stock?",
+                    "article": "# What is a Stock?\n\nA **stock** (also called a **share**) represents a unit of ownership in a company. When you buy a stock, you become a partial owner of that company.\n\n## Key Points\n\n### Ownership\n- Each share represents a small piece of the company\n- Shareholders have voting rights in company decisions\n- You can earn money through dividends and capital appreciation\n\n## Real-World Analogy\n\nThink of a company as a pizza. When the company issues stocks, it's like cutting the pizza into slices. Each slice (stock) represents a portion of the whole pizza (company). If you own 10 slices out of 100, you own 10% of the pizza!",
+                    "videoUrl": "https://www.youtube.com/watch?v=GcZW24SkbHM",
+                    "resources": [
+                        {
+                            "title": "Zerodha Varsity - Intro",
+                            "url": "https://zerodha.com/varsity/chapter/introduction-to-stock-markets/",
+                            "type": "article"
+                        }
+                    ]
+                },
+                {
+                    "id": "stock-exchanges",
+                    "title": "Exchanges (NSE/BSE)",
+                    "article": "# Stock Exchanges: NSE & BSE\n\nA **stock exchange** is a marketplace where buyers and sellers trade stocks. Think of it like a farmer's market, but instead of vegetables, people buy and sell pieces of companies!\n\n### NSE (National Stock Exchange)\n- Largest in India\n- Benchmark Index: **NIFTY 50**\n\n### BSE (Bombay Stock Exchange)\n- Oldest in Asia (1875)\n- Benchmark Index: **SENSEX**\n\n## How it Works\n1. You place an order on your app (Zerodha, Upstox)\n2. App sends order to Exchange (NSE/BSE)\n3. Exchange finds a seller matching your price\n4. Trade executed!",
+                    "videoUrl": "https://www.youtube.com/watch?v=GcZW24SkbHM",
+                    "resources": [
+                        {
+                            "title": "NSE Official Site",
+                            "url": "https://www.nseindia.com/",
+                            "type": "website"
+                        }
+                    ]
+                },
+                {
+                    "id": "price-movements",
+                    "title": "How Prices Move",
+                    "article": "# Why Stock Prices Move?\n\nIt's all about **Supply and Demand**.\n\n- **Checking Good News?** (Profit up, new product) → More Buyers → Price ⬆️\n- **Bad News?** (Scandal, loss) → More Sellers → Price ⬇️\n\n## Analogy\nImagine only 10 iPhones are available, but 100 people want them. The price goes UP. If there are 1000 iPhones and nobody wants them, the price drops to clear stock.\n\nStocks work the exact same way!",
+                    "videoUrl": "https://www.youtube.com/watch?v=GcZW24SkbHM",
+                    "resources": []
+                }
+            ]
+        },
+        "trading-vs-investing": {
+            "id": "trading-vs-investing",
+            "title": "Trading vs. Investing",
+            "description": "Learn the key differences between short-term trading and long-term investing strategies.",
+            "icon": "⚖️",
+            "concepts": [
+                {
+                    "id": "trading-vs-investing-core",
+                    "title": "Trading vs. Investing",
+                    "article": "# The Great Debate: Trading vs. Investing\n\nThough both involve buying stocks, they are completely different ball games.\n\n## Investing 🌳\n**Goal:** Build wealth gradually.\n**Timeframe:** Years or Decades.\n**Analysis:** Fundamental (Company health, profits).\n**Mental State:** Calm, patient.\n**Analogy:** Planting a mango tree. You water it, wait years, and eventually, it gives fruit for life.\n\n## Trading ⚡\n**Goal:** Generate quick income.\n**Timeframe:** Minutes, Days, or Months.\n**Analysis:** Technical (Charts, patterns).\n**Mental State:** Alert, active, stressful.\n**Analogy:** Buying mangoes from a wholesaler and selling them at the market for a profit the same day.\n\n| Feature | Investing | Trading |\n|---------|-----------|---------|\n| **Risk** | Moderate | High |\n| **Return** | 12-15% (CAGR) | Potentially Higher (or 0) |\n| **Effort** | Passive | Active Job |\n| **Focus** | Value of Company | Price of Stock |",
+                    "videoUrl": "https://www.youtube.com/watch?v=3nZ0E8rPqQQ",
+                    "resources": [
+                        {
+                            "title": "Trading vs Investing",
+                            "url": "https://www.investopedia.com/ask/answers/12/difference-between-investing-trading.asp",
+                            "type": "article"
+                        }
+                    ]
+                },
+                {
+                    "id": "dividends",
+                    "title": "Dividends",
+                    "article": "# Dividends: Getting Paid to Wait\n\nA **dividend** is a reward paid to shareholders for their investment. It usually implies the company is profitable and has excess cash.\n\n## How it Works\nIf TCS declares a dividend of ₹50/share and you own 100 shares, you get **₹5,000** directly in your bank account.\n\n## Dividend Yield\n```\nDividend Yield = (Dividend per share / Stock Price) × 100\n```\nHigh dividend yield stocks (like ITC, Coal India) are great for passive income portfolios.",
+                    "videoUrl": "https://www.youtube.com/watch?v=8rUc0MaMzik",
+                    "resources": []
+                }
+            ]
+        },
+        "fundamental-analysis": {
+            "id": "fundamental-analysis",
+            "title": "Fundamental Analysis",
+            "description": "Evaluate a company's financial health and intrinsic value.",
+            "icon": "🔍",
+            "concepts": [
+                {
+                    "id": "pe-ratio",
+                    "title": "P/E Ratio",
+                    "article": "# P/E Ratio (Price-to-Earnings)\n\nThe most common metric to check if a stock is cheap or expensive.\n\n**Formula:**\n```\nStock Price / Earnings Per Share (EPS)\n```\n\n## What it tells you\nIt tells you how much you are paying for ₹1 of the company's earnings.\n- **P/E = 20:** You pay ₹20 to earn ₹1.\n\n### General Rule\n- **High P/E:** Investors expect high growth (e.g., Tech stocks).\n- **Low P/E:** Company might be undervalued or mature (e.g., Oil/Gas).\n\n**Analogy:** If a shop earns ₹1 Lakh/year and is sold for ₹20 Lakh, its P/E is 20.",
+                    "videoUrl": "https://www.youtube.com/watch?v=8rUc0MaMzik",
+                    "resources": [
+                        {
+                            "title": "P/E Ratio Explained",
+                            "url": "https://zerodha.com/varsity/chapter/valuation-ratios/",
+                            "type": "article"
+                        }
+                    ]
+                },
+                {
+                    "id": "market-cap",
+                    "title": "Market Cap",
+                    "article": "# Market Capitalization\n\nShows the total size of the company.\n\n**Formula:**\n```\nStock Price × Total Number of Shares\n```\n\n## Categories\n1. **Large Cap (Top 100):** Safe, stable, moderate returns (Example: Reliance, HDFC).\n2. **Mid Cap (Next 150):** Higher growth, higher risk.\n3. **Small Cap:** Risky, volatile, but potential for massive returns.",
+                    "videoUrl": "https://www.youtube.com/watch?v=8rUc0MaMzik",
+                    "resources": []
+                }
+            ]
+        },
+        "technical-analysis": {
+            "id": "technical-analysis",
+            "title": "Technical Analysis",
+            "description": "Use charts, patterns, and indicators to predict future price movements.",
+            "icon": "📊",
+            "concepts": [
+                {
+                    "id": "candlesticks",
+                    "title": "Candlestick Charts",
+                    "article": "# Candlestick Charts\n\nThe language of traders. A single candle tells you the story of price movement for that period.\n\n## Parts of a Candle\n1. **Body:** Difference between Open and Close.\n2. **Wicks (Shadows):** The High and Low points.\n\n### Green Candle (Bullish) 🟢\n- Close price > Open price\n- Buyers are in control.\n\n### Red Candle (Bearish) 🔴\n- Close price < Open price\n- Sellers are in control.\n\nIf you see a long green candle, it means buyers dominated the session aggressively.",
+                    "videoUrl": "https://www.youtube.com/watch?v=yzRP-mA2eiE",
+                    "resources": [
+                        {
+                            "title": "Japanese Candlesticks",
+                            "url": "https://zerodha.com/varsity/module/technical-analysis/",
+                            "type": "article"
+                        }
+                    ]
+                },
+                {
+                    "id": "support-resistance",
+                    "title": "Support & Resistance",
+                    "article": "# Support & Resistance\n\nImagine a ball bouncing in a room.\n\n### Support (The Floor)\nA price level where the stock tends to **stop falling** and bounce back up. Buyers wait here.\n\n### Resistance (The Ceiling)\nA price level where the stock struggles to go higher. Sellers wait here.\n\n**Trading Strategy:**\n- Buy at Support.\n- Sell at Resistance.\n- If Resistance is broken, it often becomes a Support!",
+                    "videoUrl": "https://www.youtube.com/watch?v=yzRP-mA2eiE",
+                    "resources": []
+                }
+            ]
+        },
+        "risk-management": {
+            "id": "risk-management",
+            "title": "Risk Management",
+            "description": "Protect your capital and minimize losses.",
+            "icon": "🛡️",
+            "concepts": [
+                {
+                    "id": "diversification",
+                    "title": "Diversification",
+                    "article": "# Diversification: Don't Put All Eggs in One Basket\n\nThe only \"free lunch\" in investing. By determining how to divide your money, you reduce risk without necessarily reducing returns.\n\n## Why Diversify?\nIf you invest 100% in one company and it goes bankrupt, you lose everything. If you invest in 20 companies and one goes bankrupt, you only lose 5%.\n\n### How to Diversify\n1. **Across Assets:** Stocks, Gold, Bonds, Real Estate.\n2. **Across Sectors:** Banking, IT, Pharma, Auto.\n3. **Across Geographies:** India, US Market.\n\n> **\"Diversification is protection against ignorance.\"** - Warren Buffett",
+                    "videoUrl": "https://www.youtube.com/watch?v=7cZXY2ZmtqI",
+                    "resources": []
+                },
+                {
+                    "id": "stop-loss",
+                    "title": "Stop Loss",
+                    "article": "# Stop Loss: Your Safety Net\n\nA **Stop Loss (SL)** is an automatic order to sell your stock if it falls to a certain price.\n\n## Example\nYou buy a stock for ₹100.\nYou set a Stop Loss at ₹95.\n\nIf the market crashes and the stock falls to ₹80, your SL triggers at ₹95, limiting your loss to just ₹5.\n\n### Why use it?\n- Prevents emotional holding of losing stocks.\n- Protects your capital from market crashes.\n- Essential for traders, recommended for investors.",
+                    "videoUrl": "https://www.youtube.com/watch?v=yzRP-mA2eiE",
+                    "resources": [
+                        {
+                            "title": "Importance of Stop Loss",
+                            "url": "https://zerodha.com/varsity/chapter/stoploss/",
+                            "type": "article"
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+}

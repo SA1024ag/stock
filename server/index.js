@@ -70,6 +70,7 @@ async function startServer() {
     app.use('/api/ai', require('./routes/ai'));
     app.use('/api/news', require('./routes/news'));
     app.use('/api/payment', require('./routes/payment'));
+    app.use('/api/learning', require('./routes/learning'));
     app.use('/api/blog', require('./routes/blog')); // Add blog routes
 
     // Use server.listen instead of app.listen
