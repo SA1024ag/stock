@@ -82,9 +82,9 @@ If you don't know something, say so clearly. Do not give financial advice; focus
       const prompt = `You are a helpful financial advisor reviewing a virtual stock portfolio for a beginner investor.
 
 Portfolio Holdings:
-${holdingsBreakdown.map(h => 
-  `- ${h.symbol}: ${h.shares} shares, Invested: $${h.invested.toFixed(2)}, Current Value: $${h.currentValue.toFixed(2)}, ${h.gainLoss >= 0 ? 'Gain' : 'Loss'}: ${h.gainLossPercent.toFixed(2)}%`
-).join('\n')}
+${holdingsBreakdown.map(h =>
+        `- ${h.symbol}: ${h.shares} shares, Invested: $${h.invested.toFixed(2)}, Current Value: $${h.currentValue.toFixed(2)}, ${h.gainLoss >= 0 ? 'Gain' : 'Loss'}: ${h.gainLossPercent.toFixed(2)}%`
+      ).join('\n')}
 
 Total Portfolio Value: $${portfolioValue.toFixed(2)}
 Number of Holdings: ${portfolio.length}
@@ -168,6 +168,165 @@ Note: For detailed AI-powered analysis, ensure your Groq API key is configured.`
         };
       })
     };
+  }
+  // Simulate market scenario
+  async simulateScenario(portfolio, stockPrices, scenarioText) {
+    try {
+      // Format portfolio for the prompt
+      const portfolioData = portfolio.map(holding => {
+        const currentPrice = stockPrices[holding.symbol] || holding.averagePrice;
+        return {
+          symbol: holding.symbol,
+          sector: "Unknown", // In a real app, we would fetch this. For now, let AI infer or we skip it.
+          quantity: holding.shares,
+          average_price: holding.averagePrice,
+          current_price: currentPrice,
+          total_value: holding.shares * currentPrice
+        };
+      });
+
+      const prompt = `
+You are simulating how markets usually react to hypothetical events.
+
+The user owns a stock portfolio. They may describe a situation in plain language
+or trigger it using sliders like interest rates, inflation, sector shocks, or
+overall market drops.
+
+Your task is to:
+- Interpret what the scenario means in economic terms
+- Think about which sectors benefit or suffer
+- Estimate how each stock in the given portfolio could reasonably react
+- Keep estimates realistic and grounded in common market behavior
+
+Important:
+- This is only a hypothetical simulation, not financial advice
+- Only analyze the stocks provided
+- Do not change quantities or add new assets
+- Avoid extreme or sensational predictions
+
+Return ONLY valid JSON in this format:
+
+{
+  "summary": "one clear sentence explaining the scenario in simple terms",
+  "key_effects": [
+    "important economic or market effect",
+    "another important effect"
+  ],
+  "results": [
+    {
+      "symbol": "AAPL",
+      "sector": "Technology",
+      "estimated_change_percent": -3.8,
+      "reason": "short explanation of why this stock is affected"
+    }
+  ],
+  "overall_sentiment": "Bullish | Neutral | Bearish"
+}
+
+Portfolio:
+${JSON.stringify(portfolioData, null, 2)}
+
+Scenario:
+${scenarioText}
+`;
+
+      const response = await groq.chat.completions.create({
+        model: GROQ_MODEL,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a financial simulator AI. Return only JSON.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.5
+      });
+
+      const content = response.choices[0].message.content;
+      // Ensure we get valid JSON
+      try {
+        return JSON.parse(content);
+      } catch (e) {
+        console.log("Raw content from AI:", content);
+        // Try to extract JSON from the text if it contains markdown or other text
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          return JSON.parse(jsonMatch[0]);
+        }
+        throw new Error("Failed to parse AI response as JSON");
+      }
+
+    } catch (error) {
+      console.error('Error in scenario simulation:', error.message);
+      throw error;
+    }
+  }
+
+  // Predict stock price based on parameters
+  async predictStockPrice(symbol, currentPrice, parameters) {
+    try {
+      const prompt = `
+You are a financial simulator AI.
+
+Stock: ${symbol}
+Current Price: ${currentPrice}
+
+Parameters:
+- Inflation Rate: ${parameters.inflation}%
+- Interest Rate: ${parameters.interestRate}%
+${parameters.customScenario ? `- Custom Scenario: ${parameters.customScenario}` : ''}
+
+Task:
+Estimate the potential price range for this stock in the next 6-12 months based on these parameters.
+Consider how these economic factors typically affect companies in this sector.
+
+Return ONLY valid JSON:
+{
+  "predicted_low": 100.50,
+  "predicted_high": 120.00,
+  "confidence_score": 75,
+  "reasoning": "Higher interest rates typically compress valuations for tech stocks..."
+}
+`;
+
+      const response = await groq.chat.completions.create({
+        model: GROQ_MODEL,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a financial simulator AI. Return only JSON.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.5
+      });
+
+      const content = response.choices[0].message.content;
+      try {
+        return JSON.parse(content);
+      } catch (e) {
+        console.log("Raw content from AI:", content);
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) return JSON.parse(jsonMatch[0]);
+        throw new Error("Failed to parse AI response");
+      }
+    } catch (error) {
+      console.error('Error in prediction:', error.message);
+      // Fallback
+      const volatility = 0.05 + (parameters.inflation / 100);
+      return {
+        predicted_low: currentPrice * (1 - volatility),
+        predicted_high: currentPrice * (1 + volatility),
+        confidence_score: 50,
+        reasoning: "Estimation based on standard market volatility models and current economic indicators."
+      };
+    }
   }
 }
 

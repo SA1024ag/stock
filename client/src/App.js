@@ -16,6 +16,7 @@ import Home from './pages/Home';
 import AIStockInsights from './pages/AIStockInsights';
 import AIPortfolioAnalysis from './pages/AIPortfolioAnalysis';
 import AIRecommendations from './pages/AIRecommendations';
+import ScenarioSimulator from './pages/ScenarioSimulator';
 
 // Learning Pages
 // Learning Pages
@@ -67,6 +68,7 @@ function AppRoutes() {
       <Route path="/ai-insights" element={<PrivateRoute><AIStockInsights /></PrivateRoute>} />
       <Route path="/ai-portfolio" element={<PrivateRoute><AIPortfolioAnalysis /></PrivateRoute>} />
       <Route path="/ai-recommendations" element={<PrivateRoute><AIRecommendations /></PrivateRoute>} />
+      <Route path="/simulate" element={<PrivateRoute><ScenarioSimulator /></PrivateRoute>} />
 
       {/* Learning */}
       <Route path="/learning-hub" element={<PrivateRoute><LearningHub /></PrivateRoute>} />

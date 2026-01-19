@@ -25,7 +25,8 @@ const Sidebar = () => {
             items: [
                 { name: 'AI Stock Insights', path: '/ai-insights', icon: '📊' },
                 { name: 'AI Portfolio Analysis', path: '/ai-portfolio', icon: '💼' },
-                { name: 'AI Recommendations', path: '/ai-recommendations', icon: '💡' }
+                { name: 'AI Recommendations', path: '/ai-recommendations', icon: '💡' },
+                { name: 'Market Simulator', path: '/simulate', icon: '🌪️' }
             ]
         },
         {
