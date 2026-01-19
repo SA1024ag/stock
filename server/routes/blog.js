@@ -89,6 +89,7 @@ router.post('/:id/comment', async (req, res) => {
         const newComment = {
             author: author || 'Anonymous',
             content,
+            parentId: req.body.parentId || null,
             createdAt: new Date()
         };
 

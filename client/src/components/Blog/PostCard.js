@@ -13,22 +13,7 @@ function PostCard({ post }) {
     const [editContent, setEditContent] = useState(post.content);
     const [loadingEdit, setLoadingEdit] = useState(false);
 
-    // Check if current user liked the post
-    // The 'likes' array contains user IDs or usernames. 
-    // Let's assume we store usernames for simplicity based on the model.
-    // Actually the model implementation stored `userId` in routes/blog.js if available, or just pushed to array. 
-    // In `routes/blog.js`: `const { userId } = req.body;`
-    // We need to pass userId when liking.
-    // In `Navbar.js` user object has `username`. Let's assume user._id or user.id exists.
-
-    // Safe check if user has liked
-    // In route I used `post.likes.indexOf(userId)`. 
-    // So we need to send whatever identifier `likes` stores. 
-    // For this implementations let's use user.username as the ID for simplicity if user.id isn't guaranteed unique/stable in this 'sim' env
-    // Update: In `routes/blog.js` I expected `userId` in body.
-
     const isAuthor = user && user.username === post.author;
-
     const hasLiked = post.likes.includes(user?.username);
 
     const handleLike = async () => {
@@ -61,7 +46,6 @@ function PostCard({ post }) {
     const handleDeletePost = async () => {
         if (!window.confirm('Are you sure you want to delete this post?')) return;
         try {
-            // Need to send author in body for verification as per backend implementation
             await api.delete(`/blog/${post._id}`, { data: { author: user.username } });
         } catch (err) {
             console.error('Error deleting post:', err);
@@ -92,6 +76,113 @@ function PostCard({ post }) {
             console.error('Error deleting comment:', err);
         }
     };
+
+    // Helper to organize comments into a tree
+    const buildCommentTree = (comments) => {
+        const commentMap = {};
+        const roots = [];
+
+        // First pass: map ID to comment and init children
+        comments.forEach(c => {
+            commentMap[c._id] = { ...c, children: [] };
+        });
+
+        // Second pass: link children to parents
+        comments.forEach(c => {
+            if (c.parentId && commentMap[c.parentId]) {
+                commentMap[c.parentId].children.push(commentMap[c._id]);
+            } else {
+                roots.push(commentMap[c._id]);
+            }
+        });
+
+        return roots;
+    };
+
+    const CommentItem = ({ comment, depth = 0 }) => {
+        const [showReplyInput, setShowReplyInput] = useState(false);
+        const [replyText, setReplyText] = useState('');
+        const [loadingReply, setLoadingReply] = useState(false);
+
+        const handleReplySubmit = async (e) => {
+            e.preventDefault();
+            if (!replyText.trim()) return;
+
+            setLoadingReply(true);
+            try {
+                await api.post(`/blog/${post._id}/comment`, {
+                    author: user.username,
+                    content: replyText,
+                    parentId: comment._id
+                });
+                setReplyText('');
+                setShowReplyInput(false);
+            } catch (err) {
+                console.error('Error reply:', err);
+            } finally {
+                setLoadingReply(false);
+            }
+        };
+
+        return (
+            <div className="comment-thread" style={{ marginLeft: depth > 0 ? '20px' : '0', marginTop: '10px' }}>
+                <div className="comment">
+                    <div className="comment-avatar">
+                        {comment.author.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="comment-content-box" style={{ flex: 1 }}>
+                        <div className="comment-header" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <div className="comment-author">{comment.author}</div>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                {(user?.username === comment.author || isAuthor) && (
+                                    <button
+                                        onClick={() => handleDeleteComment(comment._id)}
+                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#888', padding: 0 }}
+                                        title="Delete Comment"
+                                    >
+                                        ×
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                        <div className="comment-text">{comment.content}</div>
+                        <div className="comment-actions" style={{ marginTop: '4px' }}>
+                            <button
+                                onClick={() => setShowReplyInput(!showReplyInput)}
+                                style={{ background: 'none', border: 'none', color: '#aaa', fontSize: '0.8rem', cursor: 'pointer', padding: 0 }}
+                            >
+                                Reply
+                            </button>
+                        </div>
+
+                        {showReplyInput && (
+                            <form onSubmit={handleReplySubmit} style={{ marginTop: '8px', display: 'flex', gap: '8px' }}>
+                                <input
+                                    type="text"
+                                    value={replyText}
+                                    onChange={(e) => setReplyText(e.target.value)}
+                                    placeholder={`Reply to ${comment.author}...`}
+                                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid #444', borderRadius: '4px', color: 'white', padding: '4px 8px', flex: 1 }}
+                                />
+                                <button type="submit" className="post-btn" style={{ fontSize: '0.8rem', padding: '4px 12px' }} disabled={loadingReply}>
+                                    Reply
+                                </button>
+                            </form>
+                        )}
+                    </div>
+                </div>
+                {comment.children && comment.children.length > 0 && (
+                    <div className="comment-children">
+                        {comment.children.map(child => (
+                            <CommentItem key={child._id} comment={child} depth={depth + 1} />
+                        ))}
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    const rootComments = buildCommentTree(post.comments);
 
     return (
         <div className="post-card glass-panel">
@@ -182,27 +273,8 @@ function PostCard({ post }) {
                     </form>
 
                     <div className="comment-list">
-                        {post.comments.map((comment, idx) => (
-                            <div key={idx} className="comment">
-                                <div className="comment-avatar">
-                                    {comment.author.charAt(0).toUpperCase()}
-                                </div>
-                                <div className="comment-content-box" style={{ flex: 1 }}>
-                                    <div className="comment-header" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                        <div className="comment-author">{comment.author}</div>
-                                        {(user?.username === comment.author || isAuthor) && (
-                                            <button
-                                                onClick={() => handleDeleteComment(comment._id)}
-                                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#888', padding: 0 }}
-                                                title="Delete Comment"
-                                            >
-                                                ×
-                                            </button>
-                                        )}
-                                    </div>
-                                    <div className="comment-text">{comment.content}</div>
-                                </div>
-                            </div>
+                        {rootComments.map((comment) => (
+                            <CommentItem key={comment._id} comment={comment} />
                         ))}
                     </div>
                 </div>

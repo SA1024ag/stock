@@ -19,6 +19,10 @@ const BlogPostSchema = new mongoose.Schema({
     comments: [{
         author: String,
         content: String,
+        parentId: {
+            type: mongoose.Schema.Types.ObjectId,
+            default: null
+        },
         createdAt: {
             type: Date,
             default: Date.now
