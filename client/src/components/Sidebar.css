@@ -136,21 +136,24 @@
     margin-bottom: 8px;
 }
 
+/* Section Header (Button) */
 .section-header {
     width: 100%;
-    padding: 16px 24px;
+    padding: 18px 24px;
     background: transparent;
     border: none;
     color: var(--text-primary);
-    font-size: 1rem;
-    font-weight: 600;
+    font-size: 1.25rem;
+    font-weight: 700;
     text-align: left;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
     transition: all 0.3s ease;
     position: relative;
+    font-family: inherit;
+    line-height: 1.4;
 }
 
 .section-header::before {
@@ -176,17 +179,17 @@
 }
 
 .section-icon {
-    font-size: 1.3rem;
+    font-size: 1.5rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    min-width: 28px;
+    min-width: 32px;
     filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.3));
 }
 
 .section-title {
     flex: 1;
-    letter-spacing: 0.02em;
+    letter-spacing: -0.01em;
 }
 
 .expand-icon {
@@ -212,7 +215,7 @@
     max-height: 500px;
 }
 
-/* Sidebar Links */
+/* Sidebar Links (Standard Items) */
 .sidebar-link {
     display: flex;
     align-items: center;
@@ -225,6 +228,27 @@
     transition: all 0.3s ease;
     position: relative;
     border-left: 3px solid transparent;
+}
+
+/* Top-level links (Direct Links) - MUST MATCH .section-header */
+.sidebar-link.direct-link {
+    padding: 18px 24px;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    gap: 16px;
+    line-height: 1.4;
+    border-left: 3px solid transparent;
+}
+
+.sidebar-link.direct-link .item-icon {
+    font-size: 1.5rem;
+    min-width: 32px;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.3));
 }
 
 .sidebar-link::before {
