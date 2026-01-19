@@ -1,10 +1,28 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import {
+    Brain,
+    LineChart,
+    PieChart,
+    Sparkles,
+    Activity,
+    BookOpen,
+    GraduationCap,
+    Target,
+    Star,
+    Newspaper,
+    Menu,
+    X
+} from 'lucide-react';
 import './Sidebar.css';
 
 const Sidebar = () => {
     const [isOpen, setIsOpen] = useState(false);
-    const [expandedSections, setExpandedSections] = useState({});
+    const [expandedSections, setExpandedSections] = useState({
+        'AI & Insights': true,
+        'Learn': true,
+        'Tracking': true
+    });
     const location = useLocation();
 
     const toggleSidebar = () => {
@@ -20,41 +38,27 @@ const Sidebar = () => {
 
     const menuSections = [
         {
+            type: 'section',
             name: 'AI & Insights',
-            icon: '🤖',
+            icon: <Brain size={20} />,
             items: [
-                { name: 'AI Stock Insights', path: '/ai-insights', icon: '📊' },
-                { name: 'AI Portfolio Analysis', path: '/ai-portfolio', icon: '💼' },
-                { name: 'AI Recommendations', path: '/ai-recommendations', icon: '💡' },
-                { name: 'Market Simulator', path: '/simulate', icon: '🌪️' }
+                { name: 'AI Stock Insights', path: '/ai-insights', icon: <LineChart size={18} /> },
+                { name: 'AI Portfolio Analysis', path: '/ai-portfolio', icon: <PieChart size={18} /> },
+                { name: 'AI Recommendations', path: '/ai-recommendations', icon: <Sparkles size={18} /> },
+                { name: 'Market Simulator', path: '/simulate', icon: <Activity size={18} /> }
             ]
         },
         {
+            type: 'link',
             name: 'Learning',
-            icon: '📚',
-            items: [
-                { name: 'Learning Hub', path: '/learning-hub', icon: '🎓' },
-                { name: 'Stock Explainers', path: '/stock-explainers', icon: '📖' },
-                { name: 'Beginner Guides', path: '/beginner-guides', icon: '🌱' }
-            ]
+            path: '/learning-hub',
+            icon: <GraduationCap size={20} />
         },
         {
-            name: 'Reports',
-            icon: '📈',
-            items: [
-                { name: 'Portfolio Report', path: '/portfolio-report', icon: '📋' },
-                { name: 'Transactions', path: '/transactions', icon: '💳' },
-                { name: 'Profit & Loss', path: '/profit-loss', icon: '💰' }
-            ]
-        },
-        {
-            name: 'Tracking',
-            icon: '👁️',
-            items: [
-                { name: 'Watchlist', path: '/watchlist', icon: '⭐' },
-                { name: 'Alerts', path: '/alerts', icon: '🔔' },
-                { name: 'Market Movers', path: '/market-movers', icon: '🚀' }
-            ]
+            type: 'link',
+            name: 'Watchlist',
+            path: '/watchlist',
+            icon: <Target size={20} />
         }
     ];
 
@@ -70,9 +74,9 @@ const Sidebar = () => {
                 onClick={toggleSidebar}
                 aria-label="Toggle menu"
             >
-                <span></span>
-                <span></span>
-                <span></span>
+                <div className="hamburger-icon-wrapper">
+                    {isOpen ? <X size={24} /> : <Menu size={24} />}
+                </div>
             </button>
 
             {/* Overlay */}
@@ -81,48 +85,56 @@ const Sidebar = () => {
             {/* Sidebar */}
             <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
-                    <h2>☰ Dashboard Menu</h2>
+                    <h2>Dashboard</h2>
                 </div>
 
                 <nav className="sidebar-nav">
-                    {/* Direct News Link */}
-                    <Link
-                        to="/news"
-                        className={`sidebar-link direct-link ${isActiveLink('/news') ? 'active' : ''}`}
-                        onClick={() => setIsOpen(false)}
-                    >
-                        <span className="item-icon">📰</span>
-                        <span className="item-name">Market News</span>
-                    </Link>
 
-                    {menuSections.map((section) => (
-                        <div key={section.name} className="sidebar-section">
-                            <button
-                                className={`section-header ${expandedSections[section.name] ? 'expanded' : ''}`}
-                                onClick={() => toggleSection(section.name)}
-                            >
-                                <span className="section-icon">{section.icon}</span>
-                                <span className="section-title">{section.name}</span>
-                                <span className="expand-icon">
-                                    {expandedSections[section.name] ? '−' : '+'}
-                                </span>
-                            </button>
 
-                            <div className={`section-items ${expandedSections[section.name] ? 'expanded' : ''}`}>
-                                {section.items.map((item) => (
-                                    <Link
-                                        key={item.path}
-                                        to={item.path}
-                                        className={`sidebar-link ${isActiveLink(item.path) ? 'active' : ''}`}
-                                        onClick={() => setIsOpen(false)}
-                                    >
-                                        <span className="item-icon">{item.icon}</span>
-                                        <span className="item-name">{item.name}</span>
-                                    </Link>
-                                ))}
+                    {menuSections.map((item) => {
+                        if (item.type === 'link') {
+                            return (
+                                <Link
+                                    key={item.name}
+                                    to={item.path}
+                                    className={`sidebar-link direct-link ${isActiveLink(item.path) ? 'active' : ''}`}
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    <span className="item-icon">{item.icon}</span>
+                                    <span className="item-name">{item.name}</span>
+                                </Link>
+                            );
+                        }
+
+                        return (
+                            <div key={item.name} className="sidebar-section">
+                                <button
+                                    className={`section-header ${expandedSections[item.name] ? 'expanded' : ''}`}
+                                    onClick={() => toggleSection(item.name)}
+                                >
+                                    <span className="section-icon">{item.icon}</span>
+                                    <span className="section-title">{item.name}</span>
+                                    <span className="expand-icon">
+                                        {expandedSections[item.name] ? '−' : '+'}
+                                    </span>
+                                </button>
+
+                                <div className={`section-items ${expandedSections[item.name] ? 'expanded' : ''}`}>
+                                    {item.items.map((subItem) => (
+                                        <Link
+                                            key={subItem.path}
+                                            to={subItem.path}
+                                            className={`sidebar-link ${isActiveLink(subItem.path) ? 'active' : ''}`}
+                                            onClick={() => setIsOpen(false)}
+                                        >
+                                            <span className="item-icon">{subItem.icon}</span>
+                                            <span className="item-name">{subItem.name}</span>
+                                        </Link>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </nav>
             </aside>
         </>
