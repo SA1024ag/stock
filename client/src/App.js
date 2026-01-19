@@ -18,8 +18,8 @@ import AIPortfolioAnalysis from './pages/AIPortfolioAnalysis';
 import AIRecommendations from './pages/AIRecommendations';
 
 // Learning Pages
-// Learning Pages
 import LearningHub from './pages/LearningHub';
+import ModuleDetailPage from './pages/ModuleDetailPage';
 import { StockExplainers, BeginnerGuides, PortfolioReport, Transactions, ProfitLoss, Watchlist, Alerts, MarketMovers } from './pages/PlaceholderPages';
 
 // Profile Pages
@@ -70,6 +70,7 @@ function AppRoutes() {
 
       {/* Learning */}
       <Route path="/learning-hub" element={<PrivateRoute><LearningHub /></PrivateRoute>} />
+      <Route path="/module/:moduleId" element={<PrivateRoute><ModuleDetailPage /></PrivateRoute>} />
       <Route path="/stock-explainers" element={<PrivateRoute><StockExplainers /></PrivateRoute>} />
       <Route path="/beginner-guides" element={<PrivateRoute><BeginnerGuides /></PrivateRoute>} />
 

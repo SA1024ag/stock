@@ -20,7 +20,7 @@ router.post('/analyze', async (req, res) => {
     // Get stock data
     const stockData = await stockService.getQuote(symbol);
     let historicalData = null;
-    
+
     try {
       historicalData = await stockService.getHistoricalData(symbol);
     } catch (error) {
@@ -71,6 +71,31 @@ router.post('/portfolio-review', async (req, res) => {
   } catch (error) {
     console.error('AI portfolio review error:', error);
     res.status(500).json({ message: 'Error reviewing portfolio', error: error.message });
+  }
+});
+
+// AI Tutor for Study Buddy Chatbot
+router.post('/tutor', async (req, res) => {
+  try {
+    const { message, context } = req.body;
+
+    if (!message) {
+      return res.status(400).json({ message: 'Message is required' });
+    }
+
+    // Call AI tutor with context
+    const response = await aiService.askTutor(message, {
+      ...context,
+      userQuestion: message
+    });
+
+    res.json(response);
+  } catch (error) {
+    console.error('AI tutor error:', error);
+    res.status(500).json({
+      message: 'Error getting tutor response',
+      error: error.message
+    });
   }
 });
 

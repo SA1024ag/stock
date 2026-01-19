@@ -82,9 +82,9 @@ If you don't know something, say so clearly. Do not give financial advice; focus
       const prompt = `You are a helpful financial advisor reviewing a virtual stock portfolio for a beginner investor.
 
 Portfolio Holdings:
-${holdingsBreakdown.map(h => 
-  `- ${h.symbol}: ${h.shares} shares, Invested: $${h.invested.toFixed(2)}, Current Value: $${h.currentValue.toFixed(2)}, ${h.gainLoss >= 0 ? 'Gain' : 'Loss'}: ${h.gainLossPercent.toFixed(2)}%`
-).join('\n')}
+${holdingsBreakdown.map(h =>
+        `- ${h.symbol}: ${h.shares} shares, Invested: $${h.invested.toFixed(2)}, Current Value: $${h.currentValue.toFixed(2)}, ${h.gainLoss >= 0 ? 'Gain' : 'Loss'}: ${h.gainLossPercent.toFixed(2)}%`
+      ).join('\n')}
 
 Total Portfolio Value: $${portfolioValue.toFixed(2)}
 Number of Holdings: ${portfolio.length}
@@ -168,6 +168,75 @@ Note: For detailed AI-powered analysis, ensure your Groq API key is configured.`
         };
       })
     };
+  }
+
+  // AI Tutor for Learning Hub - Explains financial terms using simple analogies
+  async askTutor(term, context = {}) {
+    try {
+      const { definition, analogy, userQuestion } = context;
+
+      let prompt = `You are a friendly Financial Mentor helping a complete beginner understand stock market concepts.
+
+Financial Term: "${term}"
+`;
+
+      if (definition) {
+        prompt += `\nBasic Definition: ${definition}\n`;
+      }
+
+      if (analogy) {
+        prompt += `\nReal-World Analogy: ${analogy}\n`;
+      }
+
+      if (userQuestion) {
+        prompt += `\nStudent's Question: ${userQuestion}\n`;
+      }
+
+      prompt += `
+
+Please explain this concept in a warm, encouraging way:
+1. Use everyday language and avoid jargon
+2. Provide a relatable example or story
+3. Explain why this concept matters for investing
+4. If relevant, give a simple tip or key takeaway
+
+Remember: Your student is brand new to investing. Make them feel confident and excited to learn!`;
+
+      const response = await groq.chat.completions.create({
+        model: GROQ_MODEL,
+        messages: [
+          {
+            role: 'system',
+            content: `You are a patient, encouraging Financial Mentor. Think of yourself as a friendly teacher explaining concepts to a curious student over coffee. Use analogies like comparing the Stock Exchange to a Farmer's Market, or P/E Ratio to comparing house prices. Always be positive, clear, and make complex ideas simple. Never use intimidating financial jargon without explaining it first.`
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        max_tokens: 400,
+        temperature: 0.8 // Slightly higher for more creative analogies
+      });
+
+      return {
+        explanation: response.choices[0].message.content,
+        term,
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('Error in AI tutor:', error.message);
+      // Fallback response
+      return {
+        explanation: `I'd love to explain "${term}" to you! Unfortunately, I'm having trouble connecting right now. 
+
+Here's a quick tip: ${term} is an important concept in investing. Try searching for "${term} explained simply" on YouTube, or check out Zerodha Varsity for beginner-friendly explanations.
+
+Feel free to ask me again in a moment!`,
+        term,
+        timestamp: new Date().toISOString(),
+        error: true
+      };
+    }
   }
 }
 
