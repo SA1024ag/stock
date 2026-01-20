@@ -97,6 +97,7 @@ function AppRoutes() {
       <Route path="/profile/security" element={<PrivateRoute><Security /></PrivateRoute>} />
       <Route path="/profile/help" element={<PrivateRoute><Help /></PrivateRoute>} />
       <Route path="/payment" element={<PrivateRoute><Payment /></PrivateRoute>} />
+      <Route path="/add-credits" element={<PrivateRoute><Payment /></PrivateRoute>} />
     </Routes>
   );
 }

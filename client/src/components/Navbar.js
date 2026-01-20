@@ -178,12 +178,14 @@ function Navbar() {
                 {theme === 'dark' ? '☀️' : '🌙'}
               </button>
 
-              <div className="balance-display glass-panel">
-                <span className="balance-label">Buying Power</span>
-                <span className="balance-amount text-green">
-                  ₹{user.virtualBalance?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
-                </span>
-              </div>
+              <Link to="/add-credits" className="balance-display-link">
+                <div className="balance-display glass-panel">
+                  <span className="balance-label">Buying Power</span>
+                  <span className="balance-amount text-green">
+                    ₹{user.virtualBalance?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
+                  </span>
+                </div>
+              </Link>
 
               <div className="user-menu">
                 <div

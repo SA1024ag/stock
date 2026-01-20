@@ -217,6 +217,15 @@
   gap: 24px;
 }
 
+.balance-display-link {
+  text-decoration: none;
+  transition: transform 0.2s ease;
+}
+
+.balance-display-link:hover {
+  transform: translateY(-2px);
+}
+
 .balance-display {
   display: flex;
   flex-direction: column;
@@ -225,6 +234,13 @@
   border-radius: 10px;
   /* Override glass-panel defaults for this small widget */
   background: rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.balance-display-link:hover .balance-display {
+  background: rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.3);
 }
 
 .balance-label {
