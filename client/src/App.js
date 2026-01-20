@@ -11,6 +11,7 @@ import Portfolio from './pages/Portfolio';
 import News from './pages/News';
 import Community from './pages/Community';
 import Home from './pages/Home';
+import LandingPage from './pages/LandingPage';
 
 
 // AI & Insights Pages
@@ -54,7 +55,7 @@ function AppRoutes() {
       <Route path="/register" element={user ? <Navigate to="/" /> : <Register />} />
 
       {/* Main Pages */}
-      <Route path="/" element={<PrivateRoute><Home /></PrivateRoute>} />
+      <Route path="/" element={user ? <Home /> : <LandingPage />} />
       <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
       <Route path="/search" element={<PrivateRoute><StockSearch /></PrivateRoute>} />
       <Route path="/stock/:symbol" element={<PrivateRoute><StockDetail /></PrivateRoute>} />
