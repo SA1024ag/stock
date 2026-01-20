@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { createChart } from 'lightweight-charts';
+import { createChart, CandlestickSeries } from 'lightweight-charts';
 
 const MiniCandlestickChart = ({ data, isPositive }) => {
     const chartContainerRef = useRef(null);
@@ -36,7 +36,7 @@ const MiniCandlestickChart = ({ data, isPositive }) => {
             handleScale: false,
         });
 
-        const series = chart.addCandlestickSeries({
+        const series = chart.addSeries(CandlestickSeries, {
             upColor: '#10b981',
             downColor: '#ef4444',
             borderUpColor: '#10b981',
