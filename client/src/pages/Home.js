@@ -6,6 +6,9 @@ import './Home.css';
 // A curated list of popular symbols to sample performance from
 // const DEFAULT_SYMBOLS = []; // Removed
 
+import MarketTicker from '../components/MarketTicker';
+import MiniCandlestickChart from '../components/MiniCandlestickChart';
+
 function Home() {
   const [quotes, setQuotes] = useState({ top: [], worst: [] });
   const [loading, setLoading] = useState(true);
@@ -40,6 +43,7 @@ function Home() {
 
   return (
     <div className="home">
+      <MarketTicker />
       <h1>Market Snapshot</h1>
       <p className="home-subtitle">
         See today&apos;s top gainers and losers from a curated list of popular Indian stocks.
@@ -81,10 +85,40 @@ function Home() {
   );
 }
 
+
+
 function StockSummary({ quote, positive }) {
   const isUp = quote.changePercent >= 0;
   const directionClass = isUp ? 'positive' : 'negative';
   const navigate = useNavigate();
+  const [chartData, setChartData] = useState([]);
+  const [loadingChart, setLoadingChart] = useState(true);
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        // Fetch 1 Month data for the trend
+        const res = await api.get(`/stocks/${quote.symbol}/history?timeframe=1M`);
+        // Format for lightweight-charts
+        const formatted = res.data.map(d => ({
+          time: d.date.split('T')[0], // Extract YYYY-MM-DD from ISO string
+          open: d.open,
+          high: d.high,
+          low: d.low,
+          close: d.close
+        }));
+        setChartData(formatted);
+      } catch (e) {
+        console.error(`Failed to load chart for ${quote.symbol}`);
+      } finally {
+        setLoadingChart(false);
+      }
+    };
+
+    if (quote.symbol) {
+      fetchHistory();
+    }
+  }, [quote.symbol]);
 
   return (
     <div
@@ -99,20 +133,33 @@ function StockSummary({ quote, positive }) {
           {isUp ? 'Gainer' : 'Loser'}
         </span>
       </div>
+
       <div className="home-stock-body">
-        <div className="home-stock-price">
-          ₹{quote.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        <div className="home-stock-price-section">
+          <div className="home-stock-price">
+            ₹{quote.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </div>
+          <div className={`home-stock-change ${directionClass}`}>
+            {isUp ? '+' : ''}{quote.change.toFixed(2)} ({isUp ? '+' : ''}{quote.changePercent.toFixed(2)}%)
+          </div>
         </div>
-        <div className={`home-stock-change ${directionClass}`}>
-          {isUp ? '+' : ''}
-          {quote.change.toFixed(2)} ({isUp ? '+' : ''}
-          {quote.changePercent.toFixed(2)}%)
+
+        {/* Mini Chart */}
+        <div className="home-stock-chart">
+          {!loadingChart && chartData.length > 0 ? (
+            <MiniCandlestickChart data={chartData} isPositive={isUp} />
+          ) : (
+            <div style={{ height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.5 }}>
+              <span style={{ fontSize: '0.8rem' }}>Loading Chart...</span>
+            </div>
+          )}
         </div>
       </div>
+
       <div className="home-stock-meta">
-        <span>Open: ₹{quote.open.toLocaleString('en-IN')}</span>
-        <span>High: ₹{quote.high.toLocaleString('en-IN')}</span>
-        <span>Low: ₹{quote.low.toLocaleString('en-IN')}</span>
+        <span>O: {quote.open.toLocaleString('en-IN')}</span>
+        <span>H: {quote.high.toLocaleString('en-IN')}</span>
+        <span>L: {quote.low.toLocaleString('en-IN')}</span>
       </div>
     </div>
   );

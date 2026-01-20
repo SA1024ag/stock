@@ -1,0 +1,130 @@
+.market-ticker-container {
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    height: 50px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    position: relative;
+    z-index: 50;
+    width: 100%;
+}
+
+.market-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 24px;
+    background: rgba(15, 23, 42, 0.9);
+    height: 100%;
+    z-index: 10;
+    font-size: 0.85rem;
+    font-weight: 600;
+    box-shadow: 4px 0 12px rgba(0, 0, 0, 0.2);
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    white-space: nowrap;
+}
+
+.status-value {
+    letter-spacing: 0.05em;
+}
+
+.text-green {
+    color: #10b981;
+}
+
+.text-red {
+    color: #ef4444;
+}
+
+.ticker-wrapper {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.ticker-track {
+    display: flex;
+    animation: scroll 30s linear infinite;
+    gap: 0;
+}
+
+/* Pause animation on hover */
+.ticker-wrapper:hover .ticker-track {
+    animation-play-state: paused;
+}
+
+.ticker-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 32px;
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s;
+    height: 50px;
+}
+
+.ticker-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.index-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.index-price {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.index-change {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.index-change.positive {
+    color: #10b981;
+}
+
+.index-change.negative {
+    color: #ef4444;
+}
+
+.index-change.neutral {
+    color: #9ca3af;
+}
+
+.change-percent {
+    opacity: 0.8;
+    font-size: 0.8rem;
+}
+
+.loading-ticker {
+    padding: 0 20px;
+    color: var(--text-secondary);
+    font-style: italic;
+    font-size: 0.9rem;
+}
+
+@keyframes scroll {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(-50%);
+        /* Move half way since we doubled the items */
+    }
+}
