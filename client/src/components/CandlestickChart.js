@@ -95,7 +95,8 @@ function CandlestickChart({ symbol, data, currentPrice, onTimeframeChange, selec
         try {
             // Format data for the chart
             const formattedData = data.map(item => {
-                const timestamp = new Date(item.date).getTime() / 1000;
+                // Add IST offset (5 hours 30 minutes = 19800 seconds)
+                const timestamp = (new Date(item.date).getTime() / 1000) + 19800;
                 return {
                     time: timestamp,
                     open: parseFloat(item.open),
@@ -145,7 +146,7 @@ function CandlestickChart({ symbol, data, currentPrice, onTimeframeChange, selec
             }
 
             const updatedCandle = {
-                time: new Date(lastCandle.date).getTime() / 1000,
+                time: (new Date(lastCandle.date).getTime() / 1000) + 19800,
                 open: lastCandle.open,
                 high: Math.max(lastCandle.high, currentPrice),
                 low: Math.min(lastCandle.low, currentPrice),
