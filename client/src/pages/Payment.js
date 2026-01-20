@@ -133,14 +133,16 @@ function Payment() {
                         <Button variant="secondary" fullWidth onClick={() => handleBuyCredits(3, 1000)}>Buy Now</Button>
                     </Card>
 
-                    <Card className="glass-panel pricing-card popular">
+                    <div className="pricing-card-wrapper popular">
                         <div className="popular-badge">Most Popular</div>
-                        <div className="price-tag">₹6</div>
-                        <h3>Trader Pack</h3>
-                        <p className="credit-amount">5,000 Credits</p>
-                        <p className="price-subtext">Real Money</p>
-                        <Button variant="primary" fullWidth onClick={() => handleBuyCredits(6, 5000)}>Buy Now</Button>
-                    </Card>
+                        <Card className="glass-panel pricing-card">
+                            <div className="price-tag">₹6</div>
+                            <h3>Trader Pack</h3>
+                            <p className="credit-amount">5,000 Credits</p>
+                            <p className="price-subtext">Real Money</p>
+                            <Button variant="primary" fullWidth onClick={() => handleBuyCredits(6, 5000)}>Buy Now</Button>
+                        </Card>
+                    </div>
 
                     <Card className="glass-panel pricing-card">
                         <div className="price-tag">₹10</div>
@@ -154,9 +156,9 @@ function Payment() {
                 {/* Statement Section - Now at Bottom */}
                 <Card className="glass-panel payment-main-card">
                     <div className="drawdown-alert">
-                        <h2>A Drawdown is Not a Dead End.</h2>
+                        <h2>Running Low? A Drawdown is Not a Dead End.</h2>
                         <p className="drawdown-subtitle">
-                            Your portfolio balance has hit zero. In the real world, this is a margin call. In this learning environment, it’s a crucial lesson.
+                            Your portfolio balance is low or has hit zero. In the real world, this is a margin call. In this learning environment, it’s a crucial lesson.
                         </p>
                     </div>
 

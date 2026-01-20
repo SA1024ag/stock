@@ -24,61 +24,49 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: 32px;
+    margin-bottom: 48px;
     text-align: center;
 }
 
 .profile-avatar-xl {
-    width: 100px;
-    height: 100px;
+    width: 120px;
+    height: 120px;
     border-radius: 50%;
     background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 2.5rem;
+    font-size: 3rem;
     font-weight: 700;
     color: white;
     box-shadow: 0 0 30px rgba(168, 85, 247, 0.4);
-    margin-bottom: 16px;
+    margin-bottom: 24px;
 }
 
 .avatar-info h3 {
-    font-size: 1.5rem;
-    margin-bottom: 4px;
+    font-size: 1.75rem;
+    margin-bottom: 8px;
 }
 
 .kyc-badge {
-    display: inline-block;
-    padding: 4px 10px;
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.1);
-    font-size: 0.8rem;
-    font-weight: 600;
-    margin-top: 8px;
-}
-
-.kyc-badge.verified {
-    background: rgba(16, 185, 129, 0.2);
-    color: var(--accent-green);
-    border: 1px solid rgba(16, 185, 129, 0.3);
+    display: none;
 }
 
 .profile-tabs {
     display: flex;
     justify-content: center;
     gap: 16px;
-    margin-bottom: 32px;
+    margin-bottom: 48px;
 }
 
 .profile-tab {
-    padding: 10px 20px;
+    padding: 12px 24px;
     border-radius: 20px;
     background: transparent;
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: var(--text-secondary);
     cursor: pointer;
-    font-size: 0.95rem;
+    font-size: 1rem;
     font-weight: 500;
     transition: all 0.2s ease;
 }
@@ -96,7 +84,7 @@
 }
 
 .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 24px;
 }
 
 .form-group label {

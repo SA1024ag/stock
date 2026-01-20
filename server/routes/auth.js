@@ -95,6 +95,55 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// Update Profile (Username & Email)
+router.put('/update', require('../middleware/auth'), async (req, res) => {
+  try {
+    const { username, email } = req.body;
+    const userId = req.user._id;
+
+    // Validation
+    if (!username || !email) {
+      return res.status(400).json({ message: 'Please provide username and email' });
+    }
+
+    // Check if username/email already exists (excluding current user)
+    const existingUser = await User.findOne({
+      $and: [
+        { _id: { $ne: userId } },
+        { $or: [{ username }, { email }] }
+      ]
+    });
+
+    if (existingUser) {
+      return res.status(400).json({ message: 'Username or email already in use' });
+    }
+
+    // Update user
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { username, email },
+      { new: true, runValidators: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({
+      message: 'Profile updated successfully',
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        virtualBalance: user.virtualBalance
+      }
+    });
+  } catch (error) {
+    console.error('Profile update error:', error);
+    res.status(500).json({ message: 'Server error updating profile' });
+  }
+});
+
 // Update Password
 router.put('/password', require('../middleware/auth'), async (req, res) => {
   try {

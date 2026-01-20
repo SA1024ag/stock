@@ -112,35 +112,64 @@
     gap: 2rem;
 }
 
+/* Wrapper for the Popular Card */
+.pricing-card-wrapper {
+    position: relative;
+    z-index: 5;
+    height: 100%;
+}
+
 .pricing-card {
     padding: 2rem;
     text-align: center;
     position: relative;
     border: 1px solid rgba(255, 255, 255, 0.05);
-    transition: transform 0.3s ease, border-color 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    height: 100%;
 }
 
 .pricing-card:hover {
-    transform: translateY(-5px);
+    transform: translateY(-8px);
     border-color: var(--primary-color);
+    background: linear-gradient(180deg, rgba(99, 102, 241, 0.05) 0%, rgba(10, 14, 23, 0.4) 100%);
+    box-shadow: 0 10px 30px -10px rgba(99, 102, 241, 0.3);
 }
 
-.pricing-card.popular {
+/* Specific styles for the card INSIDE the popular wrapper */
+.pricing-card-wrapper.popular .pricing-card {
     border-color: var(--primary-color);
-    background: linear-gradient(180deg, rgba(99, 102, 241, 0.1) 0%, rgba(10, 14, 23, 0.6) 100%);
+    background: linear-gradient(180deg, rgba(99, 102, 241, 0.15) 0%, rgba(10, 14, 23, 0.6) 100%);
+    box-shadow: 0 8px 24px -6px rgba(99, 102, 241, 0.25);
+}
+
+/* Hover effect on wrapper triggers card styles */
+.pricing-card-wrapper.popular:hover .pricing-card {
+    transform: translateY(-8px);
+    background: linear-gradient(180deg, rgba(99, 102, 241, 0.2) 0%, rgba(10, 14, 23, 0.7) 100%);
+    box-shadow: 0 12px 36px -8px rgba(99, 102, 241, 0.4);
+}
+
+/* Sync badge movement with card hover via wrapper */
+.pricing-card-wrapper.popular:hover .popular-badge {
+    transform: translate(-50%, -8px);
 }
 
 .popular-badge {
     position: absolute;
-    top: -12px;
+    top: -32px;
     left: 50%;
     transform: translateX(-50%);
     background: var(--primary-color);
     color: white;
-    padding: 4px 12px;
-    border-radius: 12px;
-    font-size: 0.8rem;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 0.9rem;
     font-weight: 600;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.5);
+    white-space: nowrap;
+    z-index: 20;
+    border: 2px solid var(--bg-card);
+    /* Add border matching bg to make it pop */
 }
 
 .price-tag {
