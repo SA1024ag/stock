@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 
@@ -15,6 +15,20 @@ function PostCard({ post }) {
 
     const isAuthor = user && user.username === post.author;
     const hasLiked = post.likes.includes(user?.username);
+
+    // Track view on mount
+    useEffect(() => {
+        const trackView = async () => {
+            if (user && user.username) {
+                try {
+                    await api.post(`/blog/${post._id}/view`, { userId: user.username });
+                } catch (err) {
+                    console.error('Error tracking view:', err);
+                }
+            }
+        };
+        trackView();
+    }, [post._id, user]);
 
     const handleLike = async () => {
         if (!user) return;
@@ -245,7 +259,7 @@ function PostCard({ post }) {
                     onClick={handleLike}
                 >
                     <span>{hasLiked ? '❤️' : '🤍'}</span>
-                    <span>{post.likes.length} Likes</span>
+                    <span>{post.likes.length}</span>
                 </button>
 
                 <button
@@ -253,7 +267,12 @@ function PostCard({ post }) {
                     onClick={() => setShowComments(!showComments)}
                 >
                     <span>💬</span>
-                    <span>{post.comments.length} Comments</span>
+                    <span>{post.comments.length}</span>
+                </button>
+
+                <button className="action-btn" style={{ cursor: 'default' }}>
+                    <span>👁️</span>
+                    <span>{post.views?.length || 0}</span>
                 </button>
             </div>
 
