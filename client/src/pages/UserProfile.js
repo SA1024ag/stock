@@ -18,6 +18,12 @@ function UserProfile() {
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
 
+    // Password State
+    const [passwordData, setPasswordData] = useState({
+        currentPassword: '',
+        newPassword: ''
+    });
+
     // Preferences State (Mock)
     const [preferences, setPreferences] = useState({
         orderType: 'Market',
@@ -54,6 +60,26 @@ function UserProfile() {
             setMessage({
                 type: 'error',
                 text: error.response?.data?.message || 'Failed to update profile'
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handlePasswordSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setMessage({ type: '', text: '' });
+
+        try {
+            await api.put('/auth/password', passwordData);
+            setMessage({ type: 'success', text: 'Password updated successfully' });
+            setPasswordData({ currentPassword: '', newPassword: '' });
+        } catch (error) {
+            console.error('Password update error:', error);
+            setMessage({
+                type: 'error',
+                text: error.response?.data?.message || 'Failed to update password'
             });
         } finally {
             setLoading(false);
@@ -97,7 +123,6 @@ function UserProfile() {
                                 <div className="avatar-info">
                                     <h3>{user?.username}</h3>
                                     <span className="text-secondary">{user?.email}</span>
-                                    <div className="kyc-badge verified">KYC Verified</div>
                                 </div>
                             </div>
 
@@ -152,17 +177,48 @@ function UserProfile() {
                             <h3>Security Settings</h3>
                             <p className="text-secondary mb-4">Manage your password and authentication methods.</p>
 
-                            <div className="form-group">
-                                <label>Current Password</label>
-                                <input type="password" placeholder="••••••••" className="premium-input" />
-                            </div>
-                            <div className="form-group">
-                                <label>New Password</label>
-                                <input type="password" placeholder="New password" className="premium-input" />
-                            </div>
-                            <div className="form-group mt-4">
-                                <Button variant="primary" fullWidth>Update Password</Button>
-                            </div>
+                            {message.text && (
+                                <div className={`alert alert-${message.type} mb-4`}>
+                                    {message.text}
+                                </div>
+                            )}
+
+                            <form onSubmit={handlePasswordSubmit}>
+                                <div className="form-group">
+                                    <label>Current Password</label>
+                                    <input
+                                        type="password"
+                                        placeholder="••••••••"
+                                        className="premium-input"
+                                        value={passwordData.currentPassword}
+                                        onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                                        required
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label>New Password</label>
+                                    <input
+                                        type="password"
+                                        placeholder="New password"
+                                        className="premium-input"
+                                        value={passwordData.newPassword}
+                                        onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                                        required
+                                        minLength="6"
+                                    />
+                                </div>
+                                <div className="form-group mt-4">
+                                    <Button
+                                        variant="primary"
+                                        fullWidth
+                                        type="submit"
+                                        isLoading={loading}
+                                        disabled={loading}
+                                    >
+                                        Update Password
+                                    </Button>
+                                </div>
+                            </form>
                         </div>
                     )}
 

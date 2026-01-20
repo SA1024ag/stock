@@ -115,7 +115,7 @@ const ProfileDropdown = ({ onClose }) => {
             <div className="profile-dropdown-content">
                 <MenuSection title="Account">
                     <MenuItem icon="user" label="Profile Details" onClick={() => handleNavigate('/profile/account')} />
-                    <MenuItem icon="creditCard" label="Payment Methods" onClick={() => handleNavigate('/payment')} />
+                    <MenuItem icon="creditCard" label="Add More Credits" onClick={() => handleNavigate('/payment')} />
                 </MenuSection>
 
                 <div className="menu-divider" />
