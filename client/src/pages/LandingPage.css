@@ -1,20 +1,9 @@
-/* LandingPage.css */
-:root {
-    --primary-color: #00d2ff;
-    --secondary-color: #3a7bd5;
-    --accent-color: #7928ca;
-    --bg-dark: #0f172a;
-    --bg-card: #1e293b;
-    --text-light: #f8fafc;
-    --text-dim: #94a3b8;
-    --gradient-main: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
-    --gradient-text: linear-gradient(to right, #00d2ff, #7928ca);
-}
+/* LandingPage.css - Uses existing theme variables */
 
 .landing-page {
     min-height: 100vh;
-    background-color: var(--bg-dark);
-    color: var(--text-light);
+    background-color: var(--bg-deep);
+    color: var(--text-primary);
     font-family: 'Inter', sans-serif;
     overflow-x: hidden;
 }
@@ -26,7 +15,6 @@
     align-items: center;
     padding: 1.5rem 2rem;
     background: transparent;
-    /* Transparent as requested */
     position: absolute;
     width: 100%;
     top: 0;
@@ -37,7 +25,7 @@
 .nav-logo {
     font-size: 1.5rem;
     font-weight: 700;
-    background: var(--gradient-text);
+    background: linear-gradient(to right, var(--accent-blue), var(--accent-green));
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -49,27 +37,31 @@
 }
 
 .btn-login {
-    color: var(--text-light);
+    color: var(--text-primary);
     text-decoration: none;
     font-weight: 500;
     padding: 0.5rem 1rem;
     transition: opacity 0.2s;
 }
 
+.btn-login:hover {
+    opacity: 0.8;
+}
+
 .btn-signup {
-    background: var(--gradient-main);
+    background: linear-gradient(135deg, var(--accent-blue) 0%, #2563eb 100%);
     color: white;
     text-decoration: none;
     padding: 0.5rem 1.5rem;
     border-radius: 9999px;
-    /* Pill shape */
     font-weight: 600;
     transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 15px var(--accent-blue-glow);
 }
 
 .btn-signup:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(58, 123, 213, 0.4);
+    box-shadow: 0 6px 20px var(--accent-blue-glow);
 }
 
 /* Hero Section */
@@ -78,7 +70,6 @@
     align-items: center;
     justify-content: space-between;
     padding: 8rem 2rem 4rem 2rem;
-    /* Top padding accounts for nav */
     max-width: 1200px;
     margin: 0 auto;
     min-height: 90vh;
@@ -94,11 +85,11 @@
     font-weight: 800;
     line-height: 1.2;
     margin-bottom: 1.5rem;
-    color: var(--text-light);
+    color: var(--text-primary);
 }
 
 .gradient-text {
-    background: var(--gradient-text);
+    background: linear-gradient(to right, var(--accent-blue), var(--accent-green));
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -106,27 +97,28 @@
 
 .hero-subheadline {
     font-size: 1.25rem;
-    color: var(--text-dim);
+    color: var(--text-secondary);
     margin-bottom: 2.5rem;
     line-height: 1.6;
 }
 
 .cta-button {
     display: inline-block;
-    background: var(--gradient-main);
+    background: linear-gradient(135deg, var(--accent-blue) 0%, #2563eb 100%);
     color: white;
     font-size: 1.125rem;
     font-weight: 600;
     padding: 1rem 2.5rem;
-    border-radius: 8px;
+    border-radius: 12px;
     text-decoration: none;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 14px rgba(0, 210, 255, 0.4);
+    box-shadow: 0 4px 15px var(--accent-blue-glow);
 }
 
 .cta-button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 210, 255, 0.6);
+    box-shadow: 0 8px 25px var(--accent-blue-glow);
+    filter: brightness(1.1);
 }
 
 .hero-visual {
@@ -143,8 +135,8 @@
     height: 400px;
     background: var(--bg-card);
     border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    border: var(--border-glass);
+    box-shadow: var(--shadow-lg);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -163,13 +155,13 @@
 
 .bar {
     width: 20px;
-    background: var(--secondary-color);
+    background: var(--accent-blue);
     border-radius: 4px 4px 0 0;
     animation: grow 1.5s ease-out forwards;
 }
 
 .bar:nth-child(even) {
-    background: var(--primary-color);
+    background: var(--accent-green);
 }
 
 @keyframes grow {
@@ -194,20 +186,22 @@
 .feature-card {
     background: var(--bg-card);
     padding: 2rem;
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    transition: transform 0.3s ease, border-color 0.3s ease;
+    border-radius: 16px;
+    border: var(--border-glass);
+    transition: transform 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
     position: relative;
     overflow: hidden;
 }
 
 .feature-card:hover {
-    transform: translateY(-5px);
-    border-color: rgba(0, 210, 255, 0.3);
+    transform: translateY(-4px);
+    background: var(--bg-card-hover);
+    box-shadow: var(--shadow-lg);
+    border-color: rgba(255, 255, 255, 0.15);
 }
 
 .feature-icon-wrapper {
-    background: rgba(0, 210, 255, 0.1);
+    background: rgba(59, 130, 246, 0.15);
     width: 48px;
     height: 48px;
     border-radius: 10px;
@@ -215,18 +209,18 @@
     align-items: center;
     justify-content: center;
     margin-bottom: 1.5rem;
-    color: var(--primary-color);
+    color: var(--accent-blue);
 }
 
 .feature-title {
     font-size: 1.25rem;
     font-weight: 700;
     margin-bottom: 0.75rem;
-    color: var(--text-light);
+    color: var(--text-primary);
 }
 
 .feature-desc {
-    color: var(--text-dim);
+    color: var(--text-secondary);
     font-size: 0.95rem;
     line-height: 1.5;
 }
