@@ -1,38 +1,33 @@
 console.log('RUNNING SERVER INDEX.JS FROM /server');
-// Trigger restart for env vars
 
-// Always load env vars from the server/.env file,
-// regardless of where the process is started from.
-require('dotenv').config({ path: __dirname + '/.env' });
-
-console.log('MONGODB_URI =>', process.env.MONGODB_URI);
+const path = require('path');
+// Use path.join to ensure cross-platform compatibility for the .env path
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const http = require('http'); // Import http
-const { Server } = require('socket.io'); // Import Server from socket.io
+const http = require('http');
+const { Server } = require('socket.io');
 const socketService = require('./services/socketService');
 
 const app = express();
-const server = http.createServer(app); // Create HTTP server
+const server = http.createServer(app);
 
 // Socket.IO setup
 const io = new Server(server, {
   cors: {
-    origin: "*", // Allow all origins for simplicity (or specify client URL)
+    origin: process.env.CLIENT_URL || "*", // Best practice: use env var for origin
     methods: ["GET", "POST"]
   }
 });
 
-// Store io in app instance for routes to use
 app.set('io', io);
 
 io.on('connection', (socket) => {
-  console.log('New client connected (Community):', socket.id);
-
+  console.log('New client connected:', socket.id);
   socket.on('disconnect', () => {
-    console.log('Client disconnected (Community):', socket.id);
+    console.log('Client disconnected:', socket.id);
   });
 });
 
@@ -43,45 +38,57 @@ app.use(express.urlencoded({ extended: true }));
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Server is running' });
+  res.json({ 
+    status: 'OK', 
+    message: 'Server is running',
+    dbStatus: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected' 
+  });
 });
+
+// Import Routes
+const authRoutes = require('./routes/auth');
+const stockRoutes = require('./routes/stocks');
+const portfolioRoutes = require('./routes/portfolio');
+const aiRoutes = require('./routes/ai');
+const newsRoutes = require('./routes/news');
+const paymentRoutes = require('./routes/payment');
+const learningRoutes = require('./routes/learning');
+const blogRoutes = require('./routes/blog');
+const watchlistRoutes = require('./routes/watchlist');
+
+// Use Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/stocks', stockRoutes);
+app.use('/api/portfolio', portfolioRoutes);
+app.use('/api/ai', aiRoutes);
+app.use('/api/news', newsRoutes);
+app.use('/api/payment', paymentRoutes);
+app.use('/api/learning', learningRoutes);
+app.use('/api/blog', blogRoutes);
+app.use('/api/watchlist', watchlistRoutes);
 
 const PORT = process.env.PORT || 5000;
 
 async function startServer() {
   try {
-    if (!process.env.MONGODB_URI) {
-      throw new Error('MONGODB_URI is not defined in server/.env');
-    }
-    if (!process.env.JWT_SECRET) {
-      throw new Error('JWT_SECRET is not defined in server/.env');
-    }
+    if (!process.env.MONGODB_URI) throw new Error('MONGODB_URI missing in .env');
+    if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET missing in .env');
 
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('MongoDB connected');
 
-    // Initialize Upstox Socket
+    // Initialize External Services
     socketService.connect().catch(err => console.error('Socket init warning:', err.message));
-
-    // Routes (ONLY after DB is connected)
-    app.use('/api/auth', require('./routes/auth'));
-    app.use('/api/stocks', require('./routes/stocks'));
-    app.use('/api/portfolio', require('./routes/portfolio'));
-    app.use('/api/ai', require('./routes/ai'));
-    app.use('/api/news', require('./routes/news'));
-    app.use('/api/payment', require('./routes/payment'));
-    app.use('/api/learning', require('./routes/learning'));
-    app.use('/api/blog', require('./routes/blog'));
-    app.use('/api/watchlist', require('./routes/watchlist'));
-
-    // Start Alert Monitor
+    
     const { startAlertMonitor } = require('./services/alertMonitor');
     startAlertMonitor();
 
-    // Use server.listen instead of app.listen
-    server.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
+    // Only listen if this file is run directly (not via a test runner or serverless function)
+    if (require.main === module) {
+      server.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+      });
+    }
   } catch (err) {
     console.error('Server startup failed:', err.message);
     process.exit(1);
@@ -90,3 +97,5 @@ async function startServer() {
 
 startServer();
 
+// Export for Vercel/Serverless/Tests
+module.exports = app;
