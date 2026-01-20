@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import Card from '../components/common/Card';
@@ -8,6 +8,7 @@ import './Dashboard.css';
 
 function Dashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [portfolioSummary, setPortfolioSummary] = useState(null);
   const [indices, setIndices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -128,12 +129,11 @@ function Dashboard() {
         </Card>
       </div>
 
-      <div className="dashboard-content grid grid-2">
+      <div className="dashboard-content">
         {/* Holdings Section */}
         <div className="holdings-section">
           <div className="section-header">
             <h3>Active Positions</h3>
-            <Link to="/portfolio" className="text-muted link-hover">View All ›</Link>
           </div>
 
           {portfolioSummary?.holdings && portfolioSummary.holdings.length > 0 ? (
@@ -142,7 +142,11 @@ function Dashboard() {
                 const gain = holding.gainLoss ?? 0;
                 const isGain = gain >= 0;
                 return (
-                  <Card key={holding.symbol} className="holding-card-row">
+                  <Card
+                    key={holding.symbol}
+                    className="holding-card-row"
+                    onClick={() => navigate(`/stock/${holding.symbol}`)}
+                  >
                     <div className="holding-info">
                       <span className="holding-symbol">{holding.symbol}</span>
                       <span className="holding-shares text-secondary">{holding.shares} shares</span>
@@ -169,27 +173,6 @@ function Dashboard() {
           )}
         </div>
 
-        {/* Quick Actions / Watchlist Placeholder */}
-        <div className="side-section">
-          <Card title="Quick Access" className="h-full">
-            <div className="quick-links">
-              <Link to="/search" className="quick-link-item">
-                <div className="icon-box">🔍</div>
-                <div>
-                  <div className="font-bold">Symbol Search</div>
-                  <div className="text-xs text-muted">Find stocks to trade</div>
-                </div>
-              </Link>
-              <Link to="/portfolio" className="quick-link-item">
-                <div className="icon-box">📊</div>
-                <div>
-                  <div className="font-bold">Portfolio Analysis</div>
-                  <div className="text-xs text-muted">Deep dive into performance</div>
-                </div>
-              </Link>
-            </div>
-          </Card>
-        </div>
       </div>
     </div>
   );
