@@ -12,6 +12,7 @@ import News from './pages/News';
 import Community from './pages/Community';
 import Home from './pages/Home';
 import LandingPage from './pages/LandingPage';
+import { Toaster } from 'react-hot-toast';
 
 
 // AI & Insights Pages
@@ -112,6 +113,34 @@ function AppContent() {
       <main className="main-content">
         <AppRoutes />
       </main>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          style: {
+            background: 'rgba(15, 23, 42, 0.9)',
+            color: '#fff',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            padding: '16px',
+            borderRadius: '12px',
+            fontSize: '14px',
+            maxWidth: '400px',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+          },
+          success: {
+            iconTheme: {
+              primary: '#10b981',
+              secondary: '#fff',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#fff',
+            },
+          },
+        }}
+      />
     </div>
   );
 }

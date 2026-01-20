@@ -39,7 +39,7 @@ Please provide:
       return this.getFallbackAnalysis(symbol, stockData);
     }
   }
-
+  
   // Analyze portfolio risk and diversification
   async analyzePortfolio(portfolio, stockPrices) {
     try {

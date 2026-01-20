@@ -264,7 +264,7 @@ function Portfolio() {
         <Card className="summary-card glass-card">
           <div className="summary-content">
             <span className="summary-label">Total Invested</span>
-            <span className="summary-value-xl text-muted">₹{portfolioSummary.totalInvested.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            <span className="summary-value-xl">₹{portfolioSummary.totalInvested.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             <div className="summary-meta">
               <span className="meta-text">{portfolioSummary.holdings.length} positions</span>
             </div>
