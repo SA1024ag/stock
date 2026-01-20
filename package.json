@@ -26,8 +26,12 @@
     "nodemon": "^3.0.2"
   },
   "dependencies": {
+    "file-saver": "^2.0.5",
     "lightweight-charts": "^5.1.0",
+    "node-cron": "^4.2.1",
+    "nodemailer": "^7.0.12",
     "razorpay": "^2.9.6",
-    "upstox": "^1.2.3"
+    "upstox": "^1.2.3",
+    "xlsx": "^0.18.5"
   }
 }

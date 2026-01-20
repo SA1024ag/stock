@@ -77,6 +77,36 @@ router.post('/:id/like', async (req, res) => {
     }
 });
 
+// Track post view
+router.post('/:id/view', async (req, res) => {
+    const { userId } = req.body; // Expecting userId/username in body
+    if (!userId) return res.status(400).json({ message: 'User ID required' });
+
+    try {
+        const post = await BlogPost.findById(req.params.id);
+        if (!post) return res.status(404).json({ message: 'Post not found' });
+
+        // Add view only if user hasn't viewed before
+        if (!post.views) post.views = [];
+        if (!post.views.includes(userId)) {
+            post.views.push(userId);
+            const updatedPost = await post.save();
+
+            // Emit update
+            const io = req.app.get('io');
+            if (io) {
+                io.emit('update_post', updatedPost);
+            }
+
+            res.json(updatedPost);
+        } else {
+            res.json(post); // Already viewed
+        }
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
 // Add a comment
 router.post('/:id/comment', async (req, res) => {
     const { author, content } = req.body;

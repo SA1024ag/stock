@@ -16,6 +16,9 @@ const BlogPostSchema = new mongoose.Schema({
     likes: [{
         type: String // Array of user IDs/Usernames who liked
     }],
+    views: [{
+        type: String // Array of user IDs/Usernames who viewed
+    }],
     comments: [{
         author: String,
         content: String,
