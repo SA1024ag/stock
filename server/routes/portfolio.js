@@ -89,7 +89,7 @@ router.post('/buy', async (req, res) => {
     const user = await User.findById(req.user._id);
     if (user.virtualBalance < totalCost) {
       return res.status(400).json({
-        message: `Insufficient funds. Need $${totalCost.toFixed(2)}, have $${user.virtualBalance.toFixed(2)}`
+        message: `Insufficient funds. Need ₹${totalCost.toFixed(2)}, have ₹${user.virtualBalance.toFixed(2)}`
       });
     }
 
@@ -140,7 +140,7 @@ router.post('/buy', async (req, res) => {
     await portfolio.save();
 
     res.json({
-      message: `Successfully bought ${shares} shares of ${symbol.toUpperCase()} at $${quote.price.toFixed(2)}`,
+      message: `Successfully bought ${shares} shares of ${symbol.toUpperCase()} at ₹${quote.price.toFixed(2)}`,
       portfolio: portfolio,
       remainingBalance: user.virtualBalance
     });
@@ -178,7 +178,7 @@ router.post('/sell', async (req, res) => {
     );
 
     res.json({
-      message: `Successfully sold ${result.sharesSold} shares of ${symbol.toUpperCase()} at $${result.sellPrice.toFixed(2)}`,
+      message: `Successfully sold ${result.sharesSold} shares of ${symbol.toUpperCase()} at ₹${result.sellPrice.toFixed(2)}`,
       portfolio: result.portfolio,
       remainingBalance: result.remainingBalance
     });

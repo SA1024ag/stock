@@ -4,7 +4,7 @@ import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
-import Toast from '../components/common/Toast';
+import toast from 'react-hot-toast';
 import CandlestickChart from '../components/CandlestickChart';
 import StockPredictionSimulator from '../components/StockPredictionSimulator';
 import { Star, Check } from 'lucide-react';
@@ -31,7 +31,6 @@ function StockDetail() {
   // Watchlist State
   const [inWatchlist, setInWatchlist] = useState(false);
   const [watchlistLoading, setWatchlistLoading] = useState(false);
-  const [toast, setToast] = useState(null);
 
   useEffect(() => {
     if (symbol) {
@@ -106,15 +105,15 @@ function StockDetail() {
       if (inWatchlist) {
         await api.delete(`/watchlist/remove/${symbol}`);
         setInWatchlist(false);
-        setToast({ message: 'Removed from Watchlist', type: 'success' });
+        toast.success('Removed from Watchlist');
       } else {
         await api.post('/watchlist/add', { symbol });
         setInWatchlist(true);
-        setToast({ message: 'Added to Watchlist', type: 'success' });
+        toast.success('Added to Watchlist');
       }
     } catch (err) {
       console.error('Error toggling watchlist:', err);
-      setToast({ message: 'Failed to update watchlist', type: 'error' });
+      toast.error('Failed to update watchlist');
     } finally {
       setWatchlistLoading(false);
     }
@@ -144,7 +143,7 @@ function StockDetail() {
 
       const response = await api.post(`/portfolio/${action}`, payload);
 
-      setSuccess(response.data.message);
+      toast.success(response.data.message);
       setShares('');
 
       if (response.data.remainingBalance !== undefined) {
@@ -155,7 +154,7 @@ function StockDetail() {
         fetchStockData();
       }, 1000);
     } catch (error) {
-      setError(error.response?.data?.message || 'Trading failed. Please try again.');
+      toast.error(error.response?.data?.message || 'Trading failed. Please try again.');
     } finally {
       setTrading(false);
     }
@@ -444,13 +443,6 @@ function StockDetail() {
           </Card>
         </div>
       </div>
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
     </div>
   );
 }
