@@ -126,7 +126,7 @@ function Payment() {
                 {/* Flashcards Section - Now at Top */}
                 <div className="flashcards-container">
                     <Card className="glass-panel pricing-card">
-                        <div className="price-tag">₹3</div>
+                        <div className="price-tag">₹89</div>
                         <h3>Starter Pack</h3>
                         <p className="credit-amount">1,000 Credits</p>
                         <p className="price-subtext">Real Money</p>
@@ -136,7 +136,7 @@ function Payment() {
                     <div className="pricing-card-wrapper popular">
                         <div className="popular-badge">Most Popular</div>
                         <Card className="glass-panel pricing-card">
-                            <div className="price-tag">₹6</div>
+                            <div className="price-tag">₹189</div>
                             <h3>Trader Pack</h3>
                             <p className="credit-amount">5,000 Credits</p>
                             <p className="price-subtext">Real Money</p>
@@ -145,7 +145,7 @@ function Payment() {
                     </div>
 
                     <Card className="glass-panel pricing-card">
-                        <div className="price-tag">₹10</div>
+                        <div className="price-tag">₹289</div>
                         <h3>Pro Pack</h3>
                         <p className="credit-amount">10,000 Credits</p>
                         <p className="price-subtext">Real Money</p>

@@ -97,9 +97,6 @@ function Security() {
                             </div>
                         </form>
 
-                        <h3 className="mt-4">Two-Factor Authentication</h3>
-                        <p className="text-secondary mb-2">Add an extra layer of security to your account.</p>
-                        <Button variant="secondary" fullWidth>Enable 2FA</Button>
                     </div>
                 </Card>
             </div>
