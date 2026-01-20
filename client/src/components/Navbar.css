@@ -21,24 +21,77 @@
 .navbar-brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   text-decoration: none;
   color: var(--text-primary);
-  font-weight: 700;
+  font-weight: 800;
   font-size: 1.5rem;
   letter-spacing: -0.03em;
+  transition: transform 0.3s ease;
 }
 
-.brand-logo {
-  font-size: 1.5rem;
-  background: rgba(255, 255, 255, 0.1);
-  width: 40px;
-  height: 40px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border-radius: 10px;
-  box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+.navbar-brand:hover {
+  transform: translateY(-2px);
+}
+
+.brand-icon {
+  color: var(--accent-blue);
+  transition: all 0.3s ease;
+}
+
+.navbar-brand:hover .brand-icon {
+  transform: scale(1.1);
+}
+
+.brand-text {
+  background: linear-gradient(135deg,
+      #ffffff 0%,
+      #60a5fa 50%,
+      #3b82f6 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: brandGradient 4s ease infinite;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+@keyframes brandGradient {
+
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.brand-highlight {
+  background: linear-gradient(135deg,
+      #3b82f6 0%,
+      #60a5fa 50%,
+      #93c5fd 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: highlightGradient 3s ease infinite;
+  font-weight: 900;
+}
+
+@keyframes highlightGradient {
+
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
 }
 
 /* --- Search Bar --- */
@@ -164,6 +217,15 @@
   gap: 24px;
 }
 
+.balance-display-link {
+  text-decoration: none;
+  transition: transform 0.2s ease;
+}
+
+.balance-display-link:hover {
+  transform: translateY(-2px);
+}
+
 .balance-display {
   display: flex;
   flex-direction: column;
@@ -172,6 +234,13 @@
   border-radius: 10px;
   /* Override glass-panel defaults for this small widget */
   background: rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.balance-display-link:hover .balance-display {
+  background: rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.3);
 }
 
 .balance-label {

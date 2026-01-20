@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import ProfileDropdown from './ProfileDropdown';
+import { LineChart } from 'lucide-react';
 import './Navbar.css';
 import api from '../services/api';
 
@@ -91,8 +92,8 @@ function Navbar() {
     <nav className="navbar glass-panel">
       <div className="navbar-container">
         <Link to="/" className="navbar-brand">
-          <span className="brand-logo">⚡</span>
-          <span className="brand-text">Trade<span className="text-green">AI</span></span>
+          <LineChart className="brand-icon" size={24} />
+          <span className="brand-text">StockLabs</span>
         </Link>
 
         {user && (
@@ -177,12 +178,14 @@ function Navbar() {
                 {theme === 'dark' ? '☀️' : '🌙'}
               </button>
 
-              <div className="balance-display glass-panel">
-                <span className="balance-label">Buying Power</span>
-                <span className="balance-amount text-green">
-                  ₹{user.virtualBalance?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
-                </span>
-              </div>
+              <Link to="/add-credits" className="balance-display-link">
+                <div className="balance-display glass-panel">
+                  <span className="balance-label">Buying Power</span>
+                  <span className="balance-amount text-green">
+                    ₹{user.virtualBalance?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
+                  </span>
+                </div>
+              </Link>
 
               <div className="user-menu">
                 <div

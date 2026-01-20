@@ -84,7 +84,10 @@ const Sidebar = () => {
             {/* Sidebar */}
             <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
-                    <h2>Dashboard</h2>
+                    <div className="logo-container">
+                        <LineChart className="logo-icon" size={28} />
+                        <h2 className="logo-text">StockLabs</h2>
+                    </div>
                 </div>
 
                 <nav className="sidebar-nav">

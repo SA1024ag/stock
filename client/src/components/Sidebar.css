@@ -29,6 +29,13 @@
     border-color: rgba(255, 255, 255, 0.2);
 }
 
+.hamburger-icon-wrapper {
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .hamburger-btn span {
     width: 22px;
     height: 2px;
@@ -117,13 +124,55 @@
     background: rgba(255, 255, 255, 0.01);
 }
 
-.sidebar-header h2 {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: var(--text-primary);
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.logo-container:hover {
+    transform: translateX(4px);
+}
+
+.logo-icon {
+    color: var(--accent-blue);
+    transition: all 0.3s ease;
+}
+
+.logo-container:hover .logo-icon {
+    transform: scale(1.05);
+}
+
+.logo-text {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: transparent;
     margin: 0;
-    letter-spacing: -0.02em;
-    text-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg,
+            #3b82f6 0%,
+            #60a5fa 25%,
+            #93c5fd 50%,
+            #3b82f6 75%,
+            #60a5fa 100%);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: gradientShift 3s ease infinite;
+}
+
+@keyframes gradientShift {
+
+    0%,
+    100% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
 }
 
 /* Sidebar Navigation */
