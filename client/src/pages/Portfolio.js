@@ -65,6 +65,7 @@ function Portfolio() {
 
       // Format dates for display
       const formattedData = data.map(point => ({
+        rawDate: new Date(point.date),
         date: new Date(point.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         value: point.value
       }));
@@ -137,6 +138,49 @@ function Portfolio() {
 
   const isPositive = portfolioSummary.totalGainLoss >= 0;
   const dayChangePercent = 2.34; // Mock data - would come from backend
+
+  const getFilteredData = () => {
+    if (!performanceData || performanceData.length === 0) return [];
+    if (selectedTimeframe === 'ALL') return performanceData;
+
+    const useDate = new Date();
+    switch (selectedTimeframe) {
+      case '1W': useDate.setDate(useDate.getDate() - 7); break;
+      case '1M': useDate.setMonth(useDate.getMonth() - 1); break;
+      case '3M': useDate.setMonth(useDate.getMonth() - 3); break;
+      case '1Y': useDate.setFullYear(useDate.getFullYear() - 1); break;
+      default: return performanceData;
+    }
+
+    const filtered = performanceData.filter(item => {
+      const itemDate = item.rawDate || new Date(item.date);
+      return itemDate >= useDate;
+    });
+
+    // Remap for display based on timeframe
+    return filtered.map(item => {
+      const itemDate = item.rawDate || new Date(item.date);
+      let displayDate = '';
+
+      if (selectedTimeframe === '1W') {
+        // Week: "Mon 16"
+        displayDate = itemDate.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' });
+      } else if (selectedTimeframe === '1M') {
+        // Month: "16 Jan" (Day Month)
+        displayDate = itemDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+      } else if (selectedTimeframe === '3M') {
+        // 3 Month: "Jan 16"
+        displayDate = itemDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      } else {
+        // Year/All: "Jan 26" (Month Year) to show broad trend
+        displayDate = itemDate.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+      }
+
+      return { ...item, displayDate };
+    });
+  };
+
+  const filteredPerformanceData = getFilteredData();
 
   return (
     <div className="portfolio-container">
@@ -249,7 +293,7 @@ function Portfolio() {
         </div>
         <div className="chart-container">
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={performanceData}>
+            <LineChart key={selectedTimeframe} data={filteredPerformanceData}>
               <defs>
                 <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
@@ -257,7 +301,7 @@ function Portfolio() {
                 </linearGradient>
               </defs>
               <XAxis
-                dataKey="date"
+                dataKey="displayDate"
                 stroke="#6b7280"
                 style={{ fontSize: '12px' }}
                 tickLine={false}
