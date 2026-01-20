@@ -6,6 +6,10 @@ import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import './Portfolio.css';
 
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
+import { Download } from 'lucide-react';
+
 function Portfolio() {
   const [portfolioSummary, setPortfolioSummary] = useState(null);
   const [recentTrades, setRecentTrades] = useState([]);
@@ -76,6 +80,32 @@ function Portfolio() {
     }
   };
 
+  const exportToExcel = () => {
+    if (!portfolioSummary || !portfolioSummary.holdings) return;
+
+    // Prepare data for export
+    const exportData = portfolioSummary.holdings.map(holding => ({
+      Symbol: holding.symbol,
+      Shares: holding.shares,
+      'Avg Price': holding.averagePrice,
+      'Current Price': holding.currentPrice,
+      'Market Value': holding.currentValue,
+      'Gain/Loss': holding.gainLoss,
+      'Gain/Loss %': `${holding.gainLossPercent?.toFixed(2)}%`,
+      'Allocation %': `${holding.allocation?.toFixed(2)}%`
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Portfolio Holdings");
+
+    // Generate buffer
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8' });
+
+    saveAs(data, `portfolio_export_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  };
+
   if (loading) {
     return (
       <div className="portfolio-loading">
@@ -112,8 +142,41 @@ function Portfolio() {
     <div className="portfolio-container">
       {/* Header */}
       <div className="portfolio-header">
-        <h1 className="portfolio-title">Portfolio Dashboard</h1>
-        <p className="portfolio-subtitle">Your financial command center</p>
+        <div>
+          <h1 className="portfolio-title">Portfolio Dashboard</h1>
+          <p className="portfolio-subtitle">Your financial command center</p>
+        </div>
+        <button
+          onClick={exportToExcel}
+          className="btn glass-button-premium"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            padding: '0.75rem 1.5rem',
+            background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.2) 100%)',
+            border: '1px solid rgba(16, 185, 129, 0.4)',
+            borderRadius: '12px',
+            color: '#34d399',
+            fontWeight: '600',
+            backdropFilter: 'blur(10px)',
+            transition: 'all 0.3s ease',
+            boxShadow: '0 4px 15px rgba(16, 185, 129, 0.1)'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 8px 25px rgba(16, 185, 129, 0.2)';
+            e.currentTarget.style.border = '1px solid rgba(16, 185, 129, 0.6)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.1)';
+            e.currentTarget.style.border = '1px solid rgba(16, 185, 129, 0.4)';
+          }}
+        >
+          <Download size={20} />
+          Export Portfolio
+        </button>
       </div>
 
       {/* Portfolio Summary Cards */}

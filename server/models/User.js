@@ -37,8 +37,15 @@ const userSchema = new mongoose.Schema({
   isTwoFactorEnabled: {
     type: Boolean,
     default: false
-  }
-});
+  },
+  watchlist: [{
+    symbol: { type: String, required: true },
+    addedAt: { type: Date, default: Date.now },
+    targetLow: { type: Number }, // Alert if price drops below this
+    targetHigh: { type: Number }, // Alert if price goes above this
+    lastAlertSentAt: { type: Date } // Cooldown tracker
+  }]
+}, { timestamps: true });
 
 // Hash password before saving
 userSchema.pre('save', async function (next) {

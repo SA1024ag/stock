@@ -101,9 +101,9 @@ Please provide:
       const response = await groq.chat.completions.create({
         model: GROQ_MODEL,
         messages: [
-          { 
-            role: 'system', 
-            content: 'You are a patient Financial Mentor. Use analogies like comparing a Stock Exchange to a Farmer\'s Market. Be positive and clear.' 
+          {
+            role: 'system',
+            content: 'You are a patient Financial Mentor. Use analogies like comparing a Stock Exchange to a Farmer\'s Market. Be positive and clear.'
           },
           { role: 'user', content: prompt }
         ],
