@@ -44,8 +44,7 @@ const Sidebar = () => {
             items: [
                 { name: 'AI Stock Insights', path: '/ai-insights', icon: <LineChart size={18} /> },
                 { name: 'AI Portfolio Analysis', path: '/ai-portfolio', icon: <PieChart size={18} /> },
-                { name: 'AI Recommendations', path: '/ai-recommendations', icon: <Sparkles size={18} /> },
-                { name: 'Market Simulator', path: '/simulate', icon: <Activity size={18} /> }
+                { name: 'AI Recommendations', path: '/ai-recommendations', icon: <Sparkles size={18} /> }
             ]
         },
         {

@@ -22,7 +22,8 @@ import ScenarioSimulator from './pages/ScenarioSimulator';
 // Learning Pages
 import LearningHub from './pages/LearningHub';
 import ModuleDetailPage from './pages/ModuleDetailPage';
-import { StockExplainers, BeginnerGuides, PortfolioReport, Transactions, ProfitLoss, Watchlist, Alerts, MarketMovers } from './pages/PlaceholderPages';
+import Watchlist from './pages/Watchlist';
+import { StockExplainers, BeginnerGuides, PortfolioReport, Transactions, ProfitLoss, Alerts, MarketMovers } from './pages/PlaceholderPages';
 
 // Profile Pages
 import Account from './pages/profile/Account';

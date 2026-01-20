@@ -71,7 +71,12 @@ async function startServer() {
     app.use('/api/news', require('./routes/news'));
     app.use('/api/payment', require('./routes/payment'));
     app.use('/api/learning', require('./routes/learning'));
-    app.use('/api/blog', require('./routes/blog')); // Add blog routes
+    app.use('/api/blog', require('./routes/blog'));
+    app.use('/api/watchlist', require('./routes/watchlist'));
+
+    // Start Alert Monitor
+    const { startAlertMonitor } = require('./services/alertMonitor');
+    startAlertMonitor();
 
     // Use server.listen instead of app.listen
     server.listen(PORT, () => {

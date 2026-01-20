@@ -4,8 +4,10 @@ import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
+import Toast from '../components/common/Toast';
 import CandlestickChart from '../components/CandlestickChart';
 import StockPredictionSimulator from '../components/StockPredictionSimulator';
+import { Star, Check } from 'lucide-react';
 import './StockDetail.css';
 
 function StockDetail() {
@@ -15,26 +17,33 @@ function StockDetail() {
   const [stockData, setStockData] = useState(null);
   const [analysis, setAnalysis] = useState(null);
   const [historicalData, setHistoricalData] = useState([]);
-  const [timeframe, setTimeframe] = useState('1M'); // Add timeframe state
+  const [timeframe, setTimeframe] = useState('1M');
   const [shares, setShares] = useState('');
   const [stopLoss, setStopLoss] = useState('');
   const [takeProfit, setTakeProfit] = useState('');
   const [action, setAction] = useState('buy');
   const [loading, setLoading] = useState(true);
-  const [chartLoading, setChartLoading] = useState(false); // Separate loading for chart
+  const [chartLoading, setChartLoading] = useState(false);
   const [trading, setTrading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  // Watchlist State
+  const [inWatchlist, setInWatchlist] = useState(false);
+  const [watchlistLoading, setWatchlistLoading] = useState(false);
+  const [toast, setToast] = useState(null);
+
   useEffect(() => {
-    fetchStockData();
-    fetchAnalysis();
-    fetchHistoricalData(timeframe); // Pass timeframe
-    const interval = setInterval(fetchStockData, 30000);
-    return () => clearInterval(interval);
+    if (symbol) {
+      fetchStockData();
+      fetchAnalysis();
+      fetchHistoricalData(timeframe);
+      checkWatchlistStatus(); // Check watchlist status
+      const interval = setInterval(fetchStockData, 30000);
+      return () => clearInterval(interval);
+    }
   }, [symbol]);
 
-  // Refetch when timeframe changes
   useEffect(() => {
     if (symbol) {
       fetchHistoricalData(timeframe);
@@ -79,6 +88,36 @@ function StockDetail() {
 
   const handleTimeframeChange = (newTimeframe) => {
     setTimeframe(newTimeframe);
+  };
+
+  const checkWatchlistStatus = async () => {
+    try {
+      const response = await api.get('/watchlist');
+      const exists = response.data.some(item => item.symbol === symbol);
+      setInWatchlist(exists);
+    } catch (err) {
+      console.error('Error checking watchlist:', err);
+    }
+  };
+
+  const toggleWatchlist = async () => {
+    setWatchlistLoading(true);
+    try {
+      if (inWatchlist) {
+        await api.delete(`/watchlist/remove/${symbol}`);
+        setInWatchlist(false);
+        setToast({ message: 'Removed from Watchlist', type: 'success' });
+      } else {
+        await api.post('/watchlist/add', { symbol });
+        setInWatchlist(true);
+        setToast({ message: 'Added to Watchlist', type: 'success' });
+      }
+    } catch (err) {
+      console.error('Error toggling watchlist:', err);
+      setToast({ message: 'Failed to update watchlist', type: 'error' });
+    } finally {
+      setWatchlistLoading(false);
+    }
   };
 
   const handleTrade = async (e) => {
@@ -202,11 +241,41 @@ function StockDetail() {
             <h1 className="stock-title">{stockData.symbol}</h1>
             <p className="text-secondary">Real-time Quote</p>
           </div>
-          <div className="stock-price-display">
-            <span className="current-price">₹{(stockData.price || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-            <span className={`price-change-badge ${stockData.change >= 0 ? 'bg-green' : 'bg-red'}`}>
-              {stockData.change >= 0 ? '+' : ''}₹{Math.abs(stockData.change || 0).toFixed(2)} ({(stockData.changePercent || 0).toFixed(2)}%)
-            </span>
+          <div className="stock-price-display" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+            <button
+              className={`watchlist-btn-icon ${inWatchlist ? 'active' : ''}`}
+              onClick={toggleWatchlist}
+              disabled={watchlistLoading}
+              title={inWatchlist ? "Remove from Watchlist" : "Add to Watchlist"}
+              style={{
+                background: inWatchlist ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+                border: inWatchlist ? '1px solid #10b981' : '1px solid rgba(255, 255, 255, 0.1)',
+                color: inWatchlist ? '#10b981' : '#9ca3af',
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                boxShadow: inWatchlist ? '0 0 10px rgba(16, 185, 129, 0.2)' : 'none'
+              }}
+            >
+              {watchlistLoading ? (
+                <span className="animate-spin" style={{ fontSize: '1rem' }}>⌛</span>
+              ) : inWatchlist ? (
+                <Check size={20} strokeWidth={2.5} />
+              ) : (
+                <Star size={20} strokeWidth={2} />
+              )}
+            </button>
+            <div style={{ textAlign: 'right' }}>
+              <span className="current-price" style={{ display: 'block', lineHeight: '1' }}>₹{(stockData.price || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span className={`price-change-badge ${stockData.change >= 0 ? 'bg-green' : 'bg-red'}`} style={{ fontSize: '0.9rem', marginTop: '0.25rem', display: 'inline-block' }}>
+                {stockData.change >= 0 ? '+' : ''}₹{Math.abs(stockData.change || 0).toFixed(2)} ({(stockData.changePercent || 0).toFixed(2)}%)
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -375,6 +444,13 @@ function StockDetail() {
           </Card>
         </div>
       </div>
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }
