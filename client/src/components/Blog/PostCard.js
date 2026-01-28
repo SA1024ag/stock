@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 
+import { Heart, MessageCircle, Eye, Edit2, Trash2, X } from 'lucide-react';
+
 function PostCard({ post }) {
     const { user } = useAuth();
     const [showComments, setShowComments] = useState(false);
@@ -154,7 +156,7 @@ function PostCard({ post }) {
                                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#888', padding: 0 }}
                                         title="Delete Comment"
                                     >
-                                        ×
+                                        <X size={14} />
                                     </button>
                                 )}
                             </div>
@@ -217,7 +219,7 @@ function PostCard({ post }) {
                             title="Edit Post"
                             style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}
                         >
-                            ✏️
+                            <Edit2 size={18} />
                         </button>
                         <button
                             onClick={handleDeletePost}
@@ -225,7 +227,7 @@ function PostCard({ post }) {
                             title="Delete Post"
                             style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}
                         >
-                            🗑️
+                            <Trash2 size={18} />
                         </button>
                     </div>
                 )}
@@ -258,7 +260,7 @@ function PostCard({ post }) {
                     className={`action-btn ${hasLiked ? 'active' : ''}`}
                     onClick={handleLike}
                 >
-                    <span>{hasLiked ? '❤️' : '🤍'}</span>
+                    <span><Heart size={18} fill={hasLiked ? "currentColor" : "none"} /></span>
                     <span>{post.likes.length}</span>
                 </button>
 
@@ -266,12 +268,12 @@ function PostCard({ post }) {
                     className="action-btn"
                     onClick={() => setShowComments(!showComments)}
                 >
-                    <span>💬</span>
+                    <span><MessageCircle size={18} /></span>
                     <span>{post.comments.length}</span>
                 </button>
 
                 <button className="action-btn" style={{ cursor: 'default' }}>
-                    <span>👁️</span>
+                    <span><Eye size={18} /></span>
                     <span>{post.views?.length || 0}</span>
                 </button>
             </div>

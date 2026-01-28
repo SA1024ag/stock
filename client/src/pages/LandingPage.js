@@ -57,7 +57,7 @@ const LandingPage = () => {
                         </div>
                         <h3 className="feature-title">Virtual Funds</h3>
                         <p className="feature-desc">
-                            Start with $10,000 in virtual simulation money. Make mistakes here so you don't make them in the real market.
+                            Start with ₹10,000 in virtual simulation money. Make mistakes here so you don't make them in the real market.
                         </p>
                     </div>
 

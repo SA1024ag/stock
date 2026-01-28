@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { BookOpen, Sparkles, Bot, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import './LearningHub.css';
@@ -72,7 +73,7 @@ const LearningHub = () => {
     return (
         <div className="learning-hub">
             <header className="learning-header">
-                <h1>📚 Learning Hub</h1>
+                <h1><BookOpen size={32} className="header-icon" /> Learning Hub</h1>
                 <p>Master the fundamentals of stock market investing with our structured curriculum</p>
             </header>
 
@@ -104,8 +105,8 @@ const LearningHub = () => {
                 <div className="modal-overlay" onClick={closeModal}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>🤖 AI Financial Mentor</h2>
-                            <button className="close-btn" onClick={closeModal}>×</button>
+                            <h2><Bot size={24} /> AI Financial Mentor</h2>
+                            <button className="close-btn" onClick={closeModal}><X size={20} /></button>
                         </div>
 
                         <div className="modal-body">
