@@ -10,24 +10,35 @@ class AIService {
   // Analyze a single stock for the Stock Detail page
   async analyzeStock(symbol, stockData, historicalData) {
     try {
-      const prompt = `You are a helpful financial advisor explaining stock market information in simple language.
-Stock Symbol: ${symbol}
-Current Price: $${stockData.price}
-Change: ${stockData.change > 0 ? '+' : ''}${stockData.change} (${stockData.changePercent > 0 ? '+' : ''}${stockData.changePercent}%)
-Volume: ${stockData.volume.toLocaleString()}
-52-Week High: $${stockData.high}
-52-Week Low: $${stockData.low}
+      const prompt = `You are a helpful financial advisor for Indian investors. Provide a clear, informative analysis.
 
-Please provide:
-1. A brief explanation of what this stock's current performance means
-2. Key trends or patterns notice
-3. Simple factors affecting the price
-4. A beginner-friendly assessment of the current state.`;
+Stock Symbol: ${symbol}
+Current Price: ₹${stockData.price}
+Change: ${stockData.change > 0 ? '+' : ''}₹${stockData.change} (${stockData.changePercent > 0 ? '+' : ''}${stockData.changePercent}%)
+Volume: ${stockData.volume.toLocaleString()}
+52-Week High: ₹${stockData.high}
+52-Week Low: ₹${stockData.low}
+
+Provide analysis using this format:
+
+Performance:
+- [Explain current price trend and what it indicates - 1-2 sentences]
+- [Analyze trading volume and activity - 1-2 sentences]
+
+Key Insights:
+- [Main factor affecting the stock with brief reasoning - 1-2 sentences]
+- [Notable trend or pattern with implications - 1-2 sentences]
+- [Key risk or opportunity to be aware of - 1-2 sentences]
+
+Assessment:
+- [Overall evaluation for beginner investors - 1-2 sentences]
+
+IMPORTANT: Use ONLY hyphens (-) for bullets. NO asterisks. Keep each point concise (1-2 sentences max). Always use ₹ for currency.`;
 
       const response = await groq.chat.completions.create({
         model: GROQ_MODEL,
         messages: [
-          { role: 'system', content: 'You are a friendly financial educator. Use simple language.' },
+          { role: 'system', content: 'You are a helpful Indian stock market analyst. Provide clear, informative analysis using bullet points with hyphens only. NO asterisks. Keep each point concise (1-2 sentences). Always use ₹ for currency.' },
           { role: 'user', content: prompt }
         ],
         max_tokens: 500,
@@ -214,7 +225,7 @@ Do not include any other text, just the JSON object.`;
 
   // Fallbacks
   getFallbackAnalysis(symbol, stockData) {
-    return `Analysis for ${symbol}: Trading at $${stockData.price}. Ensure Groq API key is configured for detailed insights.`;
+    return `Analysis for ${symbol}: Trading at ₹${stockData.price}. Ensure Groq API key is configured for detailed insights.`;
   }
 
   getFallbackPortfolioAnalysis(portfolio, stockPrices) {

@@ -88,10 +88,10 @@ function UserProfile() {
 
     const tabs = [
         { id: 'personal', label: 'Personal Details' },
-        { id: 'settings', label: 'App & Settings' },
         { id: 'security', label: 'Security' },
         { id: 'help', label: 'Help & Support' }
     ];
+
 
     return (
         <div className="profile-page-container">
@@ -219,65 +219,6 @@ function UserProfile() {
                                     </Button>
                                 </div>
                             </form>
-                        </div>
-                    )}
-
-                    {activeTab === 'settings' && (
-                        <div className="preferences-section">
-                            <h3>App & Trading Preferences</h3>
-                            <p className="text-secondary mb-4">Customize your trading experience.</p>
-
-                            <div className="form-group">
-                                <label>Default Order Type</label>
-                                <select
-                                    className="premium-input"
-                                    value={preferences.orderType}
-                                    onChange={(e) => handlePreferenceChange('orderType', e.target.value)}
-                                >
-                                    <option>Market</option>
-                                    <option>Limit</option>
-                                    <option>Stop Loss</option>
-                                </select>
-                            </div>
-
-                            <div className="form-group">
-                                <label>Risk Profile</label>
-                                <select
-                                    className="premium-input"
-                                    value={preferences.riskProfile}
-                                    onChange={(e) => handlePreferenceChange('riskProfile', e.target.value)}
-                                >
-                                    <option>Conservative</option>
-                                    <option>Balanced</option>
-                                    <option>Aggressive</option>
-                                </select>
-                            </div>
-
-                            <div className="form-group">
-                                <label>AI Assistance Level</label>
-                                <select
-                                    className="premium-input"
-                                    value={preferences.aiLevel}
-                                    onChange={(e) => handlePreferenceChange('aiLevel', e.target.value)}
-                                >
-                                    <option>Low (Insights only)</option>
-                                    <option>Medium (Suggestions)</option>
-                                    <option>High (Auto-trading)</option>
-                                </select>
-                            </div>
-
-                            <div className="form-group">
-                                <label>Notifications</label>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '8px' }}>
-                                    <input
-                                        type="checkbox"
-                                        checked={preferences.notifications}
-                                        onChange={(e) => handlePreferenceChange('notifications', e.target.checked)}
-                                        style={{ width: '20px', height: '20px' }}
-                                    />
-                                    <span className="text-secondary">Enable push notifications for trade alerts</span>
-                                </div>
-                            </div>
                         </div>
                     )}
 
