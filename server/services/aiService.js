@@ -102,29 +102,65 @@ IMPORTANT: Use ONLY hyphens (-) for bullets. NO asterisks. Keep each point conci
   async askTutor(term, context = {}) {
     try {
       const { definition, analogy, userQuestion } = context;
-      let prompt = `Financial Term: "${term}"\n`;
+
+      // First, check if the question is finance/stock-related
+      const relevanceCheck = await groq.chat.completions.create({
+        model: GROQ_MODEL,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a relevance checker. Determine if a question is related to finance, stocks, investing, economics, business, or trading. Reply ONLY with "YES" or "NO".'
+          },
+          {
+            role: 'user',
+            content: `Is this question related to finance, stocks, investing, or business? Question: "${userQuestion || term}"`
+          }
+        ],
+        max_tokens: 10,
+        temperature: 0.3
+      });
+
+      const isRelevant = relevanceCheck.choices[0].message.content.trim().toUpperCase().includes('YES');
+
+      // If not relevant, return a polite fallback
+      if (!isRelevant) {
+        return {
+          explanation: "I'm your Study Buddy for finance and investing! 📈 I can help you understand stocks, trading, market concepts, and investment strategies. Try asking me about financial terms like 'dividend', 'market cap', or 'portfolio diversification'!",
+          term: userQuestion || term,
+          timestamp: new Date().toISOString(),
+          fallback: true
+        };
+      }
+
+      // Build the prompt for relevant questions
+      let prompt = `Financial Question: "${userQuestion || term}"\n`;
       if (definition) prompt += `Definition: ${definition}\n`;
       if (analogy) prompt += `Analogy: ${analogy}\n`;
-      if (userQuestion) prompt += `Question: ${userQuestion}\n`;
 
-      prompt += `\nExplain this concept warmly using everyday language, relatable stories, and why it matters for investing.`;
+      prompt += `\nProvide a clear, concise explanation in this format:
+- Start with a 1-sentence simple definition
+- Give a relatable real-world example or analogy (1-2 sentences)
+- Explain why it matters for investors (1-2 sentences)
+- Add one practical tip if relevant
+
+Keep it friendly, brief, and easy to scan. Use short sentences and bullet points where helpful.`;
 
       const response = await groq.chat.completions.create({
         model: GROQ_MODEL,
         messages: [
           {
             role: 'system',
-            content: 'You are a patient Financial Mentor. Use analogies like comparing a Stock Exchange to a Farmer\'s Market. Be positive and clear.'
+            content: 'You are a friendly Financial Study Buddy. Explain concepts clearly and concisely using everyday language. Keep responses short and scannable with bullet points. Be warm and encouraging.'
           },
           { role: 'user', content: prompt }
         ],
-        max_tokens: 400,
-        temperature: 0.8
+        max_tokens: 300,
+        temperature: 0.7
       });
 
       return {
         explanation: response.choices[0].message.content,
-        term,
+        term: userQuestion || term,
         timestamp: new Date().toISOString()
       };
     } catch (error) {
