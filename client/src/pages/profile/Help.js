@@ -1,37 +1,49 @@
 import React from 'react';
-import Card from '../../components/common/Card';
-import Button from '../../components/common/Button';
-import '../UserProfile.css';
+import { Mail, Phone, ChevronRight, MessageCircle, HeadphonesIcon } from 'lucide-react';
+import './Help.css';
 
 function Help() {
     return (
-        <div className="profile-page-container">
-            <div className="page-header">
-                <h1>Help & Support</h1>
-                <p className="text-secondary">How can we assist you today?</p>
-            </div>
-            <div className="profile-content">
-                <Card className="glass-panel profile-form-card">
-                    <div className="help-section">
-                        <div className="help-card glass-panel" style={{ padding: '20px', marginBottom: '20px', borderRadius: '12px' }}>
-                            <h4>Documentation</h4>
-                            <p className="text-secondary">Read our detailed guides on how to use the platform.</p>
-                            <Button variant="secondary" className="mt-2">View Docs</Button>
-                        </div>
-
-                        <div className="help-card glass-panel" style={{ padding: '20px', borderRadius: '12px' }}>
-                            <h4>Contact Support</h4>
-                            <p className="text-secondary">Need direct help? Our team is available 24/7.</p>
-                            <Button variant="primary" className="mt-2">Chat with Support</Button>
-                        </div>
-
-                        <div className="help-card glass-panel" style={{ padding: '20px', marginTop: '20px', borderRadius: '12px' }}>
-                            <h4>Report a Bug</h4>
-                            <p className="text-secondary">Found an issue? Let us know so we can fix it.</p>
-                            <Button variant="danger" className="mt-2">Report Issue</Button>
-                        </div>
+        <div className="help-page-container">
+            <div className="help-card-premium">
+                <div className="help-header">
+                    <div className="icon-box" style={{ width: '60px', height: '60px', margin: '0 auto 1.5rem', background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)', color: 'white' }}>
+                        <HeadphonesIcon size={32} />
                     </div>
-                </Card>
+                    <h1 className="gradient-text">Help & Support</h1>
+                    <p className="subtitle">We're here to help you 24/7</p>
+                </div>
+
+                <div className="contact-grid">
+                    <a href="mailto:sarthakag1024@gmail.com" className="contact-item">
+                        <div className="icon-box">
+                            <Mail size={24} />
+                        </div>
+                        <div className="contact-details">
+                            <span className="contact-label">Email Us</span>
+                            <span className="contact-value">sarthakag1024@gmail.com</span>
+                        </div>
+                        <ChevronRight className="arrow-icon" size={20} />
+                    </a>
+
+                    <a href="tel:+918815551046" className="contact-item">
+                        <div className="icon-box">
+                            <Phone size={24} />
+                        </div>
+                        <div className="contact-details">
+                            <span className="contact-label">Call Us</span>
+                            <span className="contact-value">+91-8815551046</span>
+                        </div>
+                        <ChevronRight className="arrow-icon" size={20} />
+                    </a>
+                </div>
+
+                <div className="quick-faq">
+                    <p className="faq-note">
+                        <MessageCircle size={14} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
+                        Typical response time: <span className="highlight">Under 1 hour</span>
+                    </p>
+                </div>
             </div>
         </div>
     );

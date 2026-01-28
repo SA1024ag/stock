@@ -130,7 +130,7 @@ function Payment() {
                         <h3>Starter Pack</h3>
                         <p className="credit-amount">1,000 Credits</p>
                         <p className="price-subtext">Real Money</p>
-                        <Button variant="secondary" fullWidth onClick={() => handleBuyCredits(3, 1000)}>Buy Now</Button>
+                        <Button variant="secondary" fullWidth onClick={() => handleBuyCredits(89, 1000)}>Buy Now</Button>
                     </Card>
 
                     <div className="pricing-card-wrapper popular">
@@ -140,7 +140,7 @@ function Payment() {
                             <h3>Trader Pack</h3>
                             <p className="credit-amount">5,000 Credits</p>
                             <p className="price-subtext">Real Money</p>
-                            <Button variant="primary" fullWidth onClick={() => handleBuyCredits(6, 5000)}>Buy Now</Button>
+                            <Button variant="primary" fullWidth onClick={() => handleBuyCredits(189, 5000)}>Buy Now</Button>
                         </Card>
                     </div>
 
@@ -149,7 +149,7 @@ function Payment() {
                         <h3>Pro Pack</h3>
                         <p className="credit-amount">10,000 Credits</p>
                         <p className="price-subtext">Real Money</p>
-                        <Button variant="secondary" fullWidth onClick={() => handleBuyCredits(10, 10000)}>Buy Now</Button>
+                        <Button variant="secondary" fullWidth onClick={() => handleBuyCredits(289, 10000)}>Buy Now</Button>
                     </Card>
                 </div>
 

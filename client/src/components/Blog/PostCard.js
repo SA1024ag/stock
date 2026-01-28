@@ -2,7 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 
+
+import { Heart, MessageCircle, Eye, Edit2, Trash2, X } from 'lucide-react';
+
+
 function PostCard({ post, onPostDeleted }) { // 1. Accept callback
+
     const { user } = useAuth();
     const [showComments, setShowComments] = useState(false);
     const [commentText, setCommentText] = useState('');
@@ -152,7 +157,17 @@ function PostCard({ post, onPostDeleted }) { // 1. Accept callback
                             <div className="comment-author">{comment.author}</div>
                             <div style={{ display: 'flex', gap: '8px' }}>
                                 {(user?.username === comment.author || isAuthor) && (
-                                    <button onClick={() => handleDeleteComment(comment._id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#888', padding: 0 }}>×</button>
+
+                                    <button
+                                        onClick={() => handleDeleteComment(comment._id)}
+                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#888', padding: 0 }}
+                                        title="Delete Comment"
+                                    >
+                                        <X size={14} />
+                                    </button>
+
+                              
+
                                 )}
                             </div>
                         </div>
@@ -189,8 +204,24 @@ function PostCard({ post, onPostDeleted }) { // 1. Accept callback
                 </div>
                 {isAuthor && (
                     <div className="post-manage-actions" style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>
-                        <button onClick={() => setIsEditing(!isEditing)} className="icon-btn" title="Edit Post">✏️</button>
-                        <button onClick={handleDeletePost} className="icon-btn" title="Delete Post">🗑️</button>
+
+                        <button
+                            onClick={() => setIsEditing(!isEditing)}
+                            className="icon-btn"
+                            title="Edit Post"
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}
+                        >
+                            <Edit2 size={18} />
+                        </button>
+                        <button
+                            onClick={handleDeletePost}
+                            className="icon-btn"
+                            title="Delete Post"
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}
+                        >
+                            <Trash2 size={18} />
+                        </button>
+
                     </div>
                 )}
             </div>
@@ -212,14 +243,29 @@ function PostCard({ post, onPostDeleted }) { // 1. Accept callback
             )}
 
             <div className="post-actions">
-                <button className={`action-btn ${hasLiked ? 'active' : ''}`} onClick={handleLike}>
-                    <span>{hasLiked ? '❤️' : '🤍'}</span><span>{post.likes ? post.likes.length : 0}</span>
+
+                <button
+                    className={`action-btn ${hasLiked ? 'active' : ''}`}
+                    onClick={handleLike}
+                >
+                    <span><Heart size={18} fill={hasLiked ? "currentColor" : "none"} /></span>
+                    <span>{post.likes.length}</span>
                 </button>
-                <button className="action-btn" onClick={() => setShowComments(!showComments)}>
-                    <span>💬</span><span>{post.comments ? post.comments.length : 0}</span>
+
+                <button
+                    className="action-btn"
+                    onClick={() => setShowComments(!showComments)}
+                >
+                    <span><MessageCircle size={18} /></span>
+                    <span>{post.comments.length}</span>
+
                 </button>
                 <button className="action-btn" style={{ cursor: 'default' }}>
-                    <span>👁️</span><span>{post.views ? post.views.length : 0}</span>
+
+                    <span><Eye size={18} /></span>
+                    <span>{post.views?.length || 0}</span>
+
+
                 </button>
             </div>
 
