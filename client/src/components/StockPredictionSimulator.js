@@ -5,7 +5,6 @@ import './StockPredictionSimulator.css';
 const StockPredictionSimulator = ({ symbol, currentPrice }) => {
     const [inflation, setInflation] = useState(5);
     const [interestRate, setInterestRate] = useState(3);
-
     const [prediction, setPrediction] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -16,13 +15,13 @@ const StockPredictionSimulator = ({ symbol, currentPrice }) => {
         setPrediction(null);
 
         try {
-            const response = await api.post('/ai/predict', {
+            // ✅ UPDATED: Points to the new Node.js-only route
+            const response = await api.post('/ai/predict-groq', {
                 symbol,
                 currentPrice,
                 parameters: {
                     inflation,
                     interestRate,
-
                 }
             });
             setPrediction(response.data);
@@ -74,8 +73,6 @@ const StockPredictionSimulator = ({ symbol, currentPrice }) => {
                     </div>
                 </div>
 
-
-
                 <button
                     className="predict-btn"
                     onClick={handlePredict}
@@ -100,8 +97,6 @@ const StockPredictionSimulator = ({ symbol, currentPrice }) => {
                             <span className="value">₹{prediction.predicted_high?.toFixed(2) || 'N/A'}</span>
                         </div>
                     </div>
-
-
 
                     <div className="prediction-reasoning mt-3">
                         <p><strong>Analysis:</strong> {prediction.reasoning}</p>
