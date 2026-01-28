@@ -39,7 +39,7 @@ Please provide:
       return this.getFallbackAnalysis(symbol, stockData);
     }
   }
-  
+
   // Analyze portfolio risk and diversification
   async analyzePortfolio(portfolio, stockPrices) {
     try {
@@ -154,27 +154,60 @@ Please provide:
   // Predict stock price based on macro parameters
   async predictStockPrice(symbol, currentPrice, parameters) {
     try {
-      const prompt = `Stock: ${symbol}, Price: ${currentPrice}. Inflation: ${parameters.inflation}%, Interest: ${parameters.interestRate}%. Predict 6-12 month range. Return ONLY JSON.`;
+      const prompt = `Analyze stock ${symbol} with current price ₹${currentPrice}.
+Economic parameters: Inflation Rate: ${parameters.inflation}%, Interest Rate: ${parameters.interestRate}%.
+
+Based on these economic indicators, predict the stock price range for the next 6-12 months.
+
+You MUST return ONLY a valid JSON object with this exact structure:
+{
+  "predicted_low": <number>,
+  "predicted_high": <number>,
+  "confidence_score": <number 0-100>,
+  "reasoning": "<brief explanation>"
+}
+
+Do not include any other text, just the JSON object.`;
 
       const response = await groq.chat.completions.create({
         model: GROQ_MODEL,
         messages: [
-          { role: 'system', content: 'You are a financial simulator AI. Return only JSON.' },
+          { role: 'system', content: 'You are a financial prediction AI. You MUST return ONLY valid JSON with predicted_low,predicted_high, confidence_score, and reasoning fields. No other text.' },
           { role: 'user', content: prompt }
         ],
-        temperature: 0.5
+        temperature: 0.5,
+        max_tokens: 300
       });
 
-      const jsonMatch = response.choices[0].message.content.match(/\{[\s\S]*\}/);
-      return JSON.parse(jsonMatch[0]);
+      const content = response.choices[0].message.content.trim();
+      console.log('AI Prediction Response:', content);
+
+      // Try to extract JSON from the response
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('No JSON found in AI response');
+      }
+
+      const prediction = JSON.parse(jsonMatch[0]);
+
+      // Validate required fields
+      if (!prediction.predicted_low || !prediction.predicted_high) {
+        throw new Error('Missing required fields in prediction');
+      }
+
+      return prediction;
     } catch (error) {
       console.error('Error in prediction:', error.message);
-      const volatility = 0.05 + (parameters.inflation / 100);
+      // Fallback prediction based on volatility
+      const volatility = 0.05 + (parameters.inflation / 200) + (parameters.interestRate / 300);
+      const predicted_low = currentPrice * (1 - volatility);
+      const predicted_high = currentPrice * (1 + volatility);
+
       return {
-        predicted_low: currentPrice * (1 - volatility),
-        predicted_high: currentPrice * (1 + volatility),
+        predicted_low,
+        predicted_high,
         confidence_score: 50,
-        reasoning: "Estimation based on standard volatility due to service timeout."
+        reasoning: `Estimation based on economic parameters. Higher inflation (${parameters.inflation}%) and interest rates (${parameters.interestRate}%) typically increase market volatility.`
       };
     }
   }

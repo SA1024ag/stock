@@ -8,7 +8,7 @@ const LandingPage = () => {
         <div className="landing-page">
             {/* Transparent Navbar */}
             <nav className="landing-nav">
-                <div className="nav-logo">AI StockSim</div>
+                <div className="nav-logo">StockLabs</div>
                 <div className="nav-links">
                     <Link to="/login" className="btn-login">Login</Link>
                     <Link to="/register" className="btn-signup">Sign Up</Link>

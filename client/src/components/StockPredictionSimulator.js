@@ -92,12 +92,12 @@ const StockPredictionSimulator = ({ symbol, currentPrice }) => {
                     <div className="price-range">
                         <div className="range-item low">
                             <span className="label">Likely Low</span>
-                            <span className="value">₹{prediction.predicted_low.toFixed(2)}</span>
+                            <span className="value">₹{prediction.predicted_low?.toFixed(2) || 'N/A'}</span>
                         </div>
                         <div className="range-arrow">➜</div>
                         <div className="range-item high">
                             <span className="label">Likely High</span>
-                            <span className="value">₹{prediction.predicted_high.toFixed(2)}</span>
+                            <span className="value">₹{prediction.predicted_high?.toFixed(2) || 'N/A'}</span>
                         </div>
                     </div>
 

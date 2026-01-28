@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
 import Login from './pages/Login';
@@ -105,10 +105,14 @@ function AppRoutes() {
 
 function AppContent() {
   const { user } = useAuth();
+  const location = useLocation();
+
+  // Hide main navbar on landing page (when user is not logged in and on root path)
+  const showNavbar = user || (location.pathname !== '/');
 
   return (
     <div className="App">
-      <Navbar />
+      {showNavbar && <Navbar />}
       {user && <Sidebar />}
 
       <main className="main-content">
