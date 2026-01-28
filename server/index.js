@@ -10,6 +10,8 @@ const cors = require('cors');
 const http = require('http');
 const { Server } = require('socket.io');
 const socketService = require('./services/socketService');
+// Import Upstox Service to initialize tokens on startup
+const upstoxAuthService = require('./services/upstoxAuthService'); 
 
 const app = express();
 const server = http.createServer(app);
@@ -17,7 +19,7 @@ const server = http.createServer(app);
 // Socket.IO setup
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || "*", // Best practice: use env var for origin
+    origin: process.env.CLIENT_URL || "*", // Use env var for production security
     methods: ["GET", "POST"]
   }
 });
@@ -32,7 +34,11 @@ io.on('connection', (socket) => {
 });
 
 // Middleware
-app.use(cors());
+// Update CORS to allow credentials and match client URL
+app.use(cors({
+    origin: process.env.CLIENT_URL || "*",
+    credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -55,9 +61,11 @@ const paymentRoutes = require('./routes/payment');
 const learningRoutes = require('./routes/learning');
 const blogRoutes = require('./routes/blog');
 const watchlistRoutes = require('./routes/watchlist');
+const upstoxAuthRoutes = require('./routes/upstoxAuth'); // Ensure this is imported
 
 // Use Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/auth/upstox', upstoxAuthRoutes); // Mount Upstox auth routes specifically
 app.use('/api/stocks', stockRoutes);
 app.use('/api/portfolio', portfolioRoutes);
 app.use('/api/ai', aiRoutes);
@@ -75,11 +83,23 @@ async function startServer() {
     if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET missing in .env');
 
     await mongoose.connect(process.env.MONGODB_URI);
-    console.log('MongoDB connected');
+    console.log('✅ MongoDB connected');
 
-    // Initialize External Services
+    // 1. Initialize Upstox Service (Load tokens from DB)
+    // This is crucial for the fallback system to work on server restart
+    try {
+        if (upstoxAuthService.init) {
+            await upstoxAuthService.init();
+            console.log('🚀 Upstox Service Initialized (Tokens Loaded)');
+        }
+    } catch (e) {
+        console.warn('⚠️ Upstox Token Load Warning:', e.message);
+    }
+
+    // 2. Initialize Socket Service
     socketService.connect().catch(err => console.error('Socket init warning:', err.message));
     
+    // 3. Start Alert Monitor
     const { startAlertMonitor } = require('./services/alertMonitor');
     startAlertMonitor();
 
