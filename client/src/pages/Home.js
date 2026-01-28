@@ -39,7 +39,10 @@ function Home() {
     }
   };
 
-  const { top = [], worst = [] } = { top: quotes.gainers, worst: quotes.losers };
+  // Safe access to top/worst with default empty arrays
+  const { top = [], worst = [] } = quotes ? 
+    { top: quotes.gainers || [], worst: quotes.losers || [] } : 
+    { top: [], worst: [] };
 
   return (
     <div className="home">
@@ -85,10 +88,19 @@ function Home() {
   );
 }
 
-
-
 function StockSummary({ quote, positive }) {
-  const isUp = quote.changePercent >= 0;
+  // Defensive coding: Ensure numeric values exist before using them
+  const safeQuote = {
+    price: quote.price || 0,
+    change: quote.change || 0,
+    changePercent: quote.changePercent || 0,
+    open: quote.open || 0,
+    high: quote.high || 0,
+    low: quote.low || 0,
+    symbol: quote.symbol || 'Unknown'
+  };
+
+  const isUp = safeQuote.changePercent >= 0;
   const directionClass = isUp ? 'positive' : 'negative';
   const navigate = useNavigate();
   const [chartData, setChartData] = useState([]);
@@ -96,39 +108,49 @@ function StockSummary({ quote, positive }) {
 
   useEffect(() => {
     const fetchHistory = async () => {
+      if (!safeQuote.symbol) return;
+      
       try {
         // Fetch 1 Month data for the trend
-        const res = await api.get(`/stocks/${quote.symbol}/history?timeframe=1M`);
-        // Format for lightweight-charts
-        const formatted = res.data.map(d => ({
-          time: d.date.split('T')[0], // Extract YYYY-MM-DD from ISO string
-          open: d.open,
-          high: d.high,
-          low: d.low,
-          close: d.close
-        }));
-        setChartData(formatted);
+        const res = await api.get(`/stocks/${safeQuote.symbol}/history?timeframe=1M`);
+        
+        if (Array.isArray(res.data)) {
+          // Format for lightweight-charts
+          const formatted = res.data.map(d => ({
+            time: d.date.split('T')[0], // Extract YYYY-MM-DD from ISO string
+            open: d.open,
+            high: d.high,
+            low: d.low,
+            close: d.close
+          }));
+          setChartData(formatted);
+        } else {
+          setChartData([]);
+        }
       } catch (e) {
-        console.error(`Failed to load chart for ${quote.symbol}`);
+        console.error(`Failed to load chart for ${safeQuote.symbol}`);
+        setChartData([]);
       } finally {
         setLoadingChart(false);
       }
     };
 
-    if (quote.symbol) {
+    if (safeQuote.symbol !== 'Unknown') {
       fetchHistory();
+    } else {
+      setLoadingChart(false);
     }
-  }, [quote.symbol]);
+  }, [safeQuote.symbol]);
 
   return (
     <div
       className="home-stock"
-      onClick={() => navigate(`/stock/${quote.symbol}`)}
+      onClick={() => navigate(`/stock/${safeQuote.symbol}`)}
       role="button"
       tabIndex={0}
     >
       <div className="home-stock-header">
-        <span className="home-stock-symbol">{quote.symbol}</span>
+        <span className="home-stock-symbol">{safeQuote.symbol}</span>
         <span className={`badge ${isUp ? 'badge-success' : 'badge-danger'}`}>
           {isUp ? 'Gainer' : 'Loser'}
         </span>
@@ -137,10 +159,10 @@ function StockSummary({ quote, positive }) {
       <div className="home-stock-body">
         <div className="home-stock-price-section">
           <div className="home-stock-price">
-            ₹{quote.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            ₹{safeQuote.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
           <div className={`home-stock-change ${directionClass}`}>
-            {isUp ? '+' : ''}{quote.change.toFixed(2)} ({isUp ? '+' : ''}{quote.changePercent.toFixed(2)}%)
+            {isUp ? '+' : ''}{safeQuote.change.toFixed(2)} ({isUp ? '+' : ''}{safeQuote.changePercent.toFixed(2)}%)
           </div>
         </div>
 
@@ -150,20 +172,19 @@ function StockSummary({ quote, positive }) {
             <MiniCandlestickChart data={chartData} isPositive={isUp} />
           ) : (
             <div style={{ height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.5 }}>
-              <span style={{ fontSize: '0.8rem' }}>Loading Chart...</span>
+              <span style={{ fontSize: '0.8rem' }}>{loadingChart ? 'Loading...' : 'No Chart'}</span>
             </div>
           )}
         </div>
       </div>
 
       <div className="home-stock-meta">
-        <span>O: {quote.open.toLocaleString('en-IN')}</span>
-        <span>H: {quote.high.toLocaleString('en-IN')}</span>
-        <span>L: {quote.low.toLocaleString('en-IN')}</span>
+        <span>O: {safeQuote.open.toLocaleString('en-IN')}</span>
+        <span>H: {safeQuote.high.toLocaleString('en-IN')}</span>
+        <span>L: {safeQuote.low.toLocaleString('en-IN')}</span>
       </div>
     </div>
   );
 }
 
 export default Home;
-
