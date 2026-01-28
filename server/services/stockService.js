@@ -51,10 +51,9 @@ class StockService {
         const data = JSON.parse(jsonString);
 
         if (Array.isArray(data)) {
-          console.log(`Sample item from ${source.exchange}:`, data[0]);
+          // console.log(`Sample item from ${source.exchange}:`, data[0]);
           const filtered = data.filter(item =>
-            // item.exchange might be missing in V3 files, so we rely on source.exchange context
-            // checking instrument_type is still valid?
+            // Filter for Equities and Indices
             (item.instrument_type === 'EQ' || item.instrument_type === 'INDEX')
           );
 
@@ -66,7 +65,7 @@ class StockService {
           }));
 
           instrumentList.push(...normalized);
-          console.log(`Loaded ${filtered.length} instruments from ${source.exchange}`);
+          console.log(`✅ Loaded ${filtered.length} instruments from ${source.exchange}`);
         } else {
           errors.push({ url: source.url, error: 'Not an array', type: typeof data });
         }
@@ -98,11 +97,8 @@ class StockService {
 
     const query = keywords.toUpperCase();
 
-
-    // Simple filter
-    // Prioritize startsWith, then includes
+    // Simple filter: Prioritize startsWith, then includes
     const results = instrumentList.filter(item => {
-      // Safe check for properties
       const symbol = item.trading_symbol || '';
       const name = item.name || '';
       return symbol.includes(query) || name.toUpperCase().includes(query);
@@ -119,11 +115,11 @@ class StockService {
       return 0;
     });
 
-    // Limit to 20
+    // Limit to 20 results
     return results.slice(0, 20).map(item => ({
       symbol: item.trading_symbol,
       name: item.name,
-      exchange: item.exchange, // 'NSE' or 'BSE'
+      exchange: item.exchange,
       instrument_key: item.instrument_key,
       type: item.instrument_type
     }));
@@ -131,28 +127,51 @@ class StockService {
 
   // Helper: Get Instrument Key perfectly
   getInstrumentKeySync(symbol) {
+    if (!symbol) return null;
     if (symbol.includes('|')) return symbol;
     const upper = symbol.toUpperCase();
     const match = instrumentList.find(i => i.trading_symbol === upper && i.exchange === 'NSE');
     return match ? match.instrument_key : null;
   }
 
-  // --- 3. Market Quotes (V3) ---
+  // --- 3. Market Quotes (Smart Fallback Logic) ---
 
   async getQuote(symbol) {
-    // Try Upstox first if token is available
-    const hasValidToken = upstoxAuthService.accessToken && !upstoxAuthService.isTokenExpired();
+    // STRATEGY: 
+    // 1. Try Upstox (Official API)
+    // 2. If 401 (Auth Error), trigger refresh and switch to Yahoo
+    // 3. If other error, switch to Yahoo
+    
+    let useUpstox = false;
+    try {
+        // Check if we have a token (don't force refresh yet, just check availability)
+        // We use the internal property or a lightweight check if available, 
+        // but calling getAccessToken() handles DB loading lazily which is good.
+        await upstoxAuthService.getAccessToken(); 
+        useUpstox = true;
+    } catch (e) {
+        // No token available, proceed directly to Yahoo
+        useUpstox = false;
+    }
 
-    if (hasValidToken) {
+    if (useUpstox) {
       try {
         return await this.getQuoteFromUpstox(symbol);
       } catch (error) {
-        console.warn(`⚠️ Upstox quote failed for ${symbol}, falling back to Yahoo Finance:`, error.message);
-        // Fall through to Yahoo Finance
+        const status = error.response?.status;
+        console.warn(`⚠️ Upstox quote failed for ${symbol} (Status: ${status}).`);
+        
+        // If Unauthorized, try to refresh token for NEXT time
+        if (status === 401) {
+            console.log("🔄 Triggering auto-refresh of Upstox token...");
+            upstoxAuthService.refreshAccessToken().catch(e => console.error("Auto-refresh failed:", e.message));
+        }
+        // Proceed to Yahoo Fallback
       }
     }
 
     // Fallback to Yahoo Finance
+    // console.log(`🌐 using Yahoo Finance fallback for ${symbol}`);
     const yahooFinanceService = require('./yahooFinanceService');
     return await yahooFinanceService.getQuote(symbol);
   }
@@ -167,13 +186,20 @@ class StockService {
         instrumentKey = this.getInstrumentKeySync(symbol);
       }
 
+      // If still not found in master list, try dynamic search or construct default
       if (!instrumentKey) {
-        instrumentKey = `NSE_EQ|${symbol.toUpperCase()}`;
         const search = await this.searchStocks(symbol);
-        if (search.length > 0) instrumentKey = search[0].instrument_key;
+        if (search.length > 0) {
+            instrumentKey = search[0].instrument_key;
+        } else {
+             // Blind guess for NSE Equity
+            instrumentKey = `NSE_EQ|${symbol.toUpperCase()}`;
+        }
       }
 
       const headers = await this.getHeaders();
+      
+      // Parallel fetch: LTP and OHLC
       const results = await Promise.allSettled([
         axios.get(`${BASE_URL_V3}/market-quote/ltp`, { headers, params: { instrument_key: instrumentKey } }),
         axios.get(`${BASE_URL_V3}/market-quote/ohlc`, { headers, params: { instrument_key: instrumentKey, interval: '1d' } })
@@ -182,16 +208,18 @@ class StockService {
       const ltpRes = results[0].status === 'fulfilled' ? results[0].value : null;
       const ohlcRes = results[1].status === 'fulfilled' ? results[1].value : null;
 
-      const findData = (response, key, symbol) => {
+      const findData = (response, key) => {
         if (!response?.data?.data) return null;
         const data = response.data.data;
+        // The API might return key like "NSE_EQ|RELIANCE" or "NSE_EQ:RELIANCE"
         if (data[key]) return data[key];
+        // Return first key if exact match missing
         if (Object.keys(data).length > 0) return Object.values(data)[0];
         return null;
       };
 
-      const ltpData = findData(ltpRes, instrumentKey, symbol);
-      const ohlcData = findData(ohlcRes, instrumentKey, symbol);
+      const ltpData = findData(ltpRes, instrumentKey);
+      const ohlcData = findData(ohlcRes, instrumentKey);
 
       if (!ltpData && !ohlcData) {
         throw new Error(`No data from Upstox V3 for key: ${instrumentKey}`);
@@ -216,42 +244,37 @@ class StockService {
       };
 
     } catch (error) {
-      console.error(`Upstox V3 Quote Error (${symbol}):`, error.response?.data || error.message);
-      throw error;
+      // Re-throw so getQuote can catch and fallback
+      throw error; 
     }
   }
 
   // --- 4. Indices & Movers (V3) ---
 
   async getMarketIndices() {
-    // Try Alpha Vantage first for real-time data
+    // 1. Try Alpha Vantage first (if configured)
     try {
-      console.log('📊 Fetching indices from Alpha Vantage...');
       const alphaVantageService = require('./alphaVantageService');
       const indices = await alphaVantageService.getIndices();
-
-      // Validate data
-      const isValid = indices && indices.length > 0 && indices.some(i => i.price > 0);
-      if (isValid) {
-        console.log('✓ Alpha Vantage data received');
+      // Basic validation
+      if (indices && indices.length > 0 && indices.some(i => i.price > 0)) {
         return indices;
       }
     } catch (error) {
-      console.warn('⚠️ Alpha Vantage failed, trying Upstox:', error.message);
+      // console.warn('Alpha Vantage failed, trying Upstox...');
     }
 
-    // Fallback to Upstox
-    const hasValidToken = upstoxAuthService.accessToken && !upstoxAuthService.isTokenExpired();
-    if (hasValidToken) {
-      try {
-        return await this.getMarketIndicesFromUpstox();
-      } catch (error) {
-        console.warn('⚠️ Upstox also failed:', error.message);
-      }
+    // 2. Try Upstox
+    try {
+       // Check token existence without throwing
+       if (upstoxAuthService.accessToken || await upstoxAuthService.loadTokens().then(() => upstoxAuthService.accessToken)) {
+           return await this.getMarketIndicesFromUpstox();
+       }
+    } catch (error) {
+       console.warn('⚠️ Upstox Indices failed:', error.message);
     }
 
-    // Ultimate fallback
-    console.warn('⚠️ All APIs failed. Using Mock Data for Indices.');
+    // 3. Ultimate Mock Fallback
     return [
       { name: 'NIFTY 50', price: 22145.65, change: 124.35, changePercent: 0.56, isOpen: true },
       { name: 'SENSEX', price: 73158.24, change: 376.12, changePercent: 0.52, isOpen: true },
@@ -261,7 +284,6 @@ class StockService {
   }
 
   async getMarketIndicesFromUpstox() {
-    // Keys: NSE_INDEX|Nifty 50, BSE_INDEX|SENSEX
     const indices = [
       { name: 'NIFTY 50', key: 'NSE_INDEX|Nifty 50' },
       { name: 'SENSEX', key: 'BSE_INDEX|SENSEX' },
@@ -271,7 +293,6 @@ class StockService {
     const headers = await this.getHeaders();
     const keys = indices.map(i => i.key).join(',');
 
-    // Parallel LTP & OHLC Fetch
     const [ltpRes, ohlcRes] = await Promise.allSettled([
       axios.get(`${BASE_URL_V3}/market-quote/ltp`, { headers, params: { instrument_key: keys } }),
       axios.get(`${BASE_URL_V3}/market-quote/ohlc`, { headers, params: { instrument_key: keys, interval: '1d' } })
@@ -280,7 +301,6 @@ class StockService {
     const ltpData = ltpRes.status === 'fulfilled' ? ltpRes.value.data.data : {};
     const ohlcData = ohlcRes.status === 'fulfilled' ? ohlcRes.value.data.data : {};
 
-    // Helper to find data matching a key
     const findInResponse = (dataObj, key) => {
       if (!dataObj) return null;
       if (dataObj[key]) return dataObj[key];
@@ -295,7 +315,6 @@ class StockService {
 
       const price = ltp ? ltp.last_price : 0;
       const prevClose = ltp && ltp.cp ? ltp.cp : (ohlc && ohlc.previous_close ? ohlc.previous_close : price);
-
       const change = price - prevClose;
       const changePercent = prevClose ? (change / prevClose * 100) : 0;
 
@@ -308,31 +327,25 @@ class StockService {
       };
     });
 
-    // Validation
-    const isValid = finalIndices.some(i => i.price > 0);
-    if (!isValid) throw new Error('Invalid data from Upstox');
-
+    if (!finalIndices.some(i => i.price > 0)) throw new Error('Invalid Upstox Indices Data');
     return finalIndices;
   }
 
-  // Get Top Gainers and Losers from a curated NIFTY list
+  // Get Top Gainers and Losers
   async getTopMovers() {
-    // Try Upstox first if token is available and not expired
-    const hasValidToken = upstoxAuthService.accessToken && !upstoxAuthService.isTokenExpired();
-
-    if (hasValidToken) {
-      try {
+    // 1. Try Upstox
+    try {
+        await upstoxAuthService.getAccessToken(); // Ensure token
         console.log('📊 Fetching top movers from Upstox...');
         return await this.getTopMoversFromUpstox();
-      } catch (e) {
-        console.warn('⚠️ Upstox failed, falling back to Yahoo Finance:', e.message);
-        // Fall through to Yahoo Finance
-      }
-    } else {
-      console.log('🌐 Using Yahoo Finance (Upstox token not available)');
+    } catch (e) {
+        if (e.response?.status === 401) {
+             upstoxAuthService.refreshAccessToken().catch(() => {});
+        }
+        console.warn('⚠️ Upstox movers failed, falling back to Yahoo Finance');
     }
 
-    // Fallback to Yahoo Finance
+    // 2. Fallback to Yahoo Finance
     const yahooFinanceService = require('./yahooFinanceService');
     const validData = await yahooFinanceService.getTopMovers();
 
@@ -340,27 +353,26 @@ class StockService {
       return validData;
     }
 
-    // Ultimate Fallback: Mock Data (so UI is never empty)
+    // 3. Mock Data Fallback
     console.warn('⚠️ All APIs failed. Using Mock Data for Top Movers.');
     return {
       gainers: [
-        { symbol: 'RELIANCE', price: 2987.50, change: 45.20, changePercent: 1.54, open: 2950, high: 3000, low: 2940 },
-        { symbol: 'TCS', price: 4120.00, change: 80.50, changePercent: 1.99, open: 4050, high: 4150, low: 4040 },
-        { symbol: 'INFY', price: 1650.75, change: 25.10, changePercent: 1.54, open: 1630, high: 1660, low: 1625 },
-        { symbol: 'HDFCBANK', price: 1450.00, change: 15.00, changePercent: 1.05, open: 1440, high: 1460, low: 1435 },
-        { symbol: 'TATAMOTORS', price: 980.50, change: 12.30, changePercent: 1.27, open: 970, high: 990, low: 965 }
+        { symbol: 'RELIANCE', price: 2987.50, change: 45.20, changePercent: 1.54 },
+        { symbol: 'TCS', price: 4120.00, change: 80.50, changePercent: 1.99 },
+        { symbol: 'INFY', price: 1650.75, change: 25.10, changePercent: 1.54 },
+        { symbol: 'HDFCBANK', price: 1450.00, change: 15.00, changePercent: 1.05 },
+        { symbol: 'TATAMOTORS', price: 980.50, change: 12.30, changePercent: 1.27 }
       ],
       losers: [
-        { symbol: 'WIPRO', price: 480.20, change: -10.50, changePercent: -2.14, open: 495, high: 498, low: 475 },
-        { symbol: 'TECHM', price: 1250.00, change: -25.00, changePercent: -1.96, open: 1280, high: 1285, low: 1240 },
-        { symbol: 'SBIN', price: 760.40, change: -8.20, changePercent: -1.07, open: 770, high: 775, low: 755 },
-        { symbol: 'LICI', price: 950.00, change: -5.00, changePercent: -0.52, open: 960, high: 965, low: 945 },
-        { symbol: 'ONGC', price: 270.10, change: -1.50, changePercent: -0.55, open: 275, high: 278, low: 268 }
+        { symbol: 'WIPRO', price: 480.20, change: -10.50, changePercent: -2.14 },
+        { symbol: 'TECHM', price: 1250.00, change: -25.00, changePercent: -1.96 },
+        { symbol: 'SBIN', price: 760.40, change: -8.20, changePercent: -1.07 },
+        { symbol: 'LICI', price: 950.00, change: -5.00, changePercent: -0.52 },
+        { symbol: 'ONGC', price: 270.10, change: -1.50, changePercent: -0.55 }
       ]
     };
   }
 
-  // Original Upstox implementation (renamed)
   async getTopMoversFromUpstox() {
     const POPULAR_SYMBOLS = [
       'RELIANCE', 'TCS', 'HDFCBANK', 'ICICIBANK', 'INFY',
@@ -368,11 +380,9 @@ class StockService {
       'TATAMOTORS', 'AXISBANK', 'HCLTECH', 'MARUTI', 'SUNPHARMA'
     ];
 
-    const quotes = [];
     const keysToFetch = [];
     const symbolMap = {};
 
-    // 1. Resolve Keys (After ensuring Init)
     await this.ensureInitialized();
 
     POPULAR_SYMBOLS.forEach(sym => {
@@ -383,178 +393,113 @@ class StockService {
       }
     });
 
-    if (keysToFetch.length === 0) return { gainers: [], losers: [] };
+    if (keysToFetch.length === 0) throw new Error("No instrument keys found for top movers");
 
-    try {
-      const headers = await this.getHeaders();
-      const params = { instrument_key: keysToFetch.join(',') };
+    const headers = await this.getHeaders();
+    const params = { instrument_key: keysToFetch.join(',') };
 
-      // 2. Batch Fetch LTP and OHLC in parallel
-      // Note: 'quotes' endpoint failed, so we construct it manually
-      const [ltpRes, ohlcRes] = await Promise.allSettled([
-        axios.get(`${BASE_URL_V3}/market-quote/ltp`, { headers, params }),
-        axios.get(`${BASE_URL_V3}/market-quote/ohlc`, { headers, params: { ...params, interval: '1d' } })
-      ]);
+    const [ltpRes, ohlcRes] = await Promise.allSettled([
+      axios.get(`${BASE_URL_V3}/market-quote/ltp`, { headers, params }),
+      axios.get(`${BASE_URL_V3}/market-quote/ohlc`, { headers, params: { ...params, interval: '1d' } })
+    ]);
 
-      const ltpData = ltpRes.status === 'fulfilled' ? ltpRes.value.data.data : {};
-      const ohlcData = ohlcRes.status === 'fulfilled' ? ohlcRes.value.data.data : {};
+    const ltpData = ltpRes.status === 'fulfilled' ? ltpRes.value.data.data : {};
+    const ohlcData = ohlcRes.status === 'fulfilled' ? ohlcRes.value.data.data : {};
 
-      // Helper to find data matching a key (handles NSE_EQ:SYMBOL format vs keys)
-      const findInResponse = (dataObj, key, sym) => {
-        if (!dataObj) return null;
-        if (dataObj[key]) return dataObj[key]; // Exact match
-        // Try format NSE_EQ:SYMBOL
-        const altKey = `NSE_EQ:${sym}`;
-        if (dataObj[altKey]) return dataObj[altKey];
-        return null;
-      };
+    const quotes = [];
 
-      // 3. Process & Merge
-      keysToFetch.forEach(key => {
-        const sym = symbolMap[key];
-        const ltp = findInResponse(ltpData, key, sym);
-        const ohlc = findInResponse(ohlcData, key, sym);
+    const findInResponse = (dataObj, key, sym) => {
+      if (!dataObj) return null;
+      if (dataObj[key]) return dataObj[key];
+      const altKey = `NSE_EQ:${sym}`;
+      if (dataObj[altKey]) return dataObj[altKey];
+      return null;
+    };
 
-        if (ltp) {
-          const price = ltp.last_price;
-          // Use 'cp' from LTP data for previous close
-          const prevClose = ltp.cp || (ohlc && ohlc.previous_close ? ohlc.previous_close : price);
-          const change = price - prevClose;
-          const changePercent = prevClose ? (change / prevClose * 100) : 0;
+    keysToFetch.forEach(key => {
+      const sym = symbolMap[key];
+      const ltp = findInResponse(ltpData, key, sym);
+      const ohlc = findInResponse(ohlcData, key, sym);
 
-          quotes.push({
-            symbol: sym,
-            price: price,
-            change: change,
-            changePercent: changePercent,
-            open: ohlc?.ohlc?.open || price,
-            high: ohlc?.ohlc?.high || price,
-            low: ohlc?.ohlc?.low || price,
-            volume: ohlc?.volume || 0,
-            source: 'upstox'
-          });
-        }
-      });
+      if (ltp) {
+        const price = ltp.last_price;
+        const prevClose = ltp.cp || (ohlc && ohlc.previous_close ? ohlc.previous_close : price);
+        const change = price - prevClose;
+        const changePercent = prevClose ? (change / prevClose * 100) : 0;
 
-      // 4. Sort
-      quotes.sort((a, b) => b.changePercent - a.changePercent);
-
-      return {
-        gainers: quotes.slice(0, 5),
-        losers: quotes.slice(-5).reverse(),
-        source: 'upstox'
-      };
-
-    } catch (e) {
-      console.error('getTopMoversFromUpstox Error:', e.message);
-
-      // Check if it's an authentication error
-      if (e.response?.status === 401) {
-        console.error('❌ Upstox Token Expired! Please re-authenticate at: http://localhost:5000/api/auth/upstox/login');
-      } else if (e.response) {
-        console.error('API Error Data:', JSON.stringify(e.response.data, null, 2));
+        quotes.push({
+          symbol: sym,
+          price: price,
+          change: change,
+          changePercent: changePercent,
+          open: ohlc?.ohlc?.open || price,
+          high: ohlc?.ohlc?.high || price,
+          low: ohlc?.ohlc?.low || price,
+          volume: ohlc?.volume || 0,
+          source: 'upstox'
+        });
       }
+    });
 
-      throw e; // Throw to trigger fallback
-    }
+    quotes.sort((a, b) => b.changePercent - a.changePercent);
+
+    return {
+      gainers: quotes.slice(0, 5),
+      losers: quotes.slice(-5).reverse(),
+      source: 'upstox'
+    };
   }
 
-  // --- 5. Historical Data (V3? V2?) ---
-  // Assuming V2/Historical-Candle works or finding V3 equivalent.
-  // Docs often keep historical separate. Let's try V2 endpoint but with V3 Auth, 
-  // OR look for V3 if exists. Most likely it shares the endpoint structure.
+  // --- 5. Historical Data ---
 
   async getHistoricalData(symbol, timeframe = '1M') {
-    // Always use Yahoo Finance for historical data to get fresh data
-    console.log(`🌐 Fetching historical data from Yahoo Finance: ${symbol} (${timeframe})`);
+    // Strategy: Yahoo First (Better stability for history), then Upstox
     const yahooFinanceService = require('./yahooFinanceService');
 
     try {
+      console.log(`🌐 Fetching historical data from Yahoo Finance: ${symbol} (${timeframe})`);
       const data = await yahooFinanceService.getHistoricalData(symbol, timeframe);
-      if (data && data.length > 0) {
-        return data;
-      }
+      if (data && data.length > 0) return data;
     } catch (error) {
-      console.warn(`⚠️ Yahoo Finance failed for ${symbol}, trying Upstox...`);
+      console.warn(`⚠️ Yahoo Finance historical failed for ${symbol}, trying Upstox...`);
     }
 
-    // Fallback to Upstox if Yahoo Finance fails
-    const hasValidToken = upstoxAuthService.accessToken && !upstoxAuthService.isTokenExpired();
-    if (hasValidToken) {
-      try {
+    // Fallback to Upstox
+    try {
+        await upstoxAuthService.getAccessToken(); // Ensure token logic
         const instrumentKey = this.getInstrumentKeySync(symbol) || `NSE_EQ|${symbol.toUpperCase()}`;
         return await this._getHistoricalDataLogic(instrumentKey, timeframe);
-      } catch (error) {
+    } catch (error) {
         console.error(`❌ Both Yahoo Finance and Upstox failed for ${symbol}`);
-      }
     }
 
     return [];
   }
 
-
-
-
-
   async _getHistoricalDataLogic(instrumentKey, timeframe) {
     try {
       const headers = await this.getHeaders();
-
       const now = new Date();
       let fromDate = new Date();
       let intervalUnit = 'minute';
       let intervalValue = '1';
 
-      // Mapping Timeframe to V3 Inputs
       switch (timeframe) {
-        case '1D':
-          fromDate.setDate(now.getDate() - 5);
-          intervalUnit = 'minute';
-          intervalValue = '1';
-          break;
-        case '1W':
-          fromDate.setDate(now.getDate() - 7);
-          intervalUnit = 'minute';
-          intervalValue = '30';
-          break;
-        case '1M':
-          fromDate.setMonth(now.getMonth() - 1);
-          intervalUnit = 'day';
-          intervalValue = '1';  // For 'day', interval usually not needed or is implicit? V3 path has it.
-          break;
-        case '1Y':
-          fromDate.setFullYear(now.getFullYear() - 1);
-          intervalUnit = 'day';
-          intervalValue = '1';
-          break;
-        default:
-          fromDate.setMonth(now.getMonth() - 1);
-          intervalUnit = 'day';
-          intervalValue = '1';
+        case '1D': fromDate.setDate(now.getDate() - 5); intervalUnit = 'minute'; intervalValue = '1'; break;
+        case '1W': fromDate.setDate(now.getDate() - 7); intervalUnit = 'minute'; intervalValue = '30'; break;
+        case '1M': fromDate.setMonth(now.getMonth() - 1); intervalUnit = 'day'; intervalValue = '1'; break;
+        case '1Y': fromDate.setFullYear(now.getFullYear() - 1); intervalUnit = 'day'; intervalValue = '1'; break;
+        default: fromDate.setMonth(now.getMonth() - 1); intervalUnit = 'day'; intervalValue = '1';
       }
 
       const fromDateStr = fromDate.toISOString().split('T')[0];
       const toDateStr = now.toISOString().split('T')[0];
 
-      // V3 Historical Endpoint: /historical-candle/{instrumentKey}/{intervalUnit}/{interval}/{to_date}/{from_date}
-      // Note: intervalUnit = '1minute' (V2) vs 'minute' (V3)
-      // V3 Docs: intervalUnit is 'minute', 'day' etc.
-      // But verify: search result says unit can be `minutes`, `days`. Plural?
-      // Let's try 'minute' first, or check docs closely. 
-      // Search result: "intervalUnit... can be minutes, hours, days..." 
-      // Okay, let's use plural 'minutes', 'days'.
-
-      const unitMap = {
-        'minute': 'minutes',
-        'day': 'days',
-        'week': 'weeks',
-        'month': 'months'
-      };
-
+      // Map unit to V3 API format
+      const unitMap = { 'minute': 'minutes', 'day': 'days', 'week': 'weeks', 'month': 'months' };
       const finalUnit = unitMap[intervalUnit] || intervalUnit;
 
       const url = `${BASE_URL_V3}/historical-candle/${instrumentKey}/${finalUnit}/${intervalValue}/${toDateStr}/${fromDateStr}`;
-
       const response = await axios.get(url, { headers });
 
       if (!response.data?.data?.candles) return [];
@@ -570,15 +515,12 @@ class StockService {
 
     } catch (e) {
       console.error('Historical Data Error:', e.response?.data || e.message);
-      return [];
+      throw e;
     }
   }
 
-  // Wrappers for mock compat
   getMockQuote(symbol) { return { symbol, price: 500, change: 10, changePercent: 2, volume: 5000, high: 510, low: 490, open: 495, previousClose: 490 }; }
   getMockSearchResults(q) { return [{ symbol: 'MOCK', name: 'Mock Stock', exchange: 'NSE', instrument_key: 'NSE_EQ|MOCK' }]; }
-
-
 }
 
 module.exports = new StockService();
