@@ -243,14 +243,21 @@ function StockDetail() {
     return lines.map((line, index) => {
       const trimmed = line.trim();
 
-      // Check if it's a section header (ends with : and no hyphen)
+      // Section headers with emoji or ending with colon
+      if (trimmed.match(/^[📊⚠️💡🎯📈✨]/)) {
+        return (
+          <h4 key={index} className="analysis-section-header" style={{ color: '#3b82f6', marginTop: '1rem', marginBottom: '0.5rem' }}>{trimmed}</h4>
+        );
+      }
+
+      // Section headers ending with ':'
       if (trimmed.endsWith(':') && !trimmed.startsWith('-')) {
         return (
           <h4 key={index} className="analysis-section-header">{trimmed}</h4>
         );
       }
 
-      // Check if it's a bullet point
+      // Bullet points
       if (trimmed.startsWith('-')) {
         return (
           <li key={index} className="analysis-bullet">{trimmed.substring(1).trim()}</li>

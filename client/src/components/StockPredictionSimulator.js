@@ -99,7 +99,26 @@ const StockPredictionSimulator = ({ symbol, currentPrice }) => {
                     </div>
 
                     <div className="prediction-reasoning mt-3">
-                        <p><strong>Analysis:</strong> {prediction.reasoning}</p>
+                        <strong style={{ display: 'block', marginBottom: '0.5rem', color: '#10b981' }}>📊 Analysis:</strong>
+                        <div className="formatted-reasoning">
+                            {prediction.reasoning?.split('\n').map((line, index) => {
+                                const trimmed = line.trim();
+                                if (!trimmed) return null;
+
+                                // Section headers with emoji
+                                if (trimmed.match(/^[📈✨🎯💡]/)) {
+                                    return <div key={index} style={{ fontWeight: '600', marginTop: '0.75rem', marginBottom: '0.25rem', color: '#3b82f6' }}>{trimmed}</div>;
+                                }
+
+                                // Bullet points
+                                if (trimmed.startsWith('-')) {
+                                    return <div key={index} style={{ paddingLeft: '1rem', marginBottom: '0.25rem', color: '#e5e7eb' }}>• {trimmed.substring(1).trim()}</div>;
+                                }
+
+                                // Regular text
+                                return <div key={index} style={{ marginBottom: '0.25rem', color: '#e5e7eb' }}>{trimmed}</div>;
+                            })}
+                        </div>
                     </div>
                 </div>
             )}
