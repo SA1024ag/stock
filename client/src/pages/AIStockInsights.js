@@ -5,38 +5,29 @@ import './AIPages.css';
 const AIStockInsights = () => {
     const [symbol, setSymbol] = useState('');
     const [loading, setLoading] = useState(false);
+    const [activeTab, setActiveTab] = useState('analysis'); // 'analysis' or 'prediction'
     const [analysis, setAnalysis] = useState(null);
+    const [prediction, setPrediction] = useState(null);
     const [error, setError] = useState('');
 
-    const handleAnalyze = async (e) => {
+    const handleSearch = async (e) => {
         e.preventDefault();
-
-        if (!symbol.trim()) {
-            setError('Please enter a stock symbol');
-            return;
-        }
+        if (!symbol.trim()) return;
 
         setLoading(true);
         setError('');
-        setAnalysis(null);
-
+        
         try {
-            const token = localStorage.getItem('token');
-            const response = await api.post(
-                '/ai/analyze',
-                { symbol: symbol.toUpperCase() },
-                {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                }
-            );
-
-            setAnalysis(response.data);
+            if (activeTab === 'analysis') {
+                const res = await api.post('/ai/analyze', { symbol: symbol.toUpperCase() });
+                setAnalysis(res.data);
+            } else {
+                // Call the new Prediction Endpoint
+                const res = await api.post('/ai/predict', { symbol: symbol.toUpperCase() });
+                setPrediction(res.data);
+            }
         } catch (err) {
-            setError(err.response?.data?.message || 'Failed to analyze stock');
-            console.error('Analysis error:', err);
+            setError(err.response?.data?.message || 'Failed to fetch data. Is the Python service running?');
         } finally {
             setLoading(false);
         }
@@ -45,101 +36,92 @@ const AIStockInsights = () => {
     return (
         <div className="ai-page">
             <div className="page-header">
-                <h1>🤖 AI Stock Insights</h1>
-                <p className="page-subtitle">Get AI-powered analysis and insights for any stock</p>
+                <h1>🤖 AI Stock Intelligence</h1>
+                <p className="page-subtitle">Deep learning models & fundamental analysis</p>
+            </div>
+
+            {/* Tab Switcher */}
+            <div className="tabs-container" style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '2rem' }}>
+                <button 
+                    className={`btn ${activeTab === 'analysis' ? 'btn-primary' : 'btn-outline'}`}
+                    onClick={() => setActiveTab('analysis')}
+                >
+                    📝 Fundamental Analysis
+                </button>
+                <button 
+                    className={`btn ${activeTab === 'prediction' ? 'btn-primary' : 'btn-outline'}`}
+                    onClick={() => setActiveTab('prediction')}
+                >
+                    📈 Price Prediction (LSTM)
+                </button>
             </div>
 
             <div className="ai-search-section">
-                <form onSubmit={handleAnalyze} className="ai-search-form">
+                <form onSubmit={handleSearch} className="ai-search-form">
                     <div className="search-input-group">
                         <input
                             type="text"
                             value={symbol}
                             onChange={(e) => setSymbol(e.target.value.toUpperCase())}
-                            placeholder="Enter stock symbol (e.g., AAPL, TSLA, GOOGL)"
+                            placeholder={activeTab === 'analysis' ? "Analyze AAPL..." : "Predict Prices for RELIANCE..."}
                             className="ai-search-input"
-                            disabled={loading}
                         />
-                        <button
-                            type="submit"
-                            className="btn btn-primary ai-analyze-btn"
-                            disabled={loading}
-                        >
-                            {loading ? (
-                                <>
-                                    <span className="spinner"></span>
-                                    Analyzing...
-                                </>
-                            ) : (
-                                <>
-                                    <span>📊</span>
-                                    Analyze
-                                </>
-                            )}
+                        <button type="submit" className="btn btn-primary" disabled={loading}>
+                            {loading ? <span className="spinner"></span> : 'Go'}
                         </button>
                     </div>
                 </form>
-
-                {error && (
-                    <div className="alert alert-error">
-                        <span>⚠️</span>
-                        {error}
-                    </div>
-                )}
+                {error && <div className="alert alert-error">{error}</div>}
             </div>
 
-            {analysis && (
-                <div className="ai-results">
-                    <div className="stock-info-card glass-panel">
-                        <div className="stock-header">
-                            <h2>{analysis.symbol}</h2>
-                            <div className={`price-badge ${analysis.stockData.change >= 0 ? 'positive' : 'negative'}`}>
-                                ₹{analysis.stockData.price.toFixed(2)}
-                            </div>
+            {/* RENDER PREDICTION RESULTS */}
+            {activeTab === 'prediction' && prediction && (
+                <div className="prediction-results fade-in">
+                    <div className="glass-panel" style={{ padding: '20px', marginBottom: '20px' }}>
+                        <h2>🔮 30-Day Forecast: {prediction.ticker}</h2>
+                        
+                        {/* Display the Plot from Base64 */}
+                        <div className="chart-container" style={{ marginTop: '20px', borderRadius: '10px', overflow: 'hidden' }}>
+                            <img 
+                                src={`data:image/png;base64,${prediction.plot}`} 
+                                alt="Prediction Chart" 
+                                style={{ width: '100%', height: 'auto' }} 
+                            />
                         </div>
 
-                        <div className="stock-metrics">
-                            <div className="metric">
-                                <span className="metric-label">Change</span>
-                                <span className={`metric-value ${analysis.stockData.change >= 0 ? 'text-green' : 'text-red'}`}>
-                                    {analysis.stockData.change >= 0 ? '+' : ''}
-                                    {analysis.stockData.change.toFixed(2)} ({analysis.stockData.changePercent.toFixed(2)}%)
-                                </span>
+                        {/* Metrics Grid */}
+                        <div className="metrics-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '15px', marginTop: '20px' }}>
+                            <div className="metric-card">
+                                <small>Root Mean Sq Error</small>
+                                <h3>{prediction.metrics.rmse.toFixed(2)}</h3>
                             </div>
-                            <div className="metric">
-                                <span className="metric-label">Volume</span>
-                                <span className="metric-value">{analysis.stockData.volume.toLocaleString()}</span>
+                            <div className="metric-card">
+                                <small>Accuracy Trend</small>
+                                <h3 className={prediction.metrics.directional_accuracy > 50 ? 'text-green' : 'text-red'}>
+                                    {prediction.metrics.directional_accuracy.toFixed(1)}%
+                                </h3>
                             </div>
-                            <div className="metric">
-                                <span className="metric-label">52W High</span>
-                                <span className="metric-value">₹{analysis.stockData.high.toFixed(2)}</span>
+                            <div className="metric-card">
+                                <small>Last Actual</small>
+                                <h3>₹{prediction.last_actual_price.toFixed(2)}</h3>
                             </div>
-                            <div className="metric">
-                                <span className="metric-label">52W Low</span>
-                                <span className="metric-value">₹{analysis.stockData.low.toFixed(2)}</span>
+                            <div className="metric-card">
+                                <small>Predicted Next</small>
+                                <h3>₹{prediction.last_predicted_price.toFixed(2)}</h3>
                             </div>
-                        </div>
-                    </div>
-
-                    <div className="ai-analysis-card glass-panel">
-                        <div className="analysis-header">
-                            <h3>🧠 AI Analysis</h3>
-                            <span className="ai-badge">Powered by Groq AI</span>
-                        </div>
-                        <div className="analysis-content">
-                            {analysis.analysis.split('\n').map((paragraph, index) => (
-                                paragraph.trim() && <p key={index}>{paragraph}</p>
-                            ))}
                         </div>
                     </div>
                 </div>
             )}
 
-            {!analysis && !loading && (
-                <div className="empty-state">
-                    <div className="empty-icon">📈</div>
-                    <h3>Ready to Analyze</h3>
-                    <p>Enter a stock symbol above to get AI-powered insights and analysis</p>
+            {/* RENDER EXISTING ANALYSIS (Keep your existing code here) */}
+            {activeTab === 'analysis' && analysis && (
+                <div className="ai-results">
+                    {/* ... Your existing AI Analysis JSX ... */}
+                    <div className="ai-analysis-card glass-panel">
+                        <h3>🧠 Smart Analysis</h3>
+                        <p>{analysis.analysis}</p>
+                    </div>
                 </div>
             )}
         </div>

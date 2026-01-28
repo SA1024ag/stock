@@ -12,7 +12,8 @@ api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
-      config.headers['x-auth-token'] = token;
+      config.headers['Authorization'] = `Bearer ${token}`;
+      config.headers['x-auth-token'] = token; // Keep for backward compatibility if needed
     }
     return config;
   },
@@ -25,8 +26,17 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Check if it's a 401 error from Upstox-related endpoints
+    // Check if it's a 401 error
     if (error.response?.status === 401) {
+      const errorMessage = error.response.data?.message || '';
+
+      // Check for specific token errors
+      if (errorMessage === 'Token is not valid' || errorMessage === 'No token, authorization denied' || errorMessage === 'Invalid credentials') {
+        // Dispatch custom event for auth handling
+        window.dispatchEvent(new CustomEvent('auth:logout'));
+        return Promise.reject(error);
+      }
+
       const url = error.config?.url || '';
 
       // If it's an Upstox-related endpoint, emit a custom event

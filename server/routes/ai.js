@@ -1,14 +1,15 @@
 const express = require('express');
+const axios = require('axios'); // 📦 Make sure to run: npm install axios
+const router = express.Router();
 const auth = require('../middleware/auth');
 const Portfolio = require('../models/Portfolio');
 const stockService = require('../services/stockService');
 const aiService = require('../services/aiService');
-const router = express.Router();
 
 // All routes require authentication
 router.use(auth);
 
-// Analyze a single stock
+// 1. Analyze a single stock (Groq/Llama)
 router.post('/analyze', async (req, res) => {
   try {
     const { symbol } = req.body;
@@ -41,7 +42,7 @@ router.post('/analyze', async (req, res) => {
   }
 });
 
-// Analyze portfolio
+// 2. Analyze portfolio (Groq/Llama)
 router.post('/portfolio-review', async (req, res) => {
   try {
     const portfolio = await Portfolio.find({ user: req.user._id });
@@ -74,7 +75,7 @@ router.post('/portfolio-review', async (req, res) => {
   }
 });
 
-// AI Tutor for Study Buddy Chatbot
+// 3. AI Tutor for Study Buddy Chatbot
 router.post('/tutor', async (req, res) => {
   try {
     const { message, context } = req.body;
@@ -99,7 +100,7 @@ router.post('/tutor', async (req, res) => {
   }
 });
 
-// Simulate market scenario
+// 4. Simulate market scenario
 router.post('/simulate', async (req, res) => {
   try {
     const { scenario } = req.body;
@@ -111,9 +112,6 @@ router.post('/simulate', async (req, res) => {
     const portfolio = await Portfolio.find({ user: req.user._id });
 
     if (portfolio.length === 0) {
-      // Allow simulation even with empty portfolio? Probably valid to just say "No stocks affected" but the prompt expects a portfolio.
-      // Let's return a specific message so frontend handles it or just pass empty list.
-      // Prompt says "The user owns a stock portfolio", so let's error if empty for now for simplicity, or handle graceful empty.
       return res.status(400).json({ message: 'Portfolio is empty. Add stocks to your portfolio to run simulations.' });
     }
 
@@ -122,7 +120,6 @@ router.post('/simulate', async (req, res) => {
     await Promise.all(
       portfolio.map(async (holding) => {
         try {
-          // Optimization: could just use cached prices or skip if we have many
           const quote = await stockService.getQuote(holding.symbol);
           stockPrices[holding.symbol] = quote.price;
         } catch (error) {
@@ -140,26 +137,59 @@ router.post('/simulate', async (req, res) => {
     console.error('AI simulation error:', error);
     res.status(500).json({
       message: 'Error running simulation',
-      error: error.message,
-      details: error.response?.data || 'No external API details'
+      error: error.message
     });
   }
 });
 
-// Predict stock price
+// 5. Predict stock price (The "Showstopper" Feature)
+// This connects to your Python Microservice running on Port 8000
 router.post('/predict', async (req, res) => {
+  const { symbol } = req.body;
+
+  if (!symbol) {
+    return res.status(400).json({ message: 'Symbol is required' });
+  }
+
+  console.log(`🔮 Node.js proxying prediction request for: ${symbol}`);
+
   try {
-    const { symbol, currentPrice, parameters } = req.body;
+    // URL of your Python FastAPI Service
+    const PYTHON_SERVICE_URL = process.env.PYTHON_API_URL || 'http://localhost:8000/api/predict';
 
-    if (!symbol || !parameters) {
-      return res.status(400).json({ message: 'Symbol and parameters are required' });
-    }
+    const payload = {
+      ticker: symbol,
+      lookback: 60,
+      train_size: 1000
+    };
 
-    const prediction = await aiService.predictStockPrice(symbol, currentPrice, parameters);
-    res.json(prediction);
+    // Forward request to Python with extended timeout
+    const response = await axios.post(PYTHON_SERVICE_URL, payload, {
+      timeout: 120000 // 120 seconds (2 mins) to allow for LSTM training
+    });
+
+    res.json(response.data);
+
   } catch (error) {
-    console.error('AI prediction error:', error);
-    res.status(500).json({ message: 'Error predicting stock price', error: error.message });
+    // Detailed Error Handling
+    if (error.response) {
+        // The Python server responded with a status code (like 400, 403, 500)
+        console.error(`❌ Python Service Error: ${error.response.status} -`, error.response.data);
+        return res.status(error.response.status).json({ 
+            message: 'AI Model Error', 
+            details: error.response.data.detail || error.message 
+        });
+    } else if (error.request) {
+        // The request was made but no response was received (Python server down)
+        console.error('❌ Python Service Unreachable. Is uvicorn running on port 8000?');
+        return res.status(503).json({ 
+            message: 'Prediction service unavailable. Please start the Python API.' 
+        });
+    } else {
+        // Something happened in setting up the request
+        console.error('❌ Request Setup Error:', error.message);
+        res.status(500).json({ message: 'Internal Server Error', error: error.message });
+    }
   }
 });
 
