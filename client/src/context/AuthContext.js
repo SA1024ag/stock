@@ -24,17 +24,30 @@ export const AuthProvider = ({ children }) => {
       setUser(JSON.parse(localStorage.getItem('user')));
     }
     setLoading(false);
+
+    // Listen for auth:logout event from api interceptor
+    const handleAuthLogout = () => {
+      logout();
+      // Optional: Add toast or alert here to inform user
+      // toast.error('Session expired. Please login again.');
+    };
+
+    window.addEventListener('auth:logout', handleAuthLogout);
+
+    return () => {
+      window.removeEventListener('auth:logout', handleAuthLogout);
+    };
   }, []);
 
   const login = async (email, password) => {
     try {
       const response = await api.post('/auth/login', { email, password });
       const { token, user } = response.data;
-      
+
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      
+
       setUser(user);
       return { success: true };
     } catch (error) {
@@ -49,11 +62,11 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await api.post('/auth/register', { username, email, password });
       const { token, user } = response.data;
-      
+
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      
+
       setUser(user);
       return { success: true };
     } catch (error) {

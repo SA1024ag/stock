@@ -145,7 +145,92 @@
   display: flex;
   justify-content: space-between;
   margin-bottom: 8px;
-  font-size: 0.95rem;
+}
+
+/* AI Analysis Styles - Expandable */
+.analysis-wrapper {
+  position: relative;
+}
+
+.analysis-content {
+  line-height: 1.6;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.analysis-content.collapsed {
+  max-height: 200px;
+  position: relative;
+}
+
+.analysis-content.collapsed::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: linear-gradient(to bottom, transparent, rgba(17, 24, 39, 0.95));
+}
+
+.analysis-content.expanded {
+  max-height: none;
+}
+
+.analysis-section-header {
+  color: var(--accent-blue);
+  font-size: 1rem;
+  font-weight: 700;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.analysis-section-header:first-child {
+  margin-top: 0;
+}
+
+.analysis-bullet {
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  padding-left: 0.75rem;
+  position: relative;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  list-style: none;
+}
+
+.analysis-bullet::before {
+  content: "•";
+  color: var(--accent-blue);
+  font-weight: bold;
+  position: absolute;
+  left: 0;
+}
+
+.analysis-text {
+  color: var(--text-secondary);
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.expand-btn {
+  width: 100%;
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 8px;
+  color: var(--accent-blue);
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.expand-btn:hover {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: var(--accent-blue);
 }
 
 /* Responsive */

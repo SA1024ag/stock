@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 
-function CreatePost() {
+function CreatePost({ onPostCreated }) { // 1. Accept the prop
     const { user } = useAuth();
     const [content, setContent] = useState('');
     const [imageUrl, setImageUrl] = useState('');
@@ -23,6 +23,12 @@ function CreatePost() {
             // Reset form
             setContent('');
             setImageUrl('');
+
+            // 2. TRIGGER REFRESH: Notify parent component immediately
+            if (onPostCreated) {
+                onPostCreated();
+            }
+
         } catch (err) {
             console.error('Error creating post:', err);
             alert('Failed to create post');

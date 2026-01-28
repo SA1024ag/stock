@@ -10,24 +10,35 @@ class AIService {
   // Analyze a single stock for the Stock Detail page
   async analyzeStock(symbol, stockData, historicalData) {
     try {
-      const prompt = `You are a helpful financial advisor explaining stock market information in simple language.
-Stock Symbol: ${symbol}
-Current Price: $${stockData.price}
-Change: ${stockData.change > 0 ? '+' : ''}${stockData.change} (${stockData.changePercent > 0 ? '+' : ''}${stockData.changePercent}%)
-Volume: ${stockData.volume.toLocaleString()}
-52-Week High: $${stockData.high}
-52-Week Low: $${stockData.low}
+      const prompt = `You are a helpful financial advisor for Indian investors. Provide a clear, informative analysis.
 
-Please provide:
-1. A brief explanation of what this stock's current performance means
-2. Key trends or patterns notice
-3. Simple factors affecting the price
-4. A beginner-friendly assessment of the current state.`;
+Stock Symbol: ${symbol}
+Current Price: ₹${stockData.price}
+Change: ${stockData.change > 0 ? '+' : ''}₹${stockData.change} (${stockData.changePercent > 0 ? '+' : ''}${stockData.changePercent}%)
+Volume: ${stockData.volume.toLocaleString()}
+52-Week High: ₹${stockData.high}
+52-Week Low: ₹${stockData.low}
+
+Provide analysis using this format:
+
+Performance:
+- [Explain current price trend and what it indicates - 1-2 sentences]
+- [Analyze trading volume and activity - 1-2 sentences]
+
+Key Insights:
+- [Main factor affecting the stock with brief reasoning - 1-2 sentences]
+- [Notable trend or pattern with implications - 1-2 sentences]
+- [Key risk or opportunity to be aware of - 1-2 sentences]
+
+Assessment:
+- [Overall evaluation for beginner investors - 1-2 sentences]
+
+IMPORTANT: Use ONLY hyphens (-) for bullets. NO asterisks. Keep each point concise (1-2 sentences max). Always use ₹ for currency.`;
 
       const response = await groq.chat.completions.create({
         model: GROQ_MODEL,
         messages: [
-          { role: 'system', content: 'You are a friendly financial educator. Use simple language.' },
+          { role: 'system', content: 'You are a helpful Indian stock market analyst. Provide clear, informative analysis using bullet points with hyphens only. NO asterisks. Keep each point concise (1-2 sentences). Always use ₹ for currency.' },
           { role: 'user', content: prompt }
         ],
         max_tokens: 500,
@@ -91,29 +102,65 @@ Please provide:
   async askTutor(term, context = {}) {
     try {
       const { definition, analogy, userQuestion } = context;
-      let prompt = `Financial Term: "${term}"\n`;
+
+      // First, check if the question is finance/stock-related
+      const relevanceCheck = await groq.chat.completions.create({
+        model: GROQ_MODEL,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a relevance checker. Determine if a question is related to finance, stocks, investing, economics, business, or trading. Reply ONLY with "YES" or "NO".'
+          },
+          {
+            role: 'user',
+            content: `Is this question related to finance, stocks, investing, or business? Question: "${userQuestion || term}"`
+          }
+        ],
+        max_tokens: 10,
+        temperature: 0.3
+      });
+
+      const isRelevant = relevanceCheck.choices[0].message.content.trim().toUpperCase().includes('YES');
+
+      // If not relevant, return a polite fallback
+      if (!isRelevant) {
+        return {
+          explanation: "I'm your Study Buddy for finance and investing! 📈 I can help you understand stocks, trading, market concepts, and investment strategies. Try asking me about financial terms like 'dividend', 'market cap', or 'portfolio diversification'!",
+          term: userQuestion || term,
+          timestamp: new Date().toISOString(),
+          fallback: true
+        };
+      }
+
+      // Build the prompt for relevant questions
+      let prompt = `Financial Question: "${userQuestion || term}"\n`;
       if (definition) prompt += `Definition: ${definition}\n`;
       if (analogy) prompt += `Analogy: ${analogy}\n`;
-      if (userQuestion) prompt += `Question: ${userQuestion}\n`;
 
-      prompt += `\nExplain this concept warmly using everyday language, relatable stories, and why it matters for investing.`;
+      prompt += `\nProvide a clear, concise explanation in this format:
+- Start with a 1-sentence simple definition
+- Give a relatable real-world example or analogy (1-2 sentences)
+- Explain why it matters for investors (1-2 sentences)
+- Add one practical tip if relevant
+
+Keep it friendly, brief, and easy to scan. Use short sentences and bullet points where helpful.`;
 
       const response = await groq.chat.completions.create({
         model: GROQ_MODEL,
         messages: [
           {
             role: 'system',
-            content: 'You are a patient Financial Mentor. Use analogies like comparing a Stock Exchange to a Farmer\'s Market. Be positive and clear.'
+            content: 'You are a friendly Financial Study Buddy. Explain concepts clearly and concisely using everyday language. Keep responses short and scannable with bullet points. Be warm and encouraging.'
           },
           { role: 'user', content: prompt }
         ],
-        max_tokens: 400,
-        temperature: 0.8
+        max_tokens: 300,
+        temperature: 0.7
       });
 
       return {
         explanation: response.choices[0].message.content,
-        term,
+        term: userQuestion || term,
         timestamp: new Date().toISOString()
       };
     } catch (error) {
@@ -214,7 +261,7 @@ Do not include any other text, just the JSON object.`;
 
   // Fallbacks
   getFallbackAnalysis(symbol, stockData) {
-    return `Analysis for ${symbol}: Trading at $${stockData.price}. Ensure Groq API key is configured for detailed insights.`;
+    return `Analysis for ${symbol}: Trading at ₹${stockData.price}. Ensure Groq API key is configured for detailed insights.`;
   }
 
   getFallbackPortfolioAnalysis(portfolio, stockPrices) {

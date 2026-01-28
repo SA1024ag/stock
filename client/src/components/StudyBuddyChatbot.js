@@ -7,7 +7,7 @@ const StudyBuddyChatbot = ({ currentConcept }) => {
     const [messages, setMessages] = useState([
         {
             role: 'assistant',
-            content: "Hi! I'm your Study Buddy 🤖 Ask me anything about finance, and I'll explain it in simple terms!"
+            content: "Hi! I'm Stock GPT - Your AI-powered stock market assistant. Ask me anything about investing, trading, or market analysis!"
         }
     ]);
     const [input, setInput] = useState('');
@@ -77,8 +77,12 @@ const StudyBuddyChatbot = ({ currentConcept }) => {
             {/* Floating Button */}
             {!isOpen && (
                 <button className="chatbot-toggle" onClick={() => setIsOpen(true)}>
-                    <span className="chatbot-icon">🤖</span>
-                    <span className="chatbot-label">Study Buddy</span>
+                    <svg className="chatbot-logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <path d="M3 3v18h18"></path>
+                        <path d="M18 17V9l-5 5-3-3-4 4"></path>
+                        <circle cx="18" cy="9" r="1.5" fill="currentColor"></circle>
+                    </svg>
+                    <span className="chatbot-label">Stock GPT</span>
                 </button>
             )}
 
@@ -88,10 +92,16 @@ const StudyBuddyChatbot = ({ currentConcept }) => {
                     {/* Header */}
                     <div className="chatbot-header">
                         <div className="header-content">
-                            <span className="chatbot-avatar">🤖</span>
+                            <div className="chatbot-logo-header">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                    <path d="M3 3v18h18"></path>
+                                    <path d="M18 17V9l-5 5-3-3-4 4"></path>
+                                    <circle cx="18" cy="9" r="1.5" fill="currentColor"></circle>
+                                </svg>
+                            </div>
                             <div>
-                                <h3>Study Buddy</h3>
-                                <p className="status">Online</p>
+                                <h3>Stock GPT</h3>
+                                <p className="status">Online • Ready to help!</p>
                             </div>
                         </div>
                         <button className="minimize-btn" onClick={() => setIsOpen(false)}>

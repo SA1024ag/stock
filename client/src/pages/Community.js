@@ -16,12 +16,18 @@ function Community() {
 
     // Socket Connection
     useEffect(() => {
-        // Connect to the same host/port as API
-        // If backend is on 5000 and client on 3000, we need full URL
-        // existing api.js uses REACT_APP_API_URL or localhost:5000/api
-        const socketUrl = 'http://localhost:5000'; // Hardcoded for now based on context, ideally from env
+        // 1. DYNAMIC URL: Uses environment variable for production, falls back to localhost
+        // Removes '/api' because Socket.io connects to the root URL (e.g., https://site.com)
+        const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+        const socketUrl = apiUrl.replace('/api', ''); 
 
-        const newSocket = io(socketUrl);
+        console.log('🔌 Community connecting to socket at:', socketUrl);
+        
+        const newSocket = io(socketUrl, {
+            transports: ['websocket', 'polling'], // Robust connection options
+            withCredentials: true
+        });
+        
         setSocket(newSocket);
 
         return () => newSocket.close();
@@ -32,11 +38,15 @@ function Community() {
         if (!socket) return;
 
         socket.on('connect', () => {
-            console.log('Connected to Community Socket');
+            console.log('✅ Connected to Community Socket');
         });
 
         socket.on('new_post', (newPost) => {
-            setPosts((prevPosts) => [newPost, ...prevPosts]);
+            // Deduplicate: Check if post already exists before adding
+            setPosts((prevPosts) => {
+                if (prevPosts.find(p => p._id === newPost._id)) return prevPosts;
+                return [newPost, ...prevPosts];
+            });
         });
 
         socket.on('update_post', (updatedPost) => {
@@ -57,6 +67,7 @@ function Community() {
         };
     }, [socket]);
 
+    // Exposed fetch function to refresh data manually if needed
     const fetchPosts = async () => {
         try {
             const response = await api.get('/blog');
@@ -71,11 +82,16 @@ function Community() {
             <div className="community-container">
                 <h1 className="page-title">Community Feed</h1>
 
-                <CreatePost />
+                {/* Pass fetchPosts as a callback so we see new posts instantly */}
+                <CreatePost onPostCreated={fetchPosts} />
 
                 <div className="posts-feed">
                     {posts.map(post => (
-                        <PostCard key={post._id} post={post} />
+                        <PostCard 
+                            key={post._id} 
+                            post={post} 
+                            onPostDeleted={fetchPosts} // Pass callback for delete
+                        />
                     ))}
 
                     {posts.length === 0 && (
