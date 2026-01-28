@@ -1,8 +1,5 @@
 const axios = require('axios');
-const fs = require('fs');
-const path = require('path');
-
-const TOKEN_FILE = path.join(__dirname, '../upstox_tokens.json');
+const UpstoxToken = require('../models/UpstoxToken');
 
 class UpstoxAuthService {
     constructor() {
@@ -11,9 +8,15 @@ class UpstoxAuthService {
         this.redirectUri = process.env.UPSTOX_REDIRECT_URI;
         this.accessToken = null;
         this.refreshToken = null;
+        
+        // Note: We cannot await in a constructor. 
+        // Token loading is now handled lazily in getAccessToken() 
+        // or explicitly via init() if called from server startup.
+    }
 
-        // Try to load tokens immediately
-        this.loadTokens();
+    // Optional: Call this from index.js if you want to preload tokens
+    async init() {
+        await this.loadTokens();
     }
 
     getLoginUrl() {
@@ -29,19 +32,11 @@ class UpstoxAuthService {
             params.append('redirect_uri', this.redirectUri);
             params.append('grant_type', 'authorization_code');
 
-            // V3 Auth Endpoint is actually usually same as V2 for login?
-            // Docs say: https://api.upstox.com/v2/login/authorization/token 
-            // Checking if V3 has specific auth url. 
-            // Most V3 docs point to same auth flow, just different data endpoints.
-            // But let's verify if 'v2' in URL should be 'v3'. 
-            // Upstox Login is separate. Usually it is v2. 
-            // We will keep v2 for Auth unless specific error. "Resource not Found" was for data.
-
             const response = await axios.post('https://api.upstox.com/v2/login/authorization/token', params, {
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' }
             });
 
-            this.saveTokens(response.data);
+            await this.saveTokens(response.data);
             return response.data;
         } catch (error) {
             console.error('Error generating Upstox token:', error.response?.data || error.message);
@@ -50,6 +45,11 @@ class UpstoxAuthService {
     }
 
     async refreshAccessToken() {
+        // Ensure we have the latest tokens from DB before trying to refresh
+        if (!this.refreshToken) {
+            await this.loadTokens();
+        }
+
         if (!this.refreshToken) {
             console.log('No refresh token available. Cannot auto-refresh.');
             return false;
@@ -68,7 +68,7 @@ class UpstoxAuthService {
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' }
             });
 
-            this.saveTokens(response.data);
+            await this.saveTokens(response.data);
             console.log('Upstox Token Refreshed Successfully');
             return true;
         } catch (error) {
@@ -77,46 +77,70 @@ class UpstoxAuthService {
         }
     }
 
-    saveTokens(data) {
+    async saveTokens(data) {
         this.accessToken = data.access_token;
         if (data.refresh_token) this.refreshToken = data.refresh_token;
 
-        const tokenData = {
-            access_token: this.accessToken,
-            refresh_token: this.refreshToken,
-            timestamp: Date.now()
-        };
-
         try {
-            fs.writeFileSync(TOKEN_FILE, JSON.stringify(tokenData, null, 2));
-            console.log('Upstox tokens saved to disk.');
+            // Upsert: Update if exists, Insert if not
+            // We use a static ID or empty filter because we only need ONE active token pair for the app
+            await UpstoxToken.findOneAndUpdate(
+                {}, 
+                { 
+                    access_token: this.accessToken,
+                    refresh_token: this.refreshToken,
+                    timestamp: Date.now()
+                },
+                { upsert: true, new: true }
+            );
+            console.log('✅ Upstox tokens saved to MongoDB.');
         } catch (err) {
-            console.error('Failed to save token file:', err.message);
+            console.error('Failed to save tokens to DB:', err.message);
         }
     }
 
-    loadTokens() {
+    async loadTokens() {
         try {
-            if (fs.existsSync(TOKEN_FILE)) {
-                const data = JSON.parse(fs.readFileSync(TOKEN_FILE, 'utf8'));
+            // Get the most recent token document
+            const data = await UpstoxToken.findOne().sort({ timestamp: -1 });
+            
+            if (data) {
                 this.accessToken = data.access_token;
                 this.refreshToken = data.refresh_token;
-                // console.log('Loaded Upstox tokens from disk');
+                // console.log('Loaded Upstox tokens from MongoDB');
             }
         } catch (err) {
-            console.error('Failed to load token file:', err.message);
+            console.error('Failed to load tokens from DB:', err.message);
         }
     }
 
     async getAccessToken() {
+        // 1. If no token in memory, try loading from DB
         if (!this.accessToken) {
-            // Attempt refresh if we have a refresh token
+            await this.loadTokens();
+        }
+
+        // 2. If still no token, we can't proceed
+        if (!this.accessToken) {
+             // Try one last attempt to refresh if we have a refresh token loaded
             if (this.refreshToken) {
                 const success = await this.refreshAccessToken();
                 if (success) return this.accessToken;
             }
             throw new Error('No access token. Please visit /api/auth/upstox/login to initialize.');
         }
+
+        // 3. Check expiry
+        if (this.isTokenExpired()) {
+             // If we have a refresh token, try to refresh
+            if (this.refreshToken) {
+                const success = await this.refreshAccessToken();
+                if (success) return this.accessToken;
+            }
+             // If refresh failed or no refresh token, throw
+             throw new Error('Token expired and refresh failed. Please re-login.');
+        }
+
         return this.accessToken;
     }
 
