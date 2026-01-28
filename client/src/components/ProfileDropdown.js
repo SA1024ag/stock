@@ -121,7 +121,6 @@ const ProfileDropdown = ({ onClose }) => {
                 <div className="menu-divider" />
 
                 <MenuSection title="Settings">
-                    <MenuItem icon="settings" label="App & Trading Prefs" onClick={() => handleNavigate('/profile/settings')} />
                     <MenuItem icon={theme === 'dark' ? 'moon' : 'sun'} label="Appearance" value={theme === 'dark' ? 'Dark' : 'Light'} onClick={toggleTheme} />
                 </MenuSection>
 

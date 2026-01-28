@@ -10,12 +10,12 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 1rem 1.5rem;
+    padding: 1.25rem 2rem;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border: none;
-    border-radius: 50px;
-    font-size: 1rem;
+    border-radius: 20px;
+    font-size: 1.1rem;
     font-weight: 600;
     cursor: pointer;
     box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
@@ -28,8 +28,9 @@
     box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
 }
 
-.chatbot-icon {
-    font-size: 1.5rem;
+.chatbot-logo {
+    width: 28px;
+    height: 28px;
 }
 
 @keyframes pulse {
@@ -87,8 +88,20 @@
     gap: 0.75rem;
 }
 
-.chatbot-avatar {
-    font-size: 2rem;
+.chatbot-logo-header {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+    padding: 8px;
+}
+
+.chatbot-logo-header svg {
+    width: 28px;
+    height: 28px;
 }
 
 .chatbot-header h3 {

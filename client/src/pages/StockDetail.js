@@ -27,6 +27,7 @@ function StockDetail() {
   const [trading, setTrading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [analysisExpanded, setAnalysisExpanded] = useState(false);
 
   // Watchlist State
   const [inWatchlist, setInWatchlist] = useState(false);
@@ -229,6 +230,38 @@ function StockDetail() {
   const displayStats = getDisplayStats();
   const totalCost = stockData.price * (parseInt(shares) || 0);
 
+  // Helper function to format and clean AI analysis text
+  const formatAnalysis = (text) => {
+    if (!text) return '';
+
+    // Remove all asterisks
+    let formatted = text.replace(/\*\*/g, '').replace(/\*/g, '');
+
+    // Split into lines
+    const lines = formatted.split('\n').filter(l => l.trim());
+
+    return lines.map((line, index) => {
+      const trimmed = line.trim();
+
+      // Check if it's a section header (ends with : and no hyphen)
+      if (trimmed.endsWith(':') && !trimmed.startsWith('-')) {
+        return (
+          <h4 key={index} className="analysis-section-header">{trimmed}</h4>
+        );
+      }
+
+      // Check if it's a bullet point
+      if (trimmed.startsWith('-')) {
+        return (
+          <li key={index} className="analysis-bullet">{trimmed.substring(1).trim()}</li>
+        );
+      }
+
+      // Regular paragraph
+      return <p key={index} className="analysis-text">{trimmed}</p>;
+    });
+  };
+
   return (
     <div className="stock-detail-container">
       <div className="stock-detail-header">
@@ -332,10 +365,16 @@ function StockDetail() {
 
           <Card title="AI Market Analysis" className="analysis-card glass-panel">
             {analysis ? (
-              <div className="analysis-content text-secondary">
-                {analysis.split('\n').map((paragraph, index) => (
-                  <p key={index} className="mb-2">{paragraph}</p>
-                ))}
+              <div className="analysis-wrapper">
+                <div className={`analysis-content ${analysisExpanded ? 'expanded' : 'collapsed'}`}>
+                  {formatAnalysis(analysis)}
+                </div>
+                <button
+                  className="expand-btn"
+                  onClick={() => setAnalysisExpanded(!analysisExpanded)}
+                >
+                  {analysisExpanded ? '▲ Show Less' : '▼ Show More'}
+                </button>
               </div>
             ) : (
               <div className="loading-state">
