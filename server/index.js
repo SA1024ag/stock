@@ -61,11 +61,11 @@ const paymentRoutes = require('./routes/payment');
 const learningRoutes = require('./routes/learning');
 const blogRoutes = require('./routes/blog');
 const watchlistRoutes = require('./routes/watchlist');
-const upstoxAuthRoutes = require('./routes/upstoxAuth'); // Ensure this is imported
+const upstoxAuthRoutes = require('./routes/upstoxAuth');
 
 // Use Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/auth/upstox', upstoxAuthRoutes); // Mount Upstox auth routes specifically
+app.use('/api/auth/upstox', upstoxAuthRoutes);
 app.use('/api/stocks', stockRoutes);
 app.use('/api/portfolio', portfolioRoutes);
 app.use('/api/ai', aiRoutes);
@@ -74,6 +74,25 @@ app.use('/api/payment', paymentRoutes);
 app.use('/api/learning', learningRoutes);
 app.use('/api/blog', blogRoutes);
 app.use('/api/watchlist', watchlistRoutes);
+
+// -------------------------------------------------------------------------
+// 🚀 SERVE REACT FRONTEND (Production Only)
+// -------------------------------------------------------------------------
+// This section fixes the "404 Not Found" on refresh.
+// It serves the static files from the React build folder.
+
+const clientBuildPath = path.join(__dirname, '../client/build');
+
+// 1. Serve static files (js, css, images)
+app.use(express.static(clientBuildPath));
+
+// 2. The "Catch-All" Route
+// For any request that doesn't match an API route above, send back index.html.
+// This allows React Router to handle paths like /dashboard, /portfolio, etc.
+app.get('*', (req, res) => {
+  res.sendFile(path.join(clientBuildPath, 'index.html'));
+});
+// -------------------------------------------------------------------------
 
 const PORT = process.env.PORT || 5000;
 
@@ -86,7 +105,6 @@ async function startServer() {
     console.log('✅ MongoDB connected');
 
     // 1. Initialize Upstox Service (Load tokens from DB)
-    // This is crucial for the fallback system to work on server restart
     try {
         if (upstoxAuthService.init) {
             await upstoxAuthService.init();
@@ -103,7 +121,7 @@ async function startServer() {
     const { startAlertMonitor } = require('./services/alertMonitor');
     startAlertMonitor();
 
-    // Only listen if this file is run directly (not via a test runner or serverless function)
+    // Only listen if this file is run directly
     if (require.main === module) {
       server.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
@@ -117,5 +135,4 @@ async function startServer() {
 
 startServer();
 
-// Export for Vercel/Serverless/Tests
 module.exports = app;
