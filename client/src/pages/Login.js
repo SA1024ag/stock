@@ -17,13 +17,13 @@ function Login() {
     setLoading(true);
 
     const result = await login(email, password);
-    
+
     if (result.success) {
-      navigate('/dashboard');
+      navigate('/');
     } else {
       setError(result.message);
     }
-    
+
     setLoading(false);
   };
 
@@ -32,9 +32,9 @@ function Login() {
       <div className="auth-card">
         <h2>Login</h2>
         <p className="auth-subtitle">Welcome back! Sign in to your account.</p>
-        
+
         {error && <div className="alert alert-error">{error}</div>}
-        
+
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label>Email</label>
@@ -46,7 +46,7 @@ function Login() {
               placeholder="Enter your email"
             />
           </div>
-          
+
           <div className="form-group">
             <label>Password</label>
             <input
@@ -57,12 +57,12 @@ function Login() {
               placeholder="Enter your password"
             />
           </div>
-          
+
           <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
-        
+
         <p className="auth-footer">
           Don't have an account? <Link to="/register">Register here</Link>
         </p>

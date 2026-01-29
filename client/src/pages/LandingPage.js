@@ -25,7 +25,7 @@ const LandingPage = () => {
                         Practice trading with logical virtual funds, get real-time market data, and learn from advanced analysis—completely risk-free.
                     </p>
                     <Link to="/register" className="cta-button">
-                        Get Started Free
+                        Get Started
                     </Link>
                 </div>
 

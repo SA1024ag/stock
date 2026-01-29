@@ -134,8 +134,8 @@
   left: 0;
   right: 0;
   margin-top: 8px;
-  background: rgba(20, 20, 30, 0.95);
-  backdrop-filter: blur(12px);
+  background: #1a1a24 !important;
+  /* Fully opaque dark grey */
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   max-height: 300px;

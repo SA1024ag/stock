@@ -30,13 +30,13 @@ function Register() {
     setLoading(true);
 
     const result = await register(username, email, password);
-    
+
     if (result.success) {
-      navigate('/dashboard');
+      navigate('/');
     } else {
       setError(result.message);
     }
-    
+
     setLoading(false);
   };
 
@@ -45,9 +45,9 @@ function Register() {
       <div className="auth-card">
         <h2>Register</h2>
         <p className="auth-subtitle">Create an account to start trading!</p>
-        
+
         {error && <div className="alert alert-error">{error}</div>}
-        
+
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label>Username</label>
@@ -60,7 +60,7 @@ function Register() {
               minLength={3}
             />
           </div>
-          
+
           <div className="form-group">
             <label>Email</label>
             <input
@@ -71,7 +71,7 @@ function Register() {
               placeholder="Enter your email"
             />
           </div>
-          
+
           <div className="form-group">
             <label>Password</label>
             <input
@@ -83,7 +83,7 @@ function Register() {
               minLength={6}
             />
           </div>
-          
+
           <div className="form-group">
             <label>Confirm Password</label>
             <input
@@ -94,12 +94,12 @@ function Register() {
               placeholder="Confirm your password"
             />
           </div>
-          
+
           <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
             {loading ? 'Creating account...' : 'Register'}
           </button>
         </form>
-        
+
         <p className="auth-footer">
           Already have an account? <Link to="/login">Login here</Link>
         </p>

@@ -103,7 +103,7 @@ router.post('/predict-groq', async (req, res) => {
 
     // Call your internal AI Service directly
     const prediction = await aiService.predictStockPrice(symbol, currentPrice, parameters);
-    
+
     res.json(prediction);
   } catch (error) {
     console.error('Groq Prediction Error:', error);
@@ -122,13 +122,13 @@ router.post('/predict', async (req, res) => {
   try {
     const PYTHON_SERVICE_URL = process.env.PYTHON_API_URL || 'http://localhost:8000/api/predict';
     const payload = { ticker: symbol, lookback: 60, train_size: 1000 };
-    
+
     const response = await axios.post(PYTHON_SERVICE_URL, payload, { timeout: 120000 });
     res.json(response.data);
   } catch (error) {
     if (error.response) {
-        console.error(`❌ Python Service Error: ${error.response.status}`);
-        return res.status(error.response.status).json({ message: 'AI Model Error', details: error.response.data });
+      console.error(`❌ Python Service Error: ${error.response.status}`);
+      return res.status(error.response.status).json({ message: 'AI Model Error', details: error.response.data });
     }
     console.error('❌ Python Service Unreachable');
     res.status(503).json({ message: 'Prediction service unavailable' });

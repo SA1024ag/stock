@@ -74,16 +74,35 @@ IMPORTANT: Use ONLY hyphens (-) for bullets. NO asterisks. Keep each point conci
         };
       });
 
-      const prompt = `Review this portfolio: ${JSON.stringify(holdingsBreakdown)}. Total Value: $${portfolioValue.toFixed(2)}. 
-      Assess diversification, risk level, and provide simple improvement suggestions.`;
+      const topHoldings = holdingsBreakdown.slice(0, 3).map(h => `${h.symbol} (${h.allocation.toFixed(1)}%)`).join(', ');
+
+      const prompt = `Analyze this Indian stock portfolio worth ₹${portfolioValue.toFixed(2)} with ${portfolio.length} holdings.
+
+Top Holdings: ${topHoldings}
+
+Provide analysis in this EXACT format:
+
+📊 Diversification:
+- [Assess if portfolio is well-diversified or concentrated - 1 sentence]
+- [Comment on sector/stock allocation balance - 1 sentence]
+
+⚠️ Risk Assessment:
+- [Evaluate overall risk level (Low/Medium/High) with reasoning - 1 sentence]
+- [Identify main risk factor - 1 sentence]
+
+💡 Recommendations:
+- [Suggest 1 key improvement - 1 sentence]
+- [Suggest 1 opportunity or action - 1 sentence]
+
+IMPORTANT: Use ONLY the emoji icons and hyphens shown above. Keep each point to 1-2 sentences. Always use ₹ for currency.`;
 
       const response = await groq.chat.completions.create({
         model: GROQ_MODEL,
         messages: [
-          { role: 'system', content: 'You are a friendly portfolio advisor.' },
+          { role: 'system', content: 'You are a portfolio advisor. Use the EXACT format requested with emoji icons and bullet points. Be concise (1-2 sentences per point). Always use ₹ for Indian Rupees.' },
           { role: 'user', content: prompt }
         ],
-        max_tokens: 600,
+        max_tokens: 400,
         temperature: 0.7
       });
 
@@ -201,20 +220,19 @@ Keep it friendly, brief, and easy to scan. Use short sentences and bullet points
   // Predict stock price based on macro parameters
   async predictStockPrice(symbol, currentPrice, parameters) {
     try {
-      const prompt = `Analyze stock ${symbol} with current price ₹${currentPrice}.
-Economic parameters: Inflation Rate: ${parameters.inflation}%, Interest Rate: ${parameters.interestRate}%.
+      const prompt = `Predict future price range for ${symbol} at ₹${currentPrice}.
 
-Based on these economic indicators, predict the stock price range for the next 6-12 months.
+Economic: Inflation ${parameters.inflation}%, Interest Rate ${parameters.interestRate}%
 
-You MUST return ONLY a valid JSON object with this exact structure:
+Return ONLY JSON:
 {
   "predicted_low": <number>,
   "predicted_high": <number>,
   "confidence_score": <number 0-100>,
-  "reasoning": "<brief explanation>"
+  "reasoning": "📈 Key Factors:\\n- [Main driver - 1 sentence]\\n- [Economic impact - 1 sentence]\\n\\n✨ Outlook: [Summary - 1 sentence]"
 }
 
-Do not include any other text, just the JSON object.`;
+Use ₹ for currency. No extra text.`;
 
       const response = await groq.chat.completions.create({
         model: GROQ_MODEL,

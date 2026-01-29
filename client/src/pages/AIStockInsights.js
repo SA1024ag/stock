@@ -16,7 +16,7 @@ const AIStockInsights = () => {
 
         setLoading(true);
         setError('');
-        
+
         try {
             if (activeTab === 'analysis') {
                 const res = await api.post('/ai/analyze', { symbol: symbol.toUpperCase() });
@@ -42,13 +42,13 @@ const AIStockInsights = () => {
 
             {/* Tab Switcher */}
             <div className="tabs-container" style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '2rem' }}>
-                <button 
+                <button
                     className={`btn ${activeTab === 'analysis' ? 'btn-primary' : 'btn-outline'}`}
                     onClick={() => setActiveTab('analysis')}
                 >
                     📝 Fundamental Analysis
                 </button>
-                <button 
+                <button
                     className={`btn ${activeTab === 'prediction' ? 'btn-primary' : 'btn-outline'}`}
                     onClick={() => setActiveTab('prediction')}
                 >
@@ -79,13 +79,13 @@ const AIStockInsights = () => {
                 <div className="prediction-results fade-in">
                     <div className="glass-panel" style={{ padding: '20px', marginBottom: '20px' }}>
                         <h2>🔮 30-Day Forecast: {prediction.ticker}</h2>
-                        
+
                         {/* Display the Plot from Base64 */}
                         <div className="chart-container" style={{ marginTop: '20px', borderRadius: '10px', overflow: 'hidden' }}>
-                            <img 
-                                src={`data:image/png;base64,${prediction.plot}`} 
-                                alt="Prediction Chart" 
-                                style={{ width: '100%', height: 'auto' }} 
+                            <img
+                                src={`data:image/png;base64,${prediction.plot}`}
+                                alt="Prediction Chart"
+                                style={{ width: '100%', height: 'auto' }}
                             />
                         </div>
 
@@ -114,13 +114,37 @@ const AIStockInsights = () => {
                 </div>
             )}
 
-            {/* RENDER EXISTING ANALYSIS (Keep your existing code here) */}
             {activeTab === 'analysis' && analysis && (
                 <div className="ai-results">
-                    {/* ... Your existing AI Analysis JSX ... */}
                     <div className="ai-analysis-card glass-panel">
-                        <h3>🧠 Smart Analysis</h3>
-                        <p>{analysis.analysis}</p>
+                        <div className="analysis-header">
+                            <h3>🧠 Smart Analysis</h3>
+                            <span className="ai-badge">Powered by Groq AI</span>
+                        </div>
+                        <div className="analysis-content formatted-analysis">
+                            {analysis.analysis.split('\n').map((line, index) => {
+                                const trimmed = line.trim();
+                                if (!trimmed) return null;
+
+                                // Section headers with emoji
+                                if (trimmed.match(/^[📊⚠️💡🎯📈✨]/)) {
+                                    return <h4 key={index} className="analysis-section-header">{trimmed}</h4>;
+                                }
+
+                                // Section headers ending with ':'
+                                if (trimmed.endsWith(':') && !trimmed.startsWith('-')) {
+                                    return <h4 key={index} className="analysis-section-header">{trimmed}</h4>;
+                                }
+
+                                // Bullet points
+                                if (trimmed.startsWith('-')) {
+                                    return <li key={index} className="analysis-bullet">{trimmed.substring(1).trim()}</li>;
+                                }
+
+                                // Regular paragraphs
+                                return <p key={index} className="analysis-text">{trimmed}</p>;
+                            })}
+                        </div>
                     </div>
                 </div>
             )}

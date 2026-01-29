@@ -79,30 +79,36 @@ function Dashboard() {
       <div className="stats-grid">
         <Card className="stat-card glass-panel">
           <div className="stat-label">Net Liquidation Value</div>
-          <div className="stat-value-large">
-            ₹{(balance + totalValue).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </div>
-          <div className={`stat-change ${isPositive ? 'text-green' : 'text-red'}`}>
-            {isPositive ? '▲' : '▼'} Total P/L
+          <div className="stat-row">
+            <div className="stat-value-large">
+              ₹{(balance + totalValue).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+            <div className={`stat-change ${isPositive ? 'text-green' : 'text-red'}`}>
+              {isPositive ? '▲' : '▼'} Total P/L
+            </div>
           </div>
         </Card>
 
         <Card className="stat-card glass-panel">
           <div className="stat-label">Day's P/L</div>
-          <div className={`stat-value-large ${isPositive ? 'text-green' : 'text-red'}`}>
-            {isPositive ? '+' : ''}₹{totalGainLoss.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </div>
-          <div className={`stat-subvalue ${isPositive ? 'text-green' : 'text-red'}`}>
-            {isPositive ? '+' : ''}{totalGainLossPercent.toFixed(2)}%
+          <div className="stat-row">
+            <div className={`stat-value-large ${isPositive ? 'text-green' : 'text-red'}`}>
+              {isPositive ? '+' : ''}₹{totalGainLoss.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+            <div className={`stat-subvalue ${isPositive ? 'text-green' : 'text-red'}`}>
+              {isPositive ? '+' : ''}{totalGainLossPercent.toFixed(2)}%
+            </div>
           </div>
         </Card>
 
         <Card className="stat-card glass-panel">
           <div className="stat-label">Buying Power</div>
-          <div className="stat-value-large text-secondary">
-            ₹{balance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          <div className="stat-row">
+            <div className="stat-value-large text-secondary">
+              ₹{balance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+            <Link to="/search" className="link-small">Top Up ›</Link>
           </div>
-          <Link to="/search" className="link-small">Top Up ›</Link>
         </Card>
 
         <Card className="stat-card glass-panel">
@@ -114,11 +120,6 @@ function Dashboard() {
                   {indices[0].price.toFixed(2)} ({indices[0].changePercent.toFixed(2)}%)
                 </span>
               </div>
-              {indices[1] && (
-                <div className="stat-subvalue text-muted mt-1">
-                  {indices[1].name}: {indices[1].price.toFixed(2)}
-                </div>
-              )}
             </div>
           ) : (
             <>

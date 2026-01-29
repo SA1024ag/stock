@@ -131,10 +131,24 @@ const AIPortfolioAnalysis = () => {
                             <h3>🧠 AI Portfolio Review</h3>
                             <span className="ai-badge">Powered by Groq AI</span>
                         </div>
-                        <div className="analysis-content">
-                            {analysis.analysis.split('\n').map((paragraph, index) => (
-                                paragraph.trim() && <p key={index}>{paragraph}</p>
-                            ))}
+                        <div className="analysis-content formatted-analysis">
+                            {analysis.analysis.split('\n').map((line, index) => {
+                                const trimmed = line.trim();
+                                if (!trimmed) return null;
+
+                                // Section headers with emoji
+                                if (trimmed.match(/^[📊⚠️💡🎯]/)) {
+                                    return <h4 key={index} className="analysis-section-header">{trimmed}</h4>;
+                                }
+
+                                // Bullet points
+                                if (trimmed.startsWith('-')) {
+                                    return <li key={index} className="analysis-bullet">{trimmed.substring(1).trim()}</li>;
+                                }
+
+                                // Regular paragraphs
+                                return <p key={index} className="analysis-text">{trimmed}</p>;
+                            })}
                         </div>
                     </div>
                 </div>

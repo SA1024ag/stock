@@ -242,6 +242,44 @@
     margin-bottom: 0;
 }
 
+/* Formatted Analysis Styles */
+.formatted-analysis .analysis-section-header {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #3b82f6;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid rgba(59, 130, 246, 0.2);
+}
+
+.formatted-analysis .analysis-section-header:first-child {
+    margin-top: 0;
+}
+
+.formatted-analysis .analysis-bullet {
+    list-style: none;
+    padding-left: 1.5rem;
+    margin-bottom: 0.75rem;
+    position: relative;
+    color: #e5e7eb;
+    line-height: 1.6;
+}
+
+.formatted-analysis .analysis-bullet::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: #3b82f6;
+    font-weight: 700;
+    font-size: 1.2rem;
+}
+
+.formatted-analysis .analysis-text {
+    margin-bottom: 0.75rem;
+    color: #e5e7eb;
+}
+
 /* Portfolio Summary */
 .portfolio-summary-card {
     padding: 32px;
