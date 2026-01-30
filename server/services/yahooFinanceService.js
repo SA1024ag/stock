@@ -1,4 +1,4 @@
-const YahooFinance = require('yahoo-finance2').default;
+const { YahooFinance } = require('yahoo-finance2'); // ✅ Use destructuring to get the Class
 const yahooFinance = new YahooFinance();
 
 // NIFTY 50 stocks with Yahoo Finance symbols
@@ -225,4 +225,3 @@ class YahooFinanceService {
 }
 
 module.exports = new YahooFinanceService();
-
